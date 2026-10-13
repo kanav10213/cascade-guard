@@ -1,0 +1,62 @@
+{
+  "config": {
+    "trials": 1000,
+    "seed": 42,
+    "inject_probability": 0.1,
+    "max_retries": 2,
+    "guard_mode": "full"
+  },
+  "baseline_accuracy": 0.657,
+  "protected_accuracy": 0.996,
+  "detected_errors": 414,
+  "recovered_errors": 410,
+  "cri": 1.0,
+  "crs": 0.9903,
+  "baseline": {
+    "trials": 1000,
+    "correct": 657,
+    "wrong": 288,
+    "crashed": 55,
+    "halted": 0,
+    "injected_trials": 356,
+    "detected": 0,
+    "recovered": 0,
+    "false_alarms": 0,
+    "missed_by_type": {}
+  },
+  "protected": {
+    "trials": 1000,
+    "correct": 996,
+    "wrong": 0,
+    "crashed": 0,
+    "halted": 4,
+    "injected_trials": 356,
+    "detected": 414,
+    "recovered": 410,
+    "false_alarms": 0,
+    "missed_by_type": {}
+  },
+  "invariants_only": {
+    "protected_accuracy": 0.934,
+    "detected_errors": 331,
+    "recovered_errors": 326,
+    "cri": 0.8192,
+    "crs": 0.9849,
+    "protected": {
+      "trials": 1000,
+      "correct": 934,
+      "wrong": 62,
+      "crashed": 0,
+      "halted": 4,
+      "injected_trials": 356,
+      "detected": 331,
+      "recovered": 326,
+      "false_alarms": 0,
+      "missed_by_type": {
+        "TRUNCATED_OUTPUT": 28,
+        "INVALID_REASONING": 28,
+        "CORRUPTED_OUTPUT": 28
+      }
+    }
+  }
+}

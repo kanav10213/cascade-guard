@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascade Guard</title>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--text:#1b1b1a;--muted:#66665f;--line:#e2e2dc;--good:#0f7b4a;--goodbg:#e2f4ea;--bad:#b3261e;--badbg:#fbe8e5;--warn:#85560a;--warnbg:#fff1d2;--accent:#2f5bea;--accentbg:#e8edff}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1d;--text:#ecece7;--muted:#9a9a92;--line:#363633;--good:#5dd39e;--goodbg:#15332a;--bad:#ff8a80;--badbg:#3a1d1a;--warn:#f5c15c;--warnbg:#3a2e12;--accent:#8aa5ff;--accentbg:#222a4a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:var(--muted);margin:2px 0 20px;max-width:760px}
+h2{font-size:17px;margin:0 0 4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input[type=range]{padding:0}
+textarea{width:100%;min-height:70px;resize:vertical}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{background:var(--accentbg);color:var(--accent)}
+button:disabled{opacity:.55;cursor:wait}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.pane{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg)}
+.pane h3{margin:0 0 8px;font-size:14px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.b-good{background:var(--goodbg);color:var(--good)}.b-bad{background:var(--badbg);color:var(--bad)}.b-warn{background:var(--warnbg);color:var(--warn)}
+.kv{font-size:13px;margin:8px 0;word-break:break-word}.kv b{display:block;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+.stage{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px dashed var(--line);font-size:13px}
+.stage .name{width:64px;flex:none;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:2px 8px;border-radius:6px;font-size:12px;background:var(--goodbg);color:var(--good)}
+.chip.fault{background:var(--warnbg);color:var(--warn)}.chip.miss{background:var(--badbg);color:var(--bad)}
+.cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg)}
+.stat .v{font-size:24px;font-weight:700}.stat .l{font-size:12px;color:var(--muted)}
+.bars{margin:10px 0 14px}.bar{display:grid;grid-template-columns:230px 1fr 56px;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+@media(max-width:640px){.bar{grid-template-columns:110px 1fr 50px}}
+.track{background:var(--bg);border:1px solid var(--line);border-radius:6px;height:16px;overflow:hidden}.fill{height:100%;background:var(--accent)}
+.fill.g{background:var(--good)}.fill.r{background:var(--bad)}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font-size:12.5px;margin:8px 0}
+.err{color:var(--bad);font-size:13px;margin-top:6px}
+.pill{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.pill.ok{color:var(--good)}.pill.no{color:var(--bad)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+#keybox{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Cascade Guard</h1>
+  <span class="pill" id="health">checking server…</span>
+</header>
+<p class="sub">In a chain of AI agents, one agent's mistake gets accepted by the next and builds up until it reaches the final answer. Cascade Guard checks every step, re-runs a failing step, and stops the order if it can't be fixed, so a wrong answer is never delivered silently.</p>
+
+<div class="card" id="keybox">
+  <h2>API key needed</h2>
+  <p class="hint">This server is protected. Enter the key you set as <span class="mono">API_KEY</span>. It is kept only in this browser tab.</p>
+  <div class="row"><label>API key<input id="key" type="password" autocomplete="off"></label><button id="savekey">Save</button></div>
+</div>
+
+<div class="card">
+  <h2>1. Live demo: the same order, with and without the guard</h2>
+  <p class="hint">Faults are injected into the agents' outputs on purpose. Both sides get exactly the same faults.</p>
+  <div class="row">
+    <label>Numbers (the order)<input id="d-nums" value="3, 7, 2, 9" size="22"></label>
+    <label>Fault chance per step: <span id="d-p-v">50%</span><input id="d-p" type="range" min="0" max="100" value="50"></label>
+    <label>Seed<input id="d-seed" type="number" value="4" style="width:90px"></label>
+    <label>Guard mode<select id="d-mode"><option value="full">full (with source check)</option><option value="invariants">consistency checks only</option></select></label>
+    <button id="d-run">Run demo</button><button class="ghost" id="d-new">Try another seed</button>
+  </div>
+  <div class="err" id="d-err"></div>
+  <div class="grid2">
+    <div class="pane"><h3>Without guard</h3><div id="d-off"><span class="hint">Press “Run demo”.</span></div></div>
+    <div class="pane"><h3>With guard</h3><div id="d-on"><span class="hint">Press “Run demo”.</span></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2. Measured results over many orders</h2>
+  <p class="hint">Runs hundreds of random orders through the chain three ways and compares them.</p>
+  <div class="row">
+    <label>Orders<input id="e-trials" type="number" value="1000" min="1" style="width:100px"></label>
+    <label>Fault chance per step: <span id="e-p-v">10%</span><input id="e-p" type="range" min="0" max="50" value="10"></label>
+    <label>Retries<input id="e-retries" type="number" value="2" min="0" max="5" style="width:70px"></label>
+    <label>Seed<input id="e-seed" type="number" value="42" style="width:90px"></label>
+    <button id="e-run">Run experiment</button>
+  </div>
+  <div class="err" id="e-err"></div>
+  <div id="e-out"></div>
+</div>
+
+<div class="card">
+  <h2>3. LLM evaluation: real model agents</h2>
+  <p class="hint">An LLM does the calculation and the trend label, and a second LLM acts as the validator. The validator is tested with a naive prompt and with a "recompute independently" prompt. Results come with 95% Wilson confidence intervals.</p>
+  <div class="note" id="l-status" style="margin:0 0 12px">checking…</div>
+  <div class="row">
+    <label>Agent trials<input id="l-agent" type="number" value="40" min="0" style="width:90px"></label>
+    <label>Validator trials per cell<input id="l-val" type="number" value="15" min="0" style="width:90px"></label>
+    <label>End-to-end trials<input id="l-e2e" type="number" value="40" min="0" style="width:90px"></label>
+    <label>Numbers<select id="l-hard"><option value="0">short and easy</option><option value="1">long and hard</option></select></label>
+    <label>Model<select id="l-sim"><option value="1">Simulated (free)</option><option value="0">Real model (costs money)</option></select></label>
+  </div>
+  <div class="row">
+    <button class="ghost" id="l-plan">Show plan and cost</button>
+    <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="l-confirm" style="padding:0">I understand a real run spends money</label>
+    <button id="l-run">Run evaluation</button>
+  </div>
+  <div class="err" id="l-err"></div>
+  <div id="l-out"></div>
+</div>
+
+<div class="card">
+  <h2>4. Check any AI output</h2>
+  <p class="hint">Paste text from any agent. It flags empty output and known failure markers (CORRUPTED_OUTPUT, MISSING_DATA, INVALID_REASONING, TRUNCATED_OUTPUT).</p>
+  <textarea id="v-text" placeholder="Paste an agent's output here"></textarea>
+  <div class="row" style="margin-top:10px"><button id="v-run">Check</button><span id="v-out"></span></div>
+  <div class="err" id="v-err"></div>
+</div>
+
+<div class="card">
+  <h2>5. Use it from your own system</h2>
+  <p class="hint">Any program can call the same API the dashboard uses. Interactive docs are at <a href="/docs">/docs</a>.</p>
+  <pre id="snippet" class="mono"></pre>
+</div>
+<p class="note">The agents here are rule-based, so these numbers show how the chain's design lets errors through, not how often real language models make mistakes.</p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let apiKey = sessionStorage.getItem('cg_key') || '';
+const STAGES = ['extract','analyze','reason','report'];
+
+function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+
+async function api(path, body){
+  const headers = {'Content-Type':'application/json'};
+  if(apiKey) headers['X-API-Key'] = apiKey;
+  const r = await fetch(path, {method:'POST', headers, body: JSON.stringify(body)});
+  if(r.status === 401){ $('#keybox').style.display = 'block'; throw new Error('API key required or wrong. Enter it in the box at the top.'); }
+  if(!r.ok){
+    const j = await r.json().catch(() => ({}));
+    let d = j.detail;
+    if(Array.isArray(d)) d = d.map(x => x.msg || JSON.stringify(x)).join('; ');
+    throw new Error(d || ('Request failed (' + r.status + ')'));
+  }
+  return r.json();
+}
+
+async function health(){
+  const p = $('#health');
+  try{ const r = await fetch('/health'); if(!r.ok) throw 0; p.textContent = 'server online'; p.className = 'pill ok'; }
+  catch(e){ p.textContent = 'server offline'; p.className = 'pill no'; }
+}
+
+function statusBadge(s){
+  const map = {correct:['Correct output','b-good'], wrong:['Wrong output delivered silently','b-bad'], crashed:['Crashed','b-bad'], halted:['Halted safely, nothing wrong delivered','b-warn']};
+  const [t,c] = map[s] || [s,'b-warn'];
+  return el('span', 'badge ' + c, t);
+}
+
+function renderRun(box, r, guardOn){
+  box.replaceChildren();
+  box.append(statusBadge(r.status));
+  const k1 = el('div','kv'); k1.append(el('b',null,'Delivered'), el('span','mono', r.final_output === null || r.final_output === undefined ? (r.status === 'halted' ? '(nothing delivered, order held)' : '(empty output delivered)') : r.final_output)); box.append(k1);
+  const k2 = el('div','kv'); k2.append(el('b',null,'Correct answer'), el('span','mono', r.expected_output)); box.append(k2);
+  for(const st of STAGES){
+    const items = r.trace.filter(t => t.stage === st);
+    if(!items.length) continue;
+    const row = el('div','stage'); row.append(el('div','name',st));
+    const chips = el('div','chips');
+    items.forEach((t, i) => {
+      let text, cls = 'chip';
+      if(t.guard_issue === 'AGENT_CRASH'){ text = 'agent crashed'; cls += ' miss'; }
+      else if(t.injected && guardOn && t.guard_issue){ text = 'fault ' + t.injected + ' caught' + (i < items.length - 1 ? ', re-run' : ', stopped'); cls += ' fault'; }
+      else if(t.injected && guardOn){ text = 'fault ' + t.injected + ' MISSED'; cls += ' miss'; }
+      else if(t.injected){ text = 'fault ' + t.injected + ' (not checked)'; cls += ' miss'; }
+      else { text = (guardOn ? 'checked, ok' : 'ok'); }
+      chips.append(el('span', cls, text));
+    });
+    row.append(chips); box.append(row);
+  }
+}
+
+async function runDemo(){
+  const btn = $('#d-run'); btn.disabled = true; $('#d-err').textContent = '';
+  const body = {numbers: $('#d-nums').value, inject_probability: $('#d-p').value / 100, seed: parseInt($('#d-seed').value || '0', 10), mode: $('#d-mode').value, max_retries: 2};
+  try{
+    const [off, on] = await Promise.all([api('/pipeline', {...body, protected:false}), api('/pipeline', {...body, protected:true})]);
+    renderRun($('#d-off'), off, false); renderRun($('#d-on'), on, true);
+  }catch(e){ $('#d-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+const pct = v => (v * 100).toFixed(1) + '%';
+
+function bar(label, v, cls){
+  const row = el('div','bar'); row.append(el('div',null,label));
+  const track = el('div','track'); const fill = el('div','fill ' + (cls || '')); fill.style.width = (v * 100) + '%'; track.append(fill);
+  row.append(track, el('div',null,pct(v))); return row;
+}
+
+async function runExperiment(){
+  const btn = $('#e-run'); btn.disabled = true; $('#e-err').textContent = ''; const out = $('#e-out'); out.replaceChildren(el('span','hint','Running…'));
+  const base = {trials: parseInt($('#e-trials').value || '1', 10), seed: parseInt($('#e-seed').value || '0', 10), inject_probability: $('#e-p').value / 100, max_retries: parseInt($('#e-retries').value || '0', 10)};
+  try{
+    const [full, inv] = await Promise.all([api('/experiment', {...base, mode:'full'}), api('/experiment', {...base, mode:'invariants'})]);
+    out.replaceChildren();
+    const stats = el('div','cards4');
+    [[pct(full.baseline_accuracy),'Accuracy without guard'],[pct(full.protected_accuracy),'Accuracy with full guard'],[pct(full.cri),'Cascade Reduction Index'],[pct(full.crs),'Cascade Recovery Score']].forEach(([v,l]) => {
+      const s = el('div','stat'); s.append(el('div','v',v), el('div','l',l)); stats.append(s);
+    });
+    out.append(stats);
+    const bars = el('div','bars');
+    bars.append(bar('No guard', full.baseline_accuracy, 'r'), bar('Guard: consistency checks only', inv.protected_accuracy), bar('Guard: with source check', full.protected_accuracy, 'g'));
+    out.append(bars);
+    const t = el('table'); const head = el('tr'); ['Outcome','No guard','Consistency only','Full guard'].forEach((h,i) => head.append(el('th', i ? 'n' : '', h))); t.append(head);
+    [['Correct','correct'],['Wrong, delivered silently','wrong'],['Crashed','crashed'],['Halted safely','halted']].forEach(([lab,k]) => {
+      const tr = el('tr'); tr.append(el('td',null,lab)); [full.baseline[k], inv.protected[k], full.protected[k]].forEach(v => tr.append(el('td','n',String(v)))); t.append(tr);
+    });
+    out.append(t);
+    const missed = Object.entries(inv.protected.missed_by_type || {}).map(([k,v]) => k + ': ' + v).join(', ');
+    out.append(el('p','note', 'Out of ' + base.trials + ' orders, ' + full.baseline.injected_trials + ' had at least one fault injected. ' +
+      'The full guard detected ' + full.detected_errors + ' failing steps and repaired ' + full.recovered_errors + ' by re-running them; the rest were halted instead of delivered. ' +
+      (missed ? 'The consistency-only guard missed faults that entered at the first step (' + missed + '), because every later agent built correctly on the wrong data.' : '')));
+  }catch(e){ out.replaceChildren(); $('#e-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+async function runValidate(){
+  $('#v-err').textContent = ''; $('#v-out').replaceChildren();
+  try{
+    const r = await api('/validate', {text: $('#v-text').value});
+    $('#v-out').append(r.passed ? el('span','badge b-good','Passed, risk LOW') : el('span','badge b-bad','Failed: ' + r.issues.join(', ')));
+  }catch(e){ $('#v-err').textContent = e.message; }
+}
+
+function snippet(){
+  const o = location.origin;
+  const h = apiKey ? ' -H "X-API-Key: YOUR_KEY"' : '';
+  $('#snippet').textContent =
+    'curl -X POST ' + o + '/validate -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"text": "agent output to check"}\'\n\n' +
+    'curl -X POST ' + o + '/pipeline -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"numbers": "3, 7, 2, 9", "protected": true, "inject_probability": 0.5}\'\n\n' +
+    'curl -X POST ' + o + '/experiment -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"trials": 500}\'';
+}
+
+$('#d-p').addEventListener('input', e => $('#d-p-v').textContent = e.target.value + '%');
+$('#e-p').addEventListener('input', e => $('#e-p-v').textContent = e.target.value + '%');
+$('#d-run').addEventListener('click', runDemo);
+$('#d-new').addEventListener('click', () => { $('#d-seed').value = Math.floor(Math.random() * 1000); runDemo(); });
+$('#e-run').addEventListener('click', runExperiment);
+$('#v-run').addEventListener('click', runValidate);
+$('#savekey').addEventListener('click', () => { apiKey = $('#key').value.trim(); sessionStorage.setItem('cg_key', apiKey); $('#keybox').style.display = 'none'; snippet(); llmStatus(); });
+
+async function apiGet(path){
+  const headers = {}; if(apiKey) headers['X-API-Key'] = apiKey;
+  const r = await fetch(path, {headers});
+  if(r.status === 401){ $('#keybox').style.display = 'block'; throw new Error('API key required or wrong. Enter it in the box at the top.'); }
+  if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.detail || ('Request failed (' + r.status + ')')); }
+  return r.json();
+}
+const ci = s => (!s || s.rate === null) ? 'n/a' : pct(s.rate) + ' (' + pct(s.ci[0]) + ' to ' + pct(s.ci[1]) + ', ' + s.k + '/' + s.n + ')';
+function table(headers, rows){
+  const t = el('table'); const hr = el('tr'); headers.forEach((x,i) => hr.append(el('th', i ? '' : '', x))); t.append(hr);
+  rows.forEach(r => { const tr = el('tr'); r.forEach(c => tr.append(el('td', null, c))); t.append(tr); }); return t;
+}
+function llmCfg(){
+  return {agent_trials: parseInt($('#l-agent').value||'0',10), validator_trials: parseInt($('#l-val').value||'0',10),
+          e2e_trials: parseInt($('#l-e2e').value||'0',10), hard: $('#l-hard').value === '1',
+          simulated: $('#l-sim').value === '1', confirm: $('#l-confirm').checked};
+}
+async function llmStatus(){
+  try{
+    const s = await apiGet('/llm/status');
+    $('#l-status').textContent = s.real_available
+      ? 'Real model available: ' + s.model + (s.auth_enabled ? '' : ' (but API_KEY auth is off, so real runs are blocked)') + '. Real runs are limited to ' + s.max_real_calls + ' calls.'
+      : 'No ANTHROPIC_API_KEY on this server, so only the simulated model can run. Set the key to run real models.';
+  }catch(e){ $('#l-status').textContent = e.message; }
+}
+async function llmPlan(){
+  $('#l-err').textContent = ''; const out = $('#l-out'); out.replaceChildren();
+  try{
+    const p = await api('/llm/plan', llmCfg());
+    out.append(table(['Call type','Minimum','Maximum'], Object.keys(p.calls_max).map(k => [k, String(p.calls_min[k]), String(p.calls_max[k])]).concat([['Total calls', String(p.total_min), String(p.total_max)]])));
+    out.append(el('p','note','Rough tokens: input ' + p.tokens_min.input + ' to ' + p.tokens_max.input + ', output ' + p.tokens_min.output + ' to ' + p.tokens_max.output + '. Multiply by your model\'s price per token for the cost. The maximum assumes every retry happens.'));
+  }catch(e){ $('#l-err').textContent = e.message; }
+}
+function renderLLM(rep){
+  const out = $('#l-out'); out.replaceChildren();
+  const m = rep.meta;
+  out.append(el('span', 'badge ' + (m.simulated ? 'b-warn' : 'b-good'), m.simulated ? 'SIMULATED model: this tests the pipeline, it is not a measurement of a real LLM' : 'Real model: ' + m.llm));
+  out.append(el('p','note', m.calls + ' model calls, ' + m.api_errors + ' API errors, ' + m.input_tokens + ' input and ' + m.output_tokens + ' output tokens.'));
+  if(rep.agents){
+    const a = rep.agents; out.append(el('h2', null, 'Agent accuracy on clean input'));
+    out.append(table(['Measure','Result'], [['Analyst accuracy (p1)', ci(a.analyst)], ['Trend accuracy (p2)', ci(a.trend)], ['Predicted chain accuracy p1 x p2', pct(a.product_predicted)], ['Observed chain accuracy', ci(a.joint_observed)]]));
+  }
+  if(rep.validator){
+    const v = rep.validator; out.append(el('h2', null, 'Validator: how often it flags the figures as wrong'));
+    const rows = [['False alarms on correct figures (lower is better)', ci(v.naive.false_positive), ci(v.recompute.false_positive)]];
+    ['internal','consistent'].forEach(k => ['small','medium','large'].forEach(g => rows.push(['Catches ' + k + ' error, ' + g, ci(v.naive.detection[k][g]), ci(v.recompute.detection[k][g])])));
+    out.append(table(['Case','Naive prompt','Recompute prompt'], rows));
+    out.append(el('p','note','Internal error: the figures contradict each other. Consistent error: the figures are wrong but agree with each other, so only recomputing from the numbers can catch it.'));
+  }
+  if(rep.end_to_end){
+    const e = rep.end_to_end; out.append(el('h2', null, 'End to end'));
+    const names = {no_guard:'No guard', validator_naive:'Naive validator + retry', validator_recompute:'Recompute validator + retry', oracle_reference:'Perfect validator (ceiling)'};
+    out.append(table(['Setup','Correct','Wrong, delivered silently','Halted'], Object.keys(names).map(k => [names[k], ci(e.arms[k].correct), ci(e.arms[k].wrong), ci(e.arms[k].halted)])));
+  }
+}
+async function llmRun(){
+  const btn = $('#l-run'); btn.disabled = true; $('#l-err').textContent = ''; const out = $('#l-out'); out.replaceChildren(el('span','hint','Starting…'));
+  try{
+    const {job_id} = await api('/llm/run', llmCfg());
+    while(true){
+      const j = await apiGet('/llm/jobs/' + job_id);
+      if(j.status === 'done'){ renderLLM(j.report); break; }
+      if(j.status === 'error') throw new Error(j.error);
+      out.replaceChildren(el('span','hint','Running: ' + j.calls_done + ' of up to ' + j.planned_max + ' model calls (' + j.elapsed_s + 's)…'));
+      await new Promise(r => setTimeout(r, 1200));
+    }
+  }catch(e){ out.replaceChildren(); $('#l-err').textContent = e.message; }
+  btn.disabled = false;
+}
+$('#l-plan').addEventListener('click', llmPlan);
+$('#l-run').addEventListener('click', llmRun);
+
+health(); snippet(); runDemo(); llmStatus();
+</script>
+</body>
+</html>

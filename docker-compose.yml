@@ -1,0 +1,10 @@
+services:
+  cascade-guard:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: "8000"
+      MAX_TRIALS: "2000"
+      # API_KEY: "change-me"   # uncomment to require an X-API-Key header
+    restart: unless-stopped
