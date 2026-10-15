@@ -3,3 +3,4 @@
    .pytest_cache/
    .venv/
    .env
+   llm_report.json
