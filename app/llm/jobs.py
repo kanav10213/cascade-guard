@@ -4,7 +4,7 @@ import time
 import uuid
 
 from app.llm.client import get_client
-from app.llm.experiments import plan, run_all
+from app.llm.experiments import plan, run_repeated
 
 _JOBS: dict = {}
 _LOCK = threading.Lock()
@@ -24,7 +24,7 @@ def submit(cfg: dict, simulated: bool) -> str:
 
     def work():
         try:
-            job["report"] = run_all(client, cfg)
+            job["report"] = run_repeated(client, cfg)
             job["status"] = "done"
         except Exception as e:  # report any failure to the poller
             job["error"] = f"{type(e).__name__}: {e}"

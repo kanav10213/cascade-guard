@@ -107,6 +107,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
     <label>Agent trials<input id="l-agent" type="number" value="40" min="0" style="width:90px"></label>
     <label>Validator trials per cell<input id="l-val" type="number" value="15" min="0" style="width:90px"></label>
     <label>End-to-end trials<input id="l-e2e" type="number" value="40" min="0" style="width:90px"></label>
+    <label>Repeats<input id="l-rep" type="number" value="1" min="1" max="10" style="width:70px"></label>
     <label>Numbers<select id="l-hard"><option value="0">short and easy</option><option value="1">long and hard</option></select></label>
     <label>Model<select id="l-sim"><option value="1">Simulated (free)</option><option value="0">Real model (costs money)</option></select></label>
   </div>
@@ -232,6 +233,7 @@ async function runExperiment(){
     out.append(el('p','note', 'Out of ' + base.trials + ' orders, ' + full.baseline.injected_trials + ' had at least one fault injected. ' +
       'The full guard detected ' + full.detected_errors + ' failing steps and repaired ' + full.recovered_errors + ' by re-running them; the rest were halted instead of delivered. ' +
       (missed ? 'The consistency-only guard missed faults that entered at the first step (' + missed + '), because every later agent built correctly on the wrong data.' : '')));
+    out.append(dlButton('experiment_report.json', {full, invariants: inv}));
   }catch(e){ out.replaceChildren(); $('#e-err').textContent = e.message; }
   btn.disabled = false;
 }
@@ -268,14 +270,26 @@ async function apiGet(path){
   if(!r.ok){ const j = await r.json().catch(() => ({})); throw new Error(j.detail || ('Request failed (' + r.status + ')')); }
   return r.json();
 }
-const ci = s => (!s || s.rate === null) ? 'n/a' : pct(s.rate) + ' (' + pct(s.ci[0]) + ' to ' + pct(s.ci[1]) + ', ' + s.k + '/' + s.n + ')';
+const ci = s => {
+  if(!s || s.rate === null) return 'n/a';
+  let t = pct(s.rate) + ' (' + pct(s.ci[0]) + ' to ' + pct(s.ci[1]) + ', ' + s.k + '/' + s.n + ')';
+  const runs = (s.repeat_rates || []).filter(x => x !== null);
+  if(runs.length > 1) t += ' | runs ' + pct(Math.min(...runs)) + ' to ' + pct(Math.max(...runs));
+  return t;
+};
+function downloadJSON(name, obj){
+  const blob = new Blob([JSON.stringify(obj, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function dlButton(name, obj){ const b = el('button', 'ghost', 'Download results (JSON)'); b.style.marginTop = '10px'; b.addEventListener('click', () => downloadJSON(name, obj)); return b; }
 function table(headers, rows){
   const t = el('table'); const hr = el('tr'); headers.forEach((x,i) => hr.append(el('th', i ? '' : '', x))); t.append(hr);
   rows.forEach(r => { const tr = el('tr'); r.forEach(c => tr.append(el('td', null, c))); t.append(tr); }); return t;
 }
 function llmCfg(){
   return {agent_trials: parseInt($('#l-agent').value||'0',10), validator_trials: parseInt($('#l-val').value||'0',10),
-          e2e_trials: parseInt($('#l-e2e').value||'0',10), hard: $('#l-hard').value === '1',
+          e2e_trials: parseInt($('#l-e2e').value||'0',10), repeats: parseInt($('#l-rep').value||'1',10), hard: $('#l-hard').value === '1',
           simulated: $('#l-sim').value === '1', confirm: $('#l-confirm').checked};
 }
 async function llmStatus(){
@@ -299,6 +313,8 @@ function renderLLM(rep){
   const m = rep.meta;
   out.append(el('span', 'badge ' + (m.simulated ? 'b-warn' : 'b-good'), m.simulated ? 'SIMULATED model: this tests the pipeline, it is not a measurement of a real LLM' : 'Real model: ' + m.llm));
   out.append(el('p','note', m.calls + ' model calls, ' + m.api_errors + ' API errors, ' + m.input_tokens + ' input and ' + m.output_tokens + ' output tokens.'));
+  if(m.repeats > 1) out.append(el('p','note','Combined from ' + m.repeats + ' repeated runs (seeds ' + m.seeds.join(', ') + '). Each cell shows the pooled result, its 95% interval, and the lowest and highest single run.'));
+  out.append(dlButton('llm_report.json', rep));
   if(rep.agents){
     const a = rep.agents; out.append(el('h2', null, 'Agent accuracy on clean input'));
     out.append(table(['Measure','Result'], [['Analyst accuracy (p1)', ci(a.analyst)], ['Trend accuracy (p2)', ci(a.trend)], ['Predicted chain accuracy p1 x p2', pct(a.product_predicted)], ['Observed chain accuracy', ci(a.joint_observed)]]));

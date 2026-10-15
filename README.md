@@ -18,13 +18,15 @@ Every agent output is validated before the next agent runs. On failure the stage
 - `full` mode: adds a source check of the first stage against the raw input.
 
 ## Run it
+Package versions are pinned in `requirements.txt` and `requirements-dev.txt`, and the tests pass with exactly those versions.
+
 **Windows:** double-click `start.bat` (needs Python installed, "Add to PATH" ticked). **Mac/Linux:** `./start.sh`.
 Your browser opens the dashboard at http://localhost:8000.
 
 Or by hand:
 ```bash
 py -m pip install -r requirements-dev.txt     # Windows (use python3 on Mac/Linux)
-py -m pytest -q                                # 31 tests
+py -m pytest -q                                # 39 tests
 py -m uvicorn app.api:app                      # dashboard + API on http://localhost:8000
 py -m experiments.compare                      # optional: writes report.json from the command line
 ```
@@ -52,12 +54,19 @@ SIMULATED. Its numbers are not measurements of a real LLM.
 ```bash
 py -m experiments.llm_eval --simulated
 ```
+**Step 1 for any real run: the one-call check.** It sends a single tiny request (a fraction of a cent) and tells you
+in plain words whether your key, model name and the model's reply format all work, with a hint if not:
+```powershell
+$env:ANTHROPIC_API_KEY = "your-key"
+py -m experiments.llm_eval --check
+```
 Real run (PowerShell). It prints the plan and number of calls, then asks you to type `yes` before spending anything:
 ```powershell
 $env:ANTHROPIC_API_KEY = "your-key"
 py -m experiments.llm_eval --price-in 1 --price-out 5 --hard     # use YOUR model's prices per million tokens
 ```
-Options: `--model` (or `CG_MODEL`, default `claude-haiku-5-5`), `--hard` (longer lists and bigger numbers, so real models
+Options: `--repeats 3` (run everything 3 times with different seeds, pool the counts, and show the lowest and highest single run),
+`--model` (or `CG_MODEL`, default `claude-haiku-5-5`), `--hard` (longer lists and bigger numbers, so real models
 make more natural errors), `--inject 0.1` (add injected faults on top), `--retries`, `--seed`, `--parts agents validator e2e`.
 Start small: the default plan is roughly 450 to 1100 calls. Results are written to `llm_report.json`.
 

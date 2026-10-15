@@ -108,6 +108,7 @@ class LLMRunRequest(BaseModel):
     inject: float = Field(0.0, ge=0, le=1)
     seed: int = 42
     workers: int = Field(4, ge=1, le=8)
+    repeats: int = Field(1, ge=1, le=10, description="run the whole evaluation this many times and combine")
     parts: list[Literal["agents", "validator", "e2e"]] = list(PARTS)
     simulated: bool = True
     confirm: bool = False

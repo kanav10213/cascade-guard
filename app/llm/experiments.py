@@ -28,7 +28,7 @@ PARTS = ("agents", "validator", "e2e")
 # rough (input, output) tokens per call, used only for the pre-run estimate
 TOKENS = {"analyst": (190, 45), "trend": (170, 12), "validator_naive": (190, 40), "validator_recompute": (210, 130)}
 DEFAULTS = {"agent_trials": 40, "validator_trials": 15, "e2e_trials": 40, "hard": False,
-            "retries": 2, "inject": 0.0, "seed": 42, "workers": 4, "parts": PARTS}
+            "retries": 2, "inject": 0.0, "seed": 42, "workers": 4, "repeats": 1, "parts": PARTS}
 
 
 def norm(cfg):
@@ -63,6 +63,10 @@ def plan(cfg):
         mx["trend"] += n * r * 3
         for s in STYLES:
             mx["validator_" + s] += n * r
+
+    for d in both:
+        for k in d:
+            d[k] *= c["repeats"]
 
     def tokens(d):
         return {"input": sum(d[k] * TOKENS[k][0] for k in d), "output": sum(d[k] * TOKENS[k][1] for k in d)}
@@ -232,3 +236,40 @@ def run_all(client, cfg):
                       "retries": c["retries"], "inject": c["inject"], "calls": u.calls, "api_errors": u.errors,
                       "input_tokens": u.input_tokens, "output_tokens": u.output_tokens}
     return report
+
+
+def _is_stat(x):
+    return isinstance(x, dict) and {"k", "n", "rate", "ci"} <= set(x)
+
+
+def merge(items):
+    """Combine several identical-shaped reports: counts are pooled (so the Wilson interval
+    uses all trials) and each rate keeps its per-run values so the spread is visible."""
+    first = items[0]
+    if _is_stat(first):
+        s = stat(sum(i["k"] for i in items), sum(i["n"] for i in items))
+        s["repeat_rates"] = [i["rate"] for i in items]
+        return s
+    if isinstance(first, dict):
+        return {key: merge([i[key] for i in items]) for key in first}
+    if isinstance(first, (bool, str)):
+        return first
+    if isinstance(first, int):
+        return sum(items)
+    if isinstance(first, float):
+        return round(sum(items) / len(items), 4)
+    return first
+
+
+def run_repeated(client, cfg):
+    """Run the evaluation `repeats` times with seeds seed, seed+1, ... and combine."""
+    c = norm(cfg)
+    n = c["repeats"]
+    if n <= 1:
+        return run_all(client, c)
+    reports = [run_all(client, {**c, "seed": c["seed"] + i}) for i in range(n)]
+    merged = merge([{k: v for k, v in r.items() if k != "meta"} for r in reports])
+    meta = dict(reports[-1]["meta"])   # usage counters are cumulative on the client
+    meta.update({"repeats": n, "seed": c["seed"], "seeds": [c["seed"] + i for i in range(n)]})
+    merged["meta"] = meta
+    return merged

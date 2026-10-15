@@ -192,3 +192,75 @@ def test_real_runs_are_guarded(monkeypatch):
     assert api.post("/llm/run", json={**body, "confirm": False}, headers=h).status_code == 422   # not confirmed
     monkeypatch.setenv("LLM_MAX_CALLS", "5")
     assert api.post("/llm/run", json=body, headers=h).status_code == 422                        # over the cap
+
+
+# ---------- repeats, spread and the one-call check
+import argparse
+
+from app.llm.experiments import merge, run_repeated
+from experiments import llm_eval
+
+
+def test_repeats_pool_counts_and_keep_the_spread():
+    r = run_repeated(FakeLLM(seed=7), {**CFG, "repeats": 3, "parts": ["agents"]})
+    a = r["agents"]["analyst"]
+    assert a["n"] == 3 * CFG["agent_trials"]
+    assert len(a["repeat_rates"]) == 3
+    assert r["meta"]["repeats"] == 3 and r["meta"]["seeds"] == [7, 8, 9]
+    assert r["meta"]["calls"] == plan({**CFG, "repeats": 3, "parts": ["agents"]})["total_min"]
+
+
+def test_one_repeat_is_just_a_normal_run():
+    a = run_repeated(FakeLLM(seed=7), {**CFG, "repeats": 1})
+    b = run_all(FakeLLM(seed=7), CFG)
+    a["meta"].pop("calls"), b["meta"].pop("calls")
+    assert a == b
+
+
+def test_plan_scales_with_repeats():
+    assert plan({**CFG, "repeats": 3})["total_max"] == 3 * plan(CFG)["total_max"]
+    assert plan({**CFG, "repeats": 3})["tokens_max"]["input"] == 3 * plan(CFG)["tokens_max"]["input"]
+
+
+def test_merge_pools_counts_and_sums_integers():
+    one = {"x": stat(3, 10), "n": 2, "f": 0.5, "s": "a"}
+    two = {"x": stat(5, 10), "n": 3, "f": 0.7, "s": "a"}
+    m = merge([one, two])
+    assert (m["x"]["k"], m["x"]["n"]) == (8, 20) and m["x"]["repeat_rates"] == [0.3, 0.5]
+    assert m["n"] == 5 and m["f"] == 0.6 and m["s"] == "a"
+
+
+def test_check_command_simulated(capsys):
+    assert llm_eval.check(argparse.Namespace(simulated=True, model=None, seed=1)) == 0
+    out = capsys.readouterr().out
+    assert "ONE test request" in out and "only tests the code" in out
+
+
+def test_check_command_explains_failures(monkeypatch, capsys):
+    class Bad(FakeLLM):
+        def complete(self, system, user):
+            raise LLMError("HTTP 404: model: not_found")
+
+    monkeypatch.setattr(llm_eval, "get_client", lambda **k: Bad())
+    assert llm_eval.check(argparse.Namespace(simulated=False, model="x", seed=1)) == 1
+    assert "--model" in capsys.readouterr().out
+
+    class Chatty(FakeLLM):
+        def complete(self, system, user):
+            return "Sure, the answer is 21."
+
+    monkeypatch.setattr(llm_eval, "get_client", lambda **k: Chatty())
+    assert llm_eval.check(argparse.Namespace(simulated=False, model=None, seed=1)) == 1
+    assert "not JSON" in capsys.readouterr().out
+
+
+def test_check_command_without_a_key(monkeypatch, capsys):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert llm_eval.check(argparse.Namespace(simulated=False, model=None, seed=1)) == 1
+    assert "ANTHROPIC_API_KEY" in capsys.readouterr().out
+
+
+def test_api_accepts_and_scales_repeats():
+    one = api.post("/llm/plan", json={}).json()["total_max"]
+    assert api.post("/llm/plan", json={"repeats": 2}).json()["total_max"] == 2 * one
+    assert api.post("/llm/plan", json={"repeats": 11}).status_code == 422
