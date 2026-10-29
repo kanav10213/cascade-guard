@@ -68,12 +68,12 @@ class ExperimentRequest(BaseModel):
 STATIC = Path(__file__).parent / "static"
 
 
-@app.get("/", include_in_schema=False)
+@app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def dashboard():
     return FileResponse(STATIC / "index.html")
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok", "version": __version__}
 

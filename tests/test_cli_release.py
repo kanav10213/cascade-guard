@@ -279,3 +279,8 @@ def test_home_flag_anywhere(in_tmp, tmp_path):
     os.chdir(in_tmp)
     assert cli.main(["compare", "--trials", "10", "--home", str(target)]) == 0
     assert (target / "report.json").is_file()
+
+
+def test_head_requests_for_uptime_monitors():
+    c = TestClient(app)
+    assert c.head("/").status_code == 200 and c.head("/health").status_code == 200
