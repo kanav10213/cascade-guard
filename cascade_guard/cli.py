@@ -162,7 +162,11 @@ def cmd_chain(args) -> int:
     from cascade_guard.llm.client import FakeLLMClient, make_client
     client = make_client(max_cost=float(os.getenv("LLM_MAX_COST", "1.0")), cache_path=None,
                          strict_prices=False) if args.real else FakeLLMClient()
-    result = run_chain_def(chain, text, client, inject=args.inject, seed=args.seed)
+    from cascade_guard.agent_call import AgentCallError
+    try:
+        result = run_chain_def(chain, text, client, inject=args.inject, seed=args.seed)
+    except AgentCallError as e:
+        raise SystemExit(f"Could not use your agent: {e}") from e
     if args.json:
         print(_json.dumps(result, indent=2, default=str))
     else:

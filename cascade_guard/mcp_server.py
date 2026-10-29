@@ -162,6 +162,7 @@ def run_agent_chain(chain: str, input: str, simulated: bool = False) -> dict:
     Returns every step's attempts, verdicts and outputs; a stopped run goes to the review queue."""
     import json as _json
 
+    from cascade_guard.agent_call import AgentCallError
     from cascade_guard.chains import ChainDef, run_chain_def
     from cascade_guard.chains_api import TEMPLATES
     store = get_store()
@@ -182,6 +183,8 @@ def run_agent_chain(chain: str, input: str, simulated: bool = False) -> dict:
         from cascade_guard.llm.client import FakeLLMClient
         client = FakeLLMClient() if simulated else _llm()
         result = run_chain_def(ChainDef.model_validate(definition), input, client)
+    except AgentCallError as e:
+        return {"error": str(e)}
     except NotConfigured as e:
         return {"error": f"No model configured: {e}"}
     except (BudgetExceeded, LLMCallError) as e:

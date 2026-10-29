@@ -10,6 +10,11 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   LangGraph graph built from the definition, with check, guided retry and safe stop on every step; they are saved in
   a new `chains` table (SQLite and PostgreSQL), exported and imported as JSON, and can plant test mistakes to show
   the guard at work. Three starter templates.
+- Integrate your own agents: a chain step can be done by your agent at a URL (any language), with the same
+  check, guided retry and safe stop; an optional bearer token read from a server environment variable; URL
+  safety rules (no link-local or metadata addresses; private addresses only on your own computer or with
+  `AGENT_ALLOW_PRIVATE=1`). A sample agent at `/demo/agent`, `cascade_guard.remote.RemoteGuard` to use a
+  deployed server from Python, runnable examples in `examples/`, and the guide `INTEGRATION.md`.
 - `HEAD` on `/` and `/health` for uptime monitors.
 
 ## [1.0.0] - 2026-10-29

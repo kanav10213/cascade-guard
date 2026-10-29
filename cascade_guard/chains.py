@@ -1,7 +1,8 @@
 """User-defined agent chains: build your own multi-step agent, with the guard on every step.
 
-A chain is data, not code. Each step has a name, an instruction for the model, an output format
-(plain text, or JSON with named keys) and a check:
+A chain is data, not code. Each step has a name, an instruction, who does it (the configured
+model, or your own agent at a URL: see agent_call.py), an output format (plain text, or JSON with
+named keys) and a check:
 
     model    the reply's format, then the LLM checker: is this output a correct result of the
              instruction on this input? (plus any extra acceptance criteria you write)
@@ -58,6 +59,10 @@ class StepDef(BaseModel):
     check: Literal["model", "format", "none"] = "model"
     criteria: str = Field("", max_length=1000, description="extra acceptance criteria for the model checker")
     max_chars: int | None = Field(None, ge=1, le=20_000, description="longest acceptable text output")
+    agent: Literal["model", "url"] = Field("model", description="model: the configured model; url: your own agent")
+    url: str = Field("", max_length=2000, description="your agent's HTTP endpoint (agent=url)")
+    auth_env: str = Field("", max_length=64, description="server environment variable that holds the agent's bearer token")
+    timeout: float | None = Field(None, gt=0, le=300, description="seconds to wait for your agent (default 60)")
 
     @field_validator("name")
     @classmethod
@@ -91,6 +96,14 @@ class StepDef(BaseModel):
             raise ValueError(f"step {self.name!r} returns JSON, so give at least one key")
         if self.output == "text":
             self.keys = []
+        if self.agent == "url":
+            if not self.url.strip().lower().startswith(("http://", "https://")):
+                raise ValueError(f"step {self.name!r} is done by your agent, so give its URL (http:// or https://)")
+            self.url = self.url.strip()
+            if self.auth_env and not re.match(r"^[A-Z_][A-Z0-9_]{0,63}$", self.auth_env):
+                raise ValueError("auth_env is the NAME of an environment variable, like MY_AGENT_TOKEN, not the token")
+        else:
+            self.url, self.auth_env, self.timeout = "", "", None
         return self
 
 
@@ -159,7 +172,7 @@ def format_problem(step: StepDef, out) -> str | None:
 
 
 def checker_task(step: StepDef) -> str:
-    t = f"Step \"{step.name}\": {step.instruction}"
+    t = f"Step \"{step.name}\"{' (external agent)' if step.agent == 'url' else ''}: {step.instruction}"
     if step.criteria:
         t += f"\nAlso check these acceptance criteria: {step.criteria}"
     if step.output == "json":
@@ -193,7 +206,8 @@ class ChainState(TypedDict, total=False):
 
 
 def build_chain_graph(chain: ChainDef, client, *, inject: float = 0.0, seed: int = 0,
-                      max_retries: int | None = None, repair: str | None = None, log: list | None = None):
+                      max_retries: int | None = None, repair: str | None = None, log: list | None = None,
+                      http_client=None):
     """A LangGraph StateGraph built from the definition: one guarded node per step."""
     from langgraph.graph import END, START, StateGraph
 
@@ -213,16 +227,21 @@ def build_chain_graph(chain: ChainDef, client, *, inject: float = 0.0, seed: int
 
         def node(state, attempt=0, feedback=None, step=step, get_source=get_source):
             src = get_source(state)
-            system, user = step_messages(step, src, state["input"], feedback if guided else None)
-            resp = client.complete(system, user, max_tokens=AGENT_MAX_TOKENS, sample=attempt,
-                                   temperature=0.0 if attempt == 0 else 1.0, purpose=f"chain:{step.name}")
-            out = parse_step_reply(step, resp.text)
+            if step.agent == "url":
+                from cascade_guard.agent_call import call_agent
+                out = call_agent(step, src, state["input"], attempt, feedback if guided else None, http_client)
+                reply = json.dumps(out, default=str) if out is not None else "(no usable output)"
+            else:
+                system, user = step_messages(step, src, state["input"], feedback if guided else None)
+                resp = client.complete(system, user, max_tokens=AGENT_MAX_TOKENS, sample=attempt,
+                                       temperature=0.0 if attempt == 0 else 1.0, purpose=f"chain:{step.name}")
+                out, reply = parse_step_reply(step, resp.text), resp.text
             injected = None
             if attempt == 0 and inject > 0:
                 rng = random.Random(f"{seed}|{step.name}|{json.dumps(src, default=str)}")
                 if rng.random() < inject:
                     out, injected = inject_fault(step, out, rng)
-            log.append({"step": step.name, "attempt": attempt, "injected": injected, "reply": resp.text[:2000]})
+            log.append({"step": step.name, "attempt": attempt, "injected": injected, "reply": reply[:2000]})
             return {"outputs": {step.name: out}, "current": out}
 
         def check(out, src, step=step):
@@ -254,7 +273,8 @@ def mermaid(chain: ChainDef) -> str:
     prev = "start"
     for i, s in enumerate(chain.steps):
         label = s.name.replace('"', "'")
-        lines.append(f'  s{i}["{label}<br/><small>check: {s.check}</small>"]')
+        who = "your agent" if s.agent == "url" else "model"
+        lines.append(f'  s{i}["{label}<br/><small>{who} · check: {s.check}</small>"]')
         lines.append(f"  {prev} --> s{i}")
         if s.check != "none":
             lines.append(f"  s{i} -. rejected, retry .-> s{i}")
@@ -265,10 +285,12 @@ def mermaid(chain: ChainDef) -> str:
 
 
 def run_chain_def(chain: ChainDef, input_text: str, client, *, inject: float = 0.0, seed: int = 0,
-                  max_retries: int | None = None, repair: str | None = None) -> dict:
-    """Run a chain on one input. status: completed | halted. Includes every attempt and verdict."""
+                  max_retries: int | None = None, repair: str | None = None, http_client=None) -> dict:
+    """Run a chain on one input. status: completed | halted. Includes every attempt and verdict.
+    http_client: an httpx.Client for steps done by your own agent (tests pass a stand-in)."""
     before = client.usage.as_dict()
-    graph, log = build_chain_graph(chain, client, inject=inject, seed=seed, max_retries=max_retries, repair=repair)
+    graph, log = build_chain_graph(chain, client, inject=inject, seed=seed, max_retries=max_retries, repair=repair,
+                                   http_client=http_client)
     state = graph.invoke({"input": input_text, "outputs": {}, "trace": []},
                          {"recursion_limit": 4 * len(chain.steps) + 10})
     after = client.usage.as_dict()

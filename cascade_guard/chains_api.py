@@ -9,9 +9,13 @@
     GET    /chains/{id}/graph      the chain as a Mermaid diagram (viewer)
     POST   /chains/{id}/run        run a saved chain on an input
     POST   /chains/run             run a definition without saving it (try before you save)
+    POST   /demo/agent             a tiny sample "outside agent" to try steps done by your own agent
+
+A step can be done by the configured model or by your own agent at a URL (see agent_call.py).
 
 Runs on the simulated model are free and open to any key; runs on the configured model need an
-admin key and share the per-minute limit of the other model routes. Every run is saved with its
+admin key, and so does running an unsaved definition that calls outside agents (a saved chain's agent
+URLs were set by an admin) and share the per-minute limit of the other model routes. Every run is saved with its
 steps and verdicts, and a stopped run goes to the review queue.
 """
 import json
@@ -121,11 +125,14 @@ def _client(opts: RunOptions, role: str, key: str):
 
 
 def _run(chain: ChainDef, opts: RunOptions, role: str, key: str, chain_id: int | None = None):
+    from cascade_guard.agent_call import AgentCallError
     from cascade_guard.llm.client import BudgetExceeded, LLMCallError
     client = _client(opts, role, key)
     try:
         result = run_chain_def(chain, opts.input, client, inject=opts.inject, seed=opts.seed,
                                max_retries=opts.max_retries, repair=opts.repair)
+    except AgentCallError as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
     except BudgetExceeded as e:
         raise HTTPException(status_code=429, detail=f"LLM limit for this server run reached: {e}") from e
     except LLMCallError as e:
@@ -159,4 +166,38 @@ def run_saved(chain_id: int, opts: RunOptions, role: str = Depends(require("view
 @router.post("/chains/run")
 def run_adhoc(body: AdhocRun, role: str = Depends(require("viewer")),
               req_key: str = Header(default="", alias="X-API-Key")):
+    if any(s.agent == "url" for s in body.chain.steps):
+        ensure(role, "admin")  # an unsaved definition must not make the server call any URL a viewer picks
     return _run(body.chain, body, role, req_key)
+
+
+# ---------------------------------------------------------------- a sample outside agent
+
+class AgentRequest(BaseModel):
+    step: str = ""
+    instruction: str = ""
+    output: str = "text"
+    keys: list[str] = Field(default_factory=list, max_length=12)
+    input: object = None
+    original: str = ""
+    attempt: int = 0
+    feedback: dict | None = None
+
+
+@router.post("/demo/agent", tags=["demo"])
+def demo_agent(req: AgentRequest, mistakes: float = 0.0):
+    """A deliberately simple outside agent that speaks the agent protocol, so you can try a step done by
+    "your agent" right away (URL: this server's /demo/agent). It answers with the first two sentences of
+    its input. With ?mistakes=0.5 its first answer is empty half of the time, so you can watch the guard
+    catch it and retry; told what was wrong (feedback), it always answers properly."""
+    import random as _random
+    import re as _re
+    text = req.input if isinstance(req.input, str) else json.dumps(req.input, default=str)
+    sentences = [x.strip() for x in _re.split(r"(?<=[.!?])\s+", " ".join(text.split())) if x.strip()]
+    answer = " ".join(sentences[:2]) or text[:300]
+    rng = _random.Random(f"{req.step}|{text}|{req.attempt}")
+    if req.attempt == 0 and not req.feedback and rng.random() < max(0.0, min(1.0, mistakes)):
+        answer = ""
+    if req.output == "json":
+        return {"output": {k: answer for k in req.keys}}
+    return {"output": answer}

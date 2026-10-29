@@ -240,7 +240,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 </div>
 <div class="card" id="builder">
   <h2>9. Build your own agent chain</h2>
-  <p class="hint">Design your own multi-step agent: give each step an instruction for the model, choose what it returns and how it is checked. Every step works on the previous step's output, is checked before the next step uses it, is retried with the reason when it is wrong, and stops the chain safely if it stays wrong. Nothing here is fixed: chains are saved in the database and run on LangGraph, built from your definition.</p>
+  <p class="hint">Design your own multi-step agent, or plug in agents you already have: each step is done by the model or by <b>your own agent at a URL</b>. Give each step an instruction, choose what it returns and how it is checked. Every step works on the previous step's output, is checked before the next step uses it, is retried with the reason when it is wrong, and stops the chain safely if it stays wrong. Nothing here is fixed: chains are saved in the database and run on LangGraph, built from your definition.</p>
   <div class="row">
     <label>Saved chains<select id="cb-saved"><option value="">(none yet)</option></select></label>
     <button class="ghost" id="cb-load">Open</button>
@@ -738,14 +738,15 @@ $('#ev-json').addEventListener('click', () => download(evalName('json'), JSON.st
 $('#ev-md').addEventListener('click', () => download(evalName('md'), evalJob.markdown, 'text/markdown'));
 // ---------------------------------------------------------------- build your own agent chain
 const CB = {steps: [], id: null, saved: [], templates: [], lastResult: null};
-function cbBlankStep(i){ return {name: 'step ' + (i + 1), instruction: '', output: 'text', keys: [], check: 'model', criteria: '', max_chars: null}; }
+function cbBlankStep(i){ return {name: 'step ' + (i + 1), instruction: '', output: 'text', keys: [], check: 'model', criteria: '', max_chars: null,
+                                  agent: 'model', url: '', auth_env: '', timeout: null}; }
 function cbOpt(sel, value, label){ const o = document.createElement('option'); o.value = value; o.textContent = label; sel.append(o); return o; }
 function cbSelect(options, value){ const s = document.createElement('select'); for(const [v, l] of options) cbOpt(s, v, l); s.value = value; return s; }
 function cbLabel(text, control, flex){ const l = el('label'); if(flex) l.style.flex = flex; l.append(text, control); return l; }
 
 function cbRenderFlow(){
   const f = $('#cb-flow'); f.replaceChildren(el('span', null, 'input'));
-  CB.steps.forEach(s => { f.append(el('span', null, '→'), el('span', 'n', (s.name || '?') + (s.check === 'none' ? '' : ' ✓'))); });
+  CB.steps.forEach(s => { f.append(el('span', null, '→'), el('span', 'n', (s.agent === 'url' ? '⇄ ' : '') + (s.name || '?') + (s.check === 'none' ? '' : ' ✓'))); });
   f.append(el('span', null, '→'), el('span', null, 'output'));
 }
 function cbRender(){
@@ -781,7 +782,28 @@ function cbRender(){
     maxc.value = s.max_chars || ''; maxc.addEventListener('input', () => { s.max_chars = maxc.value ? Number(maxc.value) : null; });
     const row = el('div', 'row'); row.style.marginTop = '8px';
     row.append(cbLabel('Returns', out), keysL, cbLabel('Check', check), critL, cbLabel('Max characters', maxc));
-    card.append(head, cbLabel('Instruction', instr), row);
+    // who does the step: the configured model, or the user's own agent at a URL
+    const who = cbSelect([['model', 'the model'], ['url', 'your agent (URL)']], s.agent || 'model');
+    const url = el('input'); url.value = s.url || ''; url.placeholder = 'https://my-agent.example.com/agent'; url.maxLength = 2000;
+    url.addEventListener('input', () => { s.url = url.value.trim(); });
+    const tok = el('input'); tok.value = s.auth_env || ''; tok.placeholder = 'e.g. MY_AGENT_TOKEN (optional)'; tok.maxLength = 64;
+    tok.title = 'The NAME of an environment variable on this server that holds the token, never the token itself';
+    tok.addEventListener('input', () => { s.auth_env = tok.value.trim(); });
+    const tmo = el('input'); tmo.type = 'number'; tmo.min = 1; tmo.max = 300; tmo.style.width = '80px'; tmo.placeholder = '60';
+    tmo.value = s.timeout || ''; tmo.addEventListener('input', () => { s.timeout = tmo.value ? Number(tmo.value) : null; });
+    const demo = el('button', 'ghost mini', 'Use the sample agent');
+    demo.title = "Fills in this server's built-in sample agent, which makes a mistake half of the time";
+    demo.addEventListener('click', () => { url.value = location.origin + '/demo/agent?mistakes=0.5'; s.url = url.value; });
+    const agentRow = el('div', 'row'); agentRow.style.marginTop = '8px';
+    agentRow.append(cbLabel('Server URL of your agent', url, '3'), cbLabel('Token variable', tok, '1'), cbLabel('Timeout (s)', tmo), demo);
+    const agentNote = el('p', 'hint', 'Cascade Guard sends your agent a POST with the instruction, the input and, on a retry, the reason the last answer was rejected; '
+      + 'it replies {"output": ...}. See INTEGRATION.md for the format and a ready-made agent server.');
+    agentNote.style.margin = '6px 0 0';
+    const showAgent = () => { const on = who.value === 'url'; agentRow.style.display = on ? '' : 'none'; agentNote.style.display = on ? '' : 'none'; };
+    who.addEventListener('change', () => { s.agent = who.value; showAgent(); cbRenderFlow(); });
+    row.prepend(cbLabel('Done by', who));
+    showAgent();
+    card.append(head, cbLabel('Instruction', instr), row, agentRow, agentNote);
     box.append(card);
   });
   $('#cb-add').disabled = CB.steps.length >= 10;
@@ -792,14 +814,17 @@ function cbDefinition(){
           max_retries: Number($('#cb-retries').value || 0), repair: $('#cb-repair').value,
           steps: CB.steps.map(s => ({name: s.name, instruction: s.instruction, output: s.output,
                                      keys: s.output === 'json' ? s.keys : [], check: s.check,
-                                     criteria: s.check === 'model' ? (s.criteria || '') : '', max_chars: s.max_chars || null}))};
+                                     criteria: s.check === 'model' ? (s.criteria || '') : '', max_chars: s.max_chars || null,
+                                     agent: s.agent || 'model', url: s.agent === 'url' ? (s.url || '') : '',
+                                     auth_env: s.agent === 'url' ? (s.auth_env || '') : '', timeout: s.agent === 'url' ? (s.timeout || null) : null}))};
 }
 function cbLoad(def, id){
   CB.id = id || null;
   $('#cb-name').value = def.name || ''; $('#cb-desc').value = def.description || '';
   $('#cb-retries').value = def.max_retries ?? 2; $('#cb-repair').value = def.repair || 'guided';
   CB.steps = (def.steps || []).map(s => ({name: s.name, instruction: s.instruction, output: s.output || 'text', keys: s.keys || [],
-                                          check: s.check || 'model', criteria: s.criteria || '', max_chars: s.max_chars || null}));
+                                          check: s.check || 'model', criteria: s.criteria || '', max_chars: s.max_chars || null,
+                                          agent: s.agent || 'model', url: s.url || '', auth_env: s.auth_env || '', timeout: s.timeout || null}));
   if(!CB.steps.length) CB.steps.push(cbBlankStep(0));
   $('#cb-delete').style.display = CB.id ? '' : 'none';
   $('#cb-saved-note').textContent = CB.id ? 'Editing saved chain #' + CB.id : 'Not saved yet';

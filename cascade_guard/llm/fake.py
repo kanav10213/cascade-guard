@@ -121,6 +121,14 @@ class SimulatedLLM:
     def _validate_chain_step(self, system, data, recompute, rng):
         m = CHAIN_TASK.search(system)
         step = m.group(1)
+        if m.group(2):  # an external agent: the simulator cannot know its right answer
+            out = data["output"]
+            text = out if isinstance(out, str) else json.dumps(out, default=str)
+            bad = not text.strip() or text.strip().lower() in ("n/a", "none", "null", "(not found)")
+            verdict = ({"verdict": "reject", "reason": "the output has no real content"} if bad else
+                       {"verdict": "accept", "reason": "simulated checker: the answer has content (it cannot judge "
+                                                       "correctness of an outside agent)"})
+            return json.dumps(verdict)
         km = CHAIN_KEYS.search(system)
         keys = [k.strip() for k in km.group(1).split(",")] if km else []
         out = data["output"]
@@ -175,7 +183,7 @@ class SimulatedLLM:
         return json.dumps(verdict)
 
 
-CHAIN_TASK = re.compile(r'Step "(.+?)": ')
+CHAIN_TASK = re.compile(r'Step "(.+?)"( \(external agent\))?: ')
 CHAIN_KEYS = re.compile(r"The output is JSON with the keys (.+?)\.(?:\n|$)")
 
 

@@ -14,4 +14,9 @@ safely and goes to the review queue if a step stays wrong. Chains run on LangGra
 - Also from the command line (`cascade-guard chain run ...`), the API (`/chains`) and AI assistants (MCP
   `run_agent_chain`)
 
+Also new: **integrate the agents you already have.** A chain step can be done by your own agent at a URL, in any
+language or framework; Cascade Guard sends it the instruction and input, checks its answer, retries it with the
+reason, and stops the chain safely if it stays wrong. Ready-to-run examples (an agent server, guarding an agent
+inside Python, guarding a LangGraph agent) and a step-by-step guide: INTEGRATION.md.
+
 Get it: `pip install --upgrade cascade-guard-ai`. Full list: CHANGELOG.md

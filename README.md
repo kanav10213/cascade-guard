@@ -12,7 +12,10 @@ A wrong answer is never passed on silently.
 
 - **Build your own agent, no code:** design a multi-step agent chain on the dashboard (instructions, output
   format, checks per step), save it, and run it with the guard on every step.
-- **Drop-in for your code:** wrap any Python step or LangGraph node with `guard_step` / `guarded_node`.
+- **Plug in the agents you already have:** any agent with an HTTP endpoint, in any language, can be a step in a
+  chain; Cascade Guard checks it, retries it with the reason and stops it safely. See [INTEGRATION.md](https://github.com/kanav10213/cascade-guard/blob/main/INTEGRATION.md).
+- **Drop-in for your code:** wrap any Python step or LangGraph node with `guard_step` / `guarded_node`, checked
+  locally or by your deployed server (`cascade_guard.remote.RemoteGuard`).
 - **A service for everything else:** a REST API that checks any agent output against its source, plus a dashboard.
 - **Inside AI assistants:** an MCP server for Claude Desktop, Claude Code and other MCP-capable tools.
 - **Measurable:** fault injection and paired experiments that report what the guard actually buys (CRI, CRS, Wilson
@@ -101,6 +104,7 @@ Each step has:
 | check | `model` (format, then the model checker against the step's input), `format` (shape only) or `none` |
 | extra acceptance criteria | optional rules for the model checker, e.g. "every owner must appear in the notes" |
 | max characters | optional limit for text output |
+| done by | the configured model, or **your own agent at a URL** (with an optional token variable and timeout) |
 
 A chain has up to 10 steps, a number of retries per step and the retry style (guided or blind). It runs on
 LangGraph, built from the definition at run time: one guarded node per step. A rejected step is retried with the
@@ -119,6 +123,21 @@ cascade-guard chain list
 ```
 Simulated runs are free and need any key; runs on the real model need an admin key; creating, editing and deleting
 chains need an admin key.
+
+## Integrate your own agent
+Four ways, from no code to a single HTTP call; the full guide with request formats is
+[INTEGRATION.md](https://github.com/kanav10213/cascade-guard/blob/main/INTEGRATION.md).
+
+| Your agent is... | Use |
+|---|---|
+| anything with an HTTP endpoint (any language or platform) | a chain step **done by your agent (URL)**: Cascade Guard POSTs `{instruction, input, original, attempt, feedback}` and checks the `{"output": ...}` it gets back. `examples/my_agent_server.py` is a ready-made agent server; the built-in `/demo/agent` is a sample to try |
+| Python code you own | `@guard_step(...)` around it (`examples/guard_inside_my_agent.py`) |
+| a LangGraph graph | `guarded_node(...)` around each node (`examples/langgraph_agent.py`) |
+| anything else | `POST /llm/verify` per answer, or `RemoteGuard` from Python |
+
+Agent URLs are never link-local or cloud-metadata addresses; on a shared server (with keys) private and local
+addresses need `AGENT_ALLOW_PRIVATE=1`. A token for your agent stays in a server environment variable; the
+chain only names it.
 
 ## Use it in your code
 `guard_step` puts check, retry-with-reason and halt around any Python step, in any framework:
@@ -204,6 +223,7 @@ Settings come from the environment or from `.env` in the working folder (the rea
 | `HOST`, `PORT` | `127.0.0.1`, `8000` | where `serve` listens (`--host`/`--port` win; the Docker image uses `0.0.0.0`) |
 | `MAX_TRIALS` | `2000` | cap on `/experiment` size |
 | `LLM_EVAL_MAX_COST` | `5.0` | highest cost cap a dashboard or API evaluation may use, USD |
+| `AGENT_ALLOW_PRIVATE` | off | `1` lets chain steps call agents on private or local addresses on a shared server |
 | `ALLOW_OPEN_NETWORK` | off | `1` drops the address check while no keys are set (Docker Compose uses it; the Host check stays) |
 | `ALLOWED_HOSTS` | | extra Host names accepted while no keys are set, comma-separated |
 | `AUDIT_REFUSED_PER_MIN` | `30` | refused requests recorded per caller per minute (a flood cannot fill the table) |
@@ -231,6 +251,7 @@ Interactive documentation: `/docs` on a running server.
 | `POST /chains`, `PUT /chains/{id}`, `DELETE /chains/{id}` | create, change or delete a chain | admin |
 | `POST /chains/{id}/run`, `POST /chains/run` | run a saved chain, or a definition without saving it (`simulated`: viewer; real: admin) | viewer / admin |
 | `GET /chains/{id}/graph` | the chain as a Mermaid diagram | viewer |
+| `POST /demo/agent` | a sample outside agent that speaks the agent format (`?mistakes=0.5` to make it err) | any |
 | `GET /llm/status` | model, calls and spend, or what is missing | viewer |
 | `POST /pilot/invoice` | one invoice through the guarded workflow (`guard`, `agents`: `rules` free, `llm` paid) | viewer / admin |
 | `POST /pilot/invoice-pdf` | the same for a PDF (`pdf_base64`) | viewer / admin |
@@ -364,7 +385,7 @@ being scored; seeds control inputs and faults, not the model.
 ## Development
 ```bash
 pip install -r requirements-dev.txt     # tested versions, this folder in editable mode, dev tools
-pytest -q                     # 179 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
+pytest -q                     # 199 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
 ruff check . && mypy cascade_guard
 python -m build               # wheel and source package in dist/
 ```
