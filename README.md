@@ -66,6 +66,13 @@ Every command works in a **working folder**: `--home` (before or after the comma
 current folder. It holds `.env`,
 `data/` (the SQLite database) and `.llm_cache/` (cached model replies, so nothing is paid for twice).
 
+## Deploy online (Render)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kanav10213/cascade-guard)
+
+`render.yaml` sets up a free web service from the Dockerfile with a generated `API_KEY` (find it in the service's
+Environment tab and enter it on the dashboard) and the free simulated model. Add `ANTHROPIC_API_KEY` and remove
+`LLM_PROVIDER=fake` to use Claude. The free plan sleeps when idle and does not keep saved runs across restarts.
+
 ## Docker
 ```bash
 docker compose up -d --build                  # http://localhost:8000, reads ./.env if present, data in a volume

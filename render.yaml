@@ -1,0 +1,16 @@
+# Render Blueprint: deploys Cascade Guard from this repository's Dockerfile.
+# One click: https://render.com/deploy?repo=https://github.com/kanav10213/cascade-guard
+services:
+  - type: web
+    name: cascade-guard
+    runtime: docker
+    plan: free                 # sleeps after ~15 min idle; saved runs reset on restart
+    healthCheckPath: /health
+    autoDeploy: true           # redeploys on every push to main
+    envVars:
+      - key: API_KEY           # admin key; Render generates a random one (see the service's Environment tab)
+        generateValue: true
+      - key: LLM_PROVIDER      # "fake" = free simulated model; set ANTHROPIC_API_KEY and change this to use Claude
+        value: fake
+      - key: LLM_MAX_COST      # spend cap per server run, USD
+        value: "1.00"
