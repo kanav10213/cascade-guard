@@ -13,6 +13,12 @@ from cascade_guard.api import app
 
 TOKEN = "t" * 20 + "-secret-connector-link-value"
 pytest.importorskip("mcp")
+try:  # the web connector needs an mcp package with the streamable-HTTP transport (1.8 or newer)
+    import mcp.client.streamable_http  # noqa: F401
+    HTTP = True
+except ImportError:
+    HTTP = False
+needs_http = pytest.mark.skipif(not HTTP, reason="the installed mcp package has no streamable-HTTP transport")
 
 
 @contextlib.contextmanager
@@ -59,6 +65,7 @@ def keys(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "fake")
 
 
+@needs_http
 def test_claude_can_check_a_bill_through_the_secret_link(keys):
     with live_server() as base:
         names, (bill, maths, demo) = _mcp(f"{base}/mcp/{TOKEN}", [
@@ -81,6 +88,7 @@ def test_claude_can_check_a_bill_through_the_secret_link(keys):
     assert viewer_info == 401
 
 
+@needs_http
 def test_admin_role_adds_the_paid_tools(keys, monkeypatch):
     monkeypatch.setenv("MCP_CONNECTOR_ROLE", "admin")
     with live_server() as base:
