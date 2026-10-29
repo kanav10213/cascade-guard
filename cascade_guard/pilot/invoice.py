@@ -378,8 +378,9 @@ def build_pilot_graph(guard: str = "rules", agents: str = "rules", client=None,
                 if isinstance(out, dict) and "_crash" in out:
                     return False, "agent crashed: " + out["_crash"]
                 return inner(clean(out), src)
-        g.add_node(step, guarded_node(node, check, output_key=step, source_key=source_for(step),
-                                      max_retries=max_retries, name=step, trace_key="trace"))
+        g.add_node(step, guarded_node(node, check, output_key=step,  # type: ignore[call-overload]  # dict state
+                                      source_key=source_for(step), max_retries=max_retries, name=step,
+                                      trace_key="trace"))
         if prev is START:
             g.add_edge(START, step)
         else:

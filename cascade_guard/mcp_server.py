@@ -29,7 +29,7 @@ from cascade_guard.config import load_env, use_home
 try:  # mcp 2.x
     from mcp.server.mcpserver import MCPServer
 except ImportError:  # mcp 1.x
-    from mcp.server.fastmcp import FastMCP as MCPServer
+    from mcp.server.fastmcp import FastMCP as MCPServer  # type: ignore[no-redef,attr-defined]
 
 from cascade_guard.guard.llm_guard import verify  # noqa: E402
 from cascade_guard.llm.client import BudgetExceeded, LLMCallError, NotConfigured, make_client  # noqa: E402

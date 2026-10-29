@@ -116,7 +116,7 @@ def build_graph(injector, guard=None, agents: dict | None = None, repair: str = 
     for stage in STAGES:
         g.add_node(stage, _agent_node(stage, agents, injector, repair))
         g.add_node(f"guard_{stage}", _guard_node(stage, guard))
-    g.add_node("finish", _finish)
+    g.add_node("finish", _finish)  # type: ignore[call-overload]  # plain dict state; LangGraph accepts it at run time
     g.add_edge(START, STAGES[0])
     for i, stage in enumerate(STAGES):
         nxt = STAGES[i + 1] if i + 1 < len(STAGES) else "finish"
