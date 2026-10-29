@@ -244,7 +244,13 @@ def main(argv=None):
     explicit = os.getenv("CASCADE_HOME")
     use_home(explicit or Path.home() / ".cascade-guard")  # an explicit folder that cannot be written is an error
     load_env()
-    server.run("stdio")
+    if sys.stdin.isatty():  # started by hand in a terminal, not by an AI app (stdout stays the protocol channel)
+        print("Cascade Guard MCP server is running and waiting for an AI app (Claude Desktop, Claude Code) to "
+              "connect. Nothing more will appear here. Press Ctrl+C to stop.", file=sys.stderr)
+    try:
+        server.run("stdio")
+    except KeyboardInterrupt:
+        print("Stopped.", file=sys.stderr)
     return 0
 
 
