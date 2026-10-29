@@ -78,7 +78,7 @@ def test_claude_can_check_a_bill_through_the_secret_link(keys):
         wrong = httpx.post(f"{base}/mcp/not-the-secret", json={})
         info = httpx.get(f"{base}/connector", headers={"X-API-Key": "adm"}).json()
         viewer_info = httpx.get(f"{base}/connector").status_code
-    assert names == ["check_bill", "check_invoice", "check_math", "guard_status", "list_agent_chains",
+    assert names == ["check_bill", "check_everyday", "check_invoice", "check_math", "guard_status", "list_agent_chains",
                      "run_agent_chain", "show_cascade_demo"]          # viewer: nothing that costs or reads the queue
     assert bill["status"] == "wrong" and bill["total"] == 15.0
     assert maths["status"] == "wrong" and maths["value"] == "5.25"

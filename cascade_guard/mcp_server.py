@@ -8,6 +8,8 @@ MCP-capable AI tool.
 Tools
     check_bill        recompute any bill or invoice exactly and say what is wrong (no model needed)
     check_math        check a sum or a claim about a list of numbers exactly (no model needed)
+    check_everyday    everyday sums in words: discounts, GST, splits, EMIs, interest, dates, ages, time
+                      zones, units, travel, fuel, SGPA, recipes (no model needed)
     verify_output     check any agent's output against its source with the LLM validator
     check_invoice     run an invoice through the guarded four-agent invoice workflow
     guard_status      which model is connected, spend so far, open review items
@@ -101,6 +103,21 @@ def check_math(claim: str) -> dict:
     from cascade_guard.claims import check_stats, looks_like_stats
     text = _as_text(claim)[:500]
     return check_stats(text) if looks_like_stats(text) else _math(text)
+
+
+@server.tool()
+def check_everyday(request: str) -> dict:
+    """Work out an everyday calculation written in plain words, exactly, with the working: percentages,
+    discounts ("₹1,500 at 20% off, they charged ₹1,250"), GST added or removed, tips, splitting a bill, who
+    owes whom ("Asha paid 600, Ravi paid 300 and I paid 0"), loan EMIs, simple and compound interest, FDs,
+    SIPs, days between dates, adding days, weekdays, ages, time between, time zones ("3 pm IST in New
+    York"), unit conversions, travel time, fuel cost, SGPA/CGPA and scaling recipes. If the request gives an
+    answer, it is checked. Needs no model. Returns status (correct | wrong | computed | unreadable), answer,
+    summary, the lines of working and notes."""
+    from cascade_guard.everyday import check_everyday as _everyday
+    r = _everyday(_as_text(request)[:2000])
+    return {k: r.get(k) for k in ("status", "summary", "title", "answer", "claimed", "lines", "notes", "calculator",
+                                  "understood_as")}
 
 
 @server.tool()
@@ -294,7 +311,7 @@ def build_remote_server(role: str = "viewer"):
     reviewer: also the review queue (read-only); admin: also verify_output and runs on the model."""
     remote = MCPServer("cascade-guard", instructions=server.instructions if hasattr(server, "instructions")
                        else None)
-    for fn in (check_bill, check_math, show_cascade_demo, list_agent_chains, guard_status):
+    for fn in (check_bill, check_math, check_everyday, show_cascade_demo, list_agent_chains, guard_status):
         remote.add_tool(fn)
     if role == "admin":
         remote.add_tool(check_invoice)

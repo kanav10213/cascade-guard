@@ -4,8 +4,9 @@
     GET  /assistant/info   what this key can use: built-in only, or the connected model too (viewer)
     POST /assistant/ask    answer one message (viewer); a PDF invoice can be attached as base64
 
-The built-in assistant is free and open to any key. Letting the model read the request costs money, so it
-needs an admin key, a configured (non-simulated) model, and shares the per-minute limit of the model routes.
+The built-in assistant is free and open to any key. Letting the model read the request may cost money, so it
+needs a configured (non-simulated) model and a key of at least ASSISTANT_MODEL_ROLE (admin by default; set it to
+viewer for a free model), and shares the per-minute limit of the model routes.
 """
 import base64
 import binascii
@@ -16,8 +17,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from cascade_guard.assistant import EXAMPLES, ask
-from cascade_guard.auth import ensure, require
+from cascade_guard.assistant import EXAMPLE_GROUPS, EXAMPLES, ask, model_role
+from cascade_guard.auth import RANK, ensure, require
 
 router = APIRouter(tags=["assistant"])
 PAGE = Path(__file__).parent / "static" / "assistant.html"
@@ -56,9 +57,10 @@ def info(role: str = Depends(require("viewer"))):
     if client is not None:
         model.update(provider=client.provider, model=client.model)
     from cascade_guard import connector
-    return {"role": role, "examples": EXAMPLES, "model": model,
-            "model_available": real is not None and role == "admin",
-            "model_needs_admin": real is not None and role != "admin",
+    allowed = RANK[role] >= RANK[model_role()]
+    return {"role": role, "examples": EXAMPLES, "example_groups": EXAMPLE_GROUPS, "model": model,
+            "model_available": real is not None and allowed,
+            "model_needs_admin": real is not None and not allowed, "model_role": model_role(),
             "connector": {"enabled": connector.status()["enabled"]}}
 
 
@@ -81,12 +83,13 @@ def ask_route(req: AskRequest, role: str = Depends(require("viewer")),
     if not message:
         raise HTTPException(status_code=422, detail="Type a message or attach a PDF.")
     real, _ = _model_client()
-    use_model = (real is not None and role == "admin") if req.use_model is None else req.use_model
+    allowed = RANK[role] >= RANK[model_role()]
+    use_model = (real is not None and allowed) if req.use_model is None else req.use_model
     if use_model:
         if real is None:
             raise HTTPException(status_code=409, detail="No AI model is connected to this server, so only the "
                                                         "built-in assistant can answer. Ask without use_model.")
-        ensure(role, "admin")
+        ensure(role, model_role())
         from cascade_guard.pilot_api import _llm_rate_limit
         _llm_rate_limit(req_key)
     history = [h.model_dump() for h in req.history]

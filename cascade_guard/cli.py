@@ -126,6 +126,11 @@ def show_answer(res: dict) -> str:
         mark = "" if stated is None else ("ok" if abs(stated - d["total"]) < 0.005 else f"WRONG (bill says {fmt(stated, cur)})")
         out.append(f"  {'Total':<44} {fmt(d['total'], cur):>14}  {mark}")
         out += [f"  Likely cause: {x}" for x in d["hints"]] + [f"  Assumed: {x}" for x in d["assumptions"]]
+    elif kind in ("check_everyday", "calculate") and d.get("lines"):
+        for line in d["lines"]:
+            mark = f"  WRONG (you said {line['wrong']})" if line.get("wrong") else ""
+            out.append(f"  {str(line['label'])[:40]:<40} {str(line['value']):>22}{mark}")
+        out += [f"  Note: {x}" for x in d.get("notes") or []]
     elif kind == "run_chain" and d.get("steps"):
         for s in d["steps"]:
             for a in s["attempts"]:
@@ -140,6 +145,8 @@ def show_answer(res: dict) -> str:
     rc = (res.get("guard") or {}).get("reply_check")
     if rc and not rc["attempts"][0]["passed"]:
         out.append("  Cascade Guard rejected the model's first answer: " + str(rc["attempts"][0]["reason"]))
+    if rc and rc.get("review", {}).get("verdict") == "accept" and not rc.get("flagged"):
+        out.append("  Checked by Cascade Guard's independent second pass: accepted.")
     if res.get("suggestions") and kind in ("help", "unknown"):
         out.append("  Try: " + " | ".join(res["suggestions"][:4]))
     return "\n".join(out)

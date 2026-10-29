@@ -7,8 +7,12 @@
     resp = client.complete(system, user, max_tokens=200)
 
 Configuration (environment variables, or a .env file in the project folder):
-    LLM_PROVIDER       anthropic | openai | fake            (default anthropic)
-    LLM_MODEL          model name   (default claude-haiku-5-5 for anthropic; required for openai)
+    LLM_PROVIDER       anthropic | openai | auto | fake     (default anthropic)
+                       auto: anthropic when ANTHROPIC_API_KEY is set, else openai when OPENAI_API_KEY is
+                       set, else the offline simulator, so a server works before any key is added
+    LLM_MODEL          model name   (default claude-haiku-5-5 for anthropic; required for openai,
+                       except on Groq, where it defaults to openai/gpt-oss-120b)
+    LLM_REASONING_EFFORT  low | medium | high, for reasoning models on OpenAI-compatible APIs (optional)
     ANTHROPIC_API_KEY  for anthropic
     OPENAI_API_KEY     for openai-compatible providers (not needed for a local Ollama)
     OPENAI_BASE_URL    default https://api.openai.com/v1
@@ -22,6 +26,7 @@ Every call goes through BaseClient.complete(), which
 The SDKs are imported only when a real client is created, so the tests and the
 fake client run without them.
 """
+import contextlib
 import hashlib
 import inspect
 import json
@@ -33,7 +38,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 DEFAULT_MODEL = "claude-haiku-5-5"
-PROVIDERS = ("anthropic", "openai", "fake")
+PROVIDERS = ("anthropic", "openai", "auto", "fake")
+GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 # USD per million tokens (input, output) for prompts under 100k tokens.
 # Haiku 5.5 rates were taken from published rate cards in Oct 2026; check
@@ -278,10 +284,10 @@ class OpenAICompatClient(BaseClient):
     provider = "openai"
 
     def __init__(self, model=None, base_url=None, api_key=None, http_client=None, **kw):
-        model = model or os.getenv("LLM_MODEL")
+        self.base_url = (base_url or os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
+        model = model or os.getenv("LLM_MODEL") or (GROQ_DEFAULT_MODEL if "groq.com" in self.base_url else None)
         if not model:
             raise NotConfigured("LLM_MODEL is not set. For an OpenAI-compatible provider, name the model in .env.")
-        self.base_url = (base_url or os.getenv("OPENAI_BASE_URL") or "https://api.openai.com/v1").rstrip("/")
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         local = any(h in self.base_url for h in ("localhost", "127.0.0.1", "0.0.0.0", "host.docker.internal"))  # noqa: S104
         if not self.api_key and not local:
@@ -296,6 +302,8 @@ class OpenAICompatClient(BaseClient):
         self._http = http_client
         self._send_temperature = True
         self._tokens_field = "max_tokens"
+        effort = os.getenv("LLM_REASONING_EFFORT", "").strip().lower()
+        self._effort = effort if effort in ("minimal", "low", "medium", "high") else None
 
     def _post(self, body):
         headers = {"Content-Type": "application/json"}
@@ -304,21 +312,31 @@ class OpenAICompatClient(BaseClient):
         for attempt in range(5):
             r = self._http.post(f"{self.base_url}/chat/completions", json=body, headers=headers)
             if r.status_code in (429, 500, 502, 503, 504) and attempt < 4:
-                time.sleep(min(30, 2 ** attempt))
+                wait = float(min(30, 2 ** attempt))
+                with contextlib.suppress(TypeError, ValueError):
+                    wait = max(wait, float(r.headers.get("retry-after", 0)))
+                if wait > 20:  # a daily or per-minute limit that won't clear soon: report it now
+                    return r
+                time.sleep(wait)
                 continue
             return r
         return r
 
     def _call(self, system, user, max_tokens, temperature, sample):
-        for _ in range(3):
+        for _ in range(4):
             body = {"model": self.model,
                     "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
                     self._tokens_field: max_tokens}
             if temperature is not None and self._send_temperature:
                 body["temperature"] = temperature
+            if self._effort:
+                body["reasoning_effort"] = self._effort
             r = self._post(body)
             if r.status_code == 400:
                 msg = r.text.lower()
+                if "reasoning" in msg and self._effort:  # this model has no reasoning setting
+                    self._effort = None
+                    continue
                 # Newer models want max_completion_tokens and/or reject temperature.
                 if "max_tokens" in msg and self._tokens_field == "max_tokens":
                     self._tokens_field = "max_completion_tokens"
@@ -366,6 +384,9 @@ def approx_tokens(text: str) -> int:
 
 def make_client(fake=False, model=None, provider=None, **kw) -> BaseClient:
     provider = (provider or os.getenv("LLM_PROVIDER") or "anthropic").strip().lower()
+    if provider == "auto":
+        provider = ("anthropic" if os.getenv("ANTHROPIC_API_KEY") else
+                    "openai" if os.getenv("OPENAI_API_KEY") else "fake")
     if fake or provider == "fake":
         return FakeLLMClient(model=model or os.getenv("LLM_MODEL") or DEFAULT_MODEL, **kw)
     if provider == "anthropic":

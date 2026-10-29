@@ -224,11 +224,14 @@ def test_mcp_server_over_stdio(tmp_path):
                 bill = await s.call_tool("check_bill", {"bill_text": "check this invoice: 3 x $4.00, 2 x $1.50, "
                                                                     "total $16.00"})
                 math = await s.call_tool("check_math", {"claim": "is 17 x 23 = 401?"})
+                day = await s.call_tool("check_everyday", {"request": "split ₹2,400 among 3 people"})
                 return (names, json.loads(v.content[0].text), json.loads(inv.content[0].text),
-                        json.loads(bad.content[0].text), json.loads(bill.content[0].text), json.loads(math.content[0].text))
+                        json.loads(bad.content[0].text), json.loads(bill.content[0].text),
+                        json.loads(math.content[0].text), json.loads(day.content[0].text))
 
-    names, v, inv, bad, bill, math = asyncio.run(go())
-    assert names == {"check_bill", "check_math", "show_cascade_demo", "verify_output", "check_invoice", "guard_status",
+    names, v, inv, bad, bill, math, day = asyncio.run(go())
+    assert day["status"] == "computed" and day["answer"].startswith("₹800.00")
+    assert names == {"check_bill", "check_math", "check_everyday", "show_cascade_demo", "verify_output", "check_invoice", "guard_status",
                      "list_review_queue", "list_agent_chains", "run_agent_chain"}  # no tool decides review items
     assert bill["status"] == "wrong" and bill["total"] == 15.0 and bill["stated"]["total"] == 16.0
     assert math["status"] == "wrong" and math["value"] == "391"

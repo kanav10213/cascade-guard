@@ -49,6 +49,9 @@ def store(tmp_path):
     ("hi", "help"), ("what can you do?", "help"), ("", "help"),
     ("is this summary correct? The customer wants a refund", "verify_answer"),
     ("tell me a joke", "unknown"),
+    ("Split ₹2,400 among 3 people", "check_everyday"),
+    ("What day is 15 August 2027?", "check_everyday"),
+    ("I bought a shirt for ₹1,500 at 20% off, they charged ₹1,250", "check_everyday"),
 ])
 def test_understand(message, kind):
     assert understand(message)[0] == kind
@@ -126,45 +129,62 @@ def test_free_text_checks_need_a_model():
 
 def test_unknown_request_says_what_it_can_do():
     r = ask("tell me a joke")
-    assert r["kind"] == "unknown" and "check a bill" in r["reply"]
+    assert r["kind"] == "unknown" and "bills and invoices" in r["reply"] and "free AI model" in r["reply"]
 
 
 # ---------------------------------------------------------------- the model path, checked by Cascade Guard
 
 class Scripted(FakeLLMClient):
-    """A stand-in for a real model: replies come from a script, one per call."""
+    """A stand-in for a real model: the writer's replies come from a script, one per call; the independent
+    checker's verdicts from `reviews` (accept when the list runs out)."""
     is_fake = False
     provider = "test"
 
-    def __init__(self, replies):
-        self.replies, self.prompts = list(replies), []
+    def __init__(self, replies, reviews=None):
+        self.replies, self.reviews, self.prompts, self.checks = list(replies), list(reviews or []), [], []
         super().__init__(self._next, model="test-model", cache_path=None)
 
     def _next(self, system, user, sample):
-        self.prompts.append(user)
-        r = self.replies.pop(0) if self.replies else '{"reply": "done"}'
+        if system.startswith("You are Cascade Guard's checker"):
+            self.checks.append(user)
+            r = self.reviews.pop(0) if self.reviews else {"verdict": "accept"}
+        else:
+            self.prompts.append(user)
+            r = self.replies.pop(0) if self.replies else "done"
         if isinstance(r, Exception):
             raise r
         return r if isinstance(r, str) else json.dumps(r)
 
 
+WRITE = "Write a short note to the shop about this invoice: 3 x $4.00, 2 x $1.50, total $16.00"
 CALL_BILL = {"tool": "check_bill", "args": {"text": "3 x $4.00, 2 x $1.50, total $16.00"}}
 
 
-def test_model_answer_with_the_tools_numbers_passes():
-    c = Scripted([CALL_BILL, {"reply": "The bill is wrong: it should be $15.00, not $16.00 ($1.00 too much)."}])
+def test_exact_requests_need_no_model_call():
+    c = Scripted([])
     r = ask(BILL, client=c, use_model=True)
+    assert r["answered_by"]["mode"] == "built-in" and "no AI needed" in r["answered_by"]["why"]
+    assert r["reply"].startswith("The total is wrong") and c.prompts == [] and c.checks == []
+    r = ask("Split ₹2,400 among 3 people", client=c, use_model=True)
+    assert r["kind"] == "check_everyday" and "₹800.00" in r["reply"] and c.prompts == []
+
+
+def test_model_answer_with_the_tools_numbers_passes():
+    c = Scripted(["Hello, the invoice total is wrong: it should be $15.00, not $16.00 ($1.00 too much). "
+                  "Please send a corrected invoice."])
+    r = ask(WRITE, client=c, use_model=True)
     assert r["answered_by"]["mode"] == "model" and r["kind"] == "check_bill"
-    assert r["reply"].startswith("The bill is wrong")
+    assert r["reply"].startswith("Hello, the invoice total is wrong")
     assert r["guard"]["reply_check"]["passed"] and not r["guard"]["reply_check"]["replaced"]
-    assert r["actions"] == [{"tool": "check_bill", "args": CALL_BILL["args"]}]
-    assert "RESULT" in c.prompts[1] and '"total": 15.0' in c.prompts[1]
+    assert r["actions"][0]["tool"] == "check_bill"                       # run exactly before the model starts
+    assert "RESULT" in c.prompts[0] and '"total": 15.0' in c.prompts[0]
+    assert len(c.checks) == 1 and "ANSWER:" in c.checks[0]               # the independent second pass
+    assert any("independent checker: accepted" in x for x in r["guard"]["checked"])
 
 
 def test_a_made_up_number_is_caught_and_the_model_fixes_it():
-    c = Scripted([CALL_BILL, {"reply": "It should be $16.50."},
-                  {"reply": "The total is wrong: it should be $15.00, not $16.00."}])
-    r = ask(BILL, client=c, use_model=True)
+    c = Scripted(["It should be $16.50.", "The total is wrong: it should be $15.00, not $16.00."])
+    r = ask(WRITE, client=c, use_model=True)
     attempts = r["guard"]["reply_check"]["attempts"]
     assert [a["passed"] for a in attempts] == [False, True]
     assert "16.50" in attempts[0]["reason"] and "REJECTED" in c.prompts[-1]
@@ -173,35 +193,81 @@ def test_a_made_up_number_is_caught_and_the_model_fixes_it():
 
 
 def test_a_model_that_keeps_misreporting_is_replaced_by_the_built_in_answer():
-    c = Scripted([CALL_BILL, {"reply": "It's $14.00."}, {"reply": "It's $14.00."}, {"reply": "It's $14.00."}])
-    r = ask(BILL, client=c, use_model=True)
+    c = Scripted(["It's $14.00."] * 3)
+    r = ask(WRITE, client=c, use_model=True)
     assert r["guard"]["reply_check"]["replaced"] is True
     assert r["reply"] == describe("check_bill", r["data"])        # the exact, built-in answer
 
 
 def test_a_wrong_verdict_is_caught():
-    c = Scripted([CALL_BILL, {"reply": "All good, the bill is correct."},
-                  {"reply": "The bill has a mistake: the total should be $15.00."}])
-    r = ask(BILL, client=c, use_model=True)
+    c = Scripted(["All good, the bill is correct.", "The bill has a mistake: the total should be $15.00."])
+    r = ask(WRITE, client=c, use_model=True)
     assert r["guard"]["reply_check"]["attempts"][0]["reason"].startswith("the tool found a mistake")
     assert r["guard"]["reply_check"]["passed"]
 
 
+def test_the_model_can_call_the_calculators():
+    c = Scripted([{"tool": "calculate", "args": {"name": "loan_emi", "args": {"principal": "500000",
+                                                                            "annual_rate": "9", "months": 60}}},
+                  "Your EMI would be ₹10,379.18 a month. Want me to compare it with a 3-year loan?"])
+    r = ask("Should I take a 5 lakh loan at 9% for 5 years? What would I pay each month?", client=c, use_model=True)
+    assert r["kind"] == "calculate" and r["data"]["answer"] == "₹10,379.18" and r["guard"]["reply_check"]["passed"]
+
+
+def test_free_text_is_read_by_the_independent_checker():
+    c = Scripted(["Dear Mr Rao, the geyser in my flat has stopped working. Could you please arrange a repair this "
+                  "week? Thank you, Kanav",
+                  "Dear Mr Rao, the geyser in my flat has stopped working since Monday. Could you please arrange a "
+                  "repair this week? Thank you, Kanav"],
+                 reviews=[{"verdict": "revise", "problems": ["the person said it broke on Monday; mention it"]}])
+    r = ask("Write a polite email to my landlord Mr Rao: the geyser broke on Monday, ask for a repair this week",
+            client=c, use_model=True)
+    assert r["kind"] == "chat" and "since Monday" in r["reply"]
+    assert [a["by"] for a in r["guard"]["reply_check"]["attempts"]] == ["checker", "rules"]
+    assert r["guard"]["verdict"] == "caught" and r["guard"]["fixed"]
+    assert "independent checker found" in c.prompts[-1]
+
+
+def test_an_answer_the_checker_still_doubts_is_flagged_not_hidden():
+    c = Scripted(["The Eiffel Tower is in Rome."] * 3,
+                 reviews=[{"verdict": "revise", "problems": ["the Eiffel Tower is in Paris"]}] * 3)
+    r = ask("where is the eiffel tower?", client=c, use_model=True)
+    assert r["guard"]["verdict"] == "flagged" and r["guard"]["reply_check"]["flagged"]
+    assert "in Paris" in r["notice"] and "Check it before relying on it" in r["notice"]
+
+
+def test_sums_written_in_an_answer_are_recomputed():
+    c = Scripted(["You need 12 x 4 = 46 chairs.", "You need 12 x 4 = 48 chairs."])
+    r = ask("how many chairs for 12 tables of 4? explain", client=c, use_model=True)
+    assert r["reply"] == "You need 12 x 4 = 48 chairs."
+    assert "48" in r["guard"]["reply_check"]["attempts"][0]["reason"]
+
+
 def test_plain_text_replies_and_greetings():
-    r = ask("hello", client=Scripted(["Hi! Paste a bill and I'll check it."]), use_model=True)
-    assert r["reply"] == "Hi! Paste a bill and I'll check it." and r["kind"] == "chat"
+    r = ask("hello, how do I use this?", client=Scripted(["Hi! Ask me anything, or paste a bill."]), use_model=True)
+    assert r["reply"] == "Hi! Ask me anything, or paste a bill." and r["kind"] == "chat"
+    r = ask("hi", client=Scripted([]), use_model=True)                  # a greeting needs no model call
+    assert "Cascade Guard checks every answer" in r["reply"]
 
 
 def test_tool_calls_are_bounded():
-    c = Scripted([{"tool": "status", "args": {}}] * 10 + [{"reply": "done"}])
-    r = ask("status please", client=c, use_model=True)
+    c = Scripted([{"tool": "status", "args": {}}] * 10 + ["done"])
+    r = ask("tell me the status please and explain it", client=c, use_model=True)
     assert len(r["actions"]) == 4
 
 
 def test_model_failure_falls_back_to_the_built_in_assistant():
-    r = ask(BILL, client=Scripted([LLMCallError("boom")]), use_model=True)
+    r = ask(WRITE, client=Scripted([LLMCallError("boom")]), use_model=True)
     assert r["answered_by"] == {"mode": "built-in"} and "not available" in r["notice"]
     assert r["reply"].startswith("The total is wrong")
+    r = ask("write a poem", client=Scripted([LLMCallError("HTTP 429 from groq: rate limit")]), use_model=True)
+    assert "busy" in r["notice"] and r["kind"] == "unknown"
+
+
+def test_a_busy_checker_does_not_block_the_answer():
+    c = Scripted(["Paris."], reviews=[LLMCallError("HTTP 429")])
+    r = ask("where is the eiffel tower?", client=c, use_model=True)
+    assert r["reply"] == "Paris." and r["guard"]["verdict"] == "unchecked"
 
 
 def test_check_reply_rules():
@@ -209,10 +275,13 @@ def test_check_reply_rules():
     assert check_reply("Wrong: 2 items, should be $15.00, not $16.00", actions, "")[0]
     assert not check_reply("Wrong: should be $15.01", actions, "")[0]
     assert check_reply("Wrong: you wrote 2026-10-29", actions, "dated 2026-10-29")[0]   # from the message
+    assert check_reply("Wrong: it should be $15.00. Please fix it by 5 November 2026.", actions, "")[0]  # a date
     assert not check_reply("", [], "")[0]
     ok = [{"tool": "check_math", "result": {"status": "correct", "value": "391"}}]
     assert check_reply("Correct, 391. Nothing wrong.", ok, "")[0]
     assert not check_reply("That is wrong.", ok, "")[0]
+    assert check_reply("Everest is 8,849 m tall.", [], "how tall is everest")[0]   # no exact tool: the checker's job
+    assert not check_reply("So 7 + 8 = 16.", [], "")[0]
 
 
 # ---------------------------------------------------------------- web routes
@@ -242,8 +311,14 @@ def test_model_mode_needs_a_model_and_an_admin_key(monkeypatch):
         assert viewer["answered_by"] == {"mode": "built-in"}          # viewers never spend money
         assert api.post("/assistant/ask", json={"message": BILL, "use_model": True},
                         headers={"X-API-Key": "view"}).status_code == 403
-        admin = api.post("/assistant/ask", json={"message": BILL}, headers={"X-API-Key": "adm"}).json()
+        llm_api.reset_client(Scripted(["Wrong: it should be $15.00, not $16.00."]))
+        admin = api.post("/assistant/ask", json={"message": WRITE}, headers={"X-API-Key": "adm"}).json()
         assert admin["answered_by"]["mode"] == "model" and admin["guard"]["reply_check"]["passed"]
+        monkeypatch.setenv("ASSISTANT_MODEL_ROLE", "viewer")              # let viewers use a free model
+        llm_api.reset_client(Scripted(["Wrong: it should be $15.00, not $16.00."]))
+        viewer = api.post("/assistant/ask", json={"message": WRITE}, headers={"X-API-Key": "view"}).json()
+        assert viewer["answered_by"]["mode"] == "model"
+        assert api.get("/assistant/info", headers={"X-API-Key": "view"}).json()["model_available"]
     finally:
         llm_api.reset_client(None)
 

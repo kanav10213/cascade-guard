@@ -175,3 +175,41 @@ def test_local_ollama_needs_no_key(monkeypatch):
     assert log[0]["auth"] is None
     with pytest.raises(NotConfigured, match="OPENAI_API_KEY"):
         OpenAICompatClient(model="m", base_url="https://api.openai.com/v1", http_client=_openai_transport([]))
+
+
+def test_auto_provider_uses_whichever_key_is_set(monkeypatch):
+    monkeypatch.setenv("LLM_PROVIDER", "auto")
+    for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "LLM_MODEL", "OPENAI_BASE_URL"):
+        monkeypatch.delenv(k, raising=False)
+    assert make_client().is_fake                                  # no key yet: the free simulator
+    monkeypatch.setenv("OPENAI_API_KEY", "k")
+    monkeypatch.setenv("OPENAI_BASE_URL", "https://api.groq.com/openai/v1")
+    c = make_client(strict_prices=False)
+    assert c.provider == "openai" and c.model == "openai/gpt-oss-120b"   # Groq's free model by default
+
+
+def test_reasoning_effort_is_sent_and_dropped_when_unsupported(monkeypatch):
+    monkeypatch.setenv("LLM_REASONING_EFFORT", "low")
+    log = []
+    c = OpenAICompatClient(model="m", base_url="https://x/v1", api_key="k", strict_prices=False,
+                           http_client=_openai_transport(log))
+    c.complete("s", "u")
+    assert log[-1]["body"]["reasoning_effort"] == "low"
+    log2 = []
+    c = OpenAICompatClient(model="m", base_url="https://x/v1", api_key="k", strict_prices=False,
+                           http_client=_openai_transport(log2, reject=("reasoning_effort",)))
+    assert c.complete("s", "u").text and "reasoning_effort" not in log2[-1]["body"]
+
+
+def test_a_long_rate_limit_is_reported_at_once(monkeypatch):
+    from cascade_guard.llm.client import LLMCallError
+    calls = []
+
+    def handler(request):
+        calls.append(1)
+        return httpx.Response(429, headers={"retry-after": "3600"}, json={"error": {"message": "rate limit"}})
+    c = OpenAICompatClient(model="m", base_url="https://x/v1", api_key="k", strict_prices=False,
+                           http_client=httpx.Client(transport=httpx.MockTransport(handler)))
+    with pytest.raises(LLMCallError, match="429"):
+        c.complete("s", "u")
+    assert len(calls) == 1                                         # no long sleeps before falling back

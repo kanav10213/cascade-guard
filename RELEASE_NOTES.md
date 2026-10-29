@@ -1,24 +1,25 @@
-# Cascade Guard 1.2.0
+# Cascade Guard 1.3.0
 
-New: **ask Cascade Guard in plain English.**
+New: **one assistant for everyday life, that checks itself.**
 
-Open `/assistant` on your server (or run `cascade-guard ask`) and type what you want checked:
+Open `/assistant` on your server (or run `cascade-guard ask`) and ask:
 
-- "Check this invoice: 3 x $4.00, 2 x $1.50, total $16.00" → *The total is wrong. It should be $15.00, but the bill
-  says $16.00 ($1.00 too much).* Every line, the tax and the total are recomputed exactly and shown like a receipt,
-  with the wrong figure struck through. Rupees, GST (also CGST + SGST), discounts, delivery and PDF invoices work.
-- "Is 17 x 23 = 401?" or "the average of 3, 7, 2, 9 is 5.5" → checked exactly.
-- "Run support ticket triage on: …" → your agent chain, with the guard on every step.
-- "Show me Cascade Guard catching a mistake" → a sample invoice through four agents with planted mistakes:
-  the wrong total that would have been delivered, and how the guard caught and fixed each mistake.
+- "I bought a shirt for ₹1,500 at 20% off, they charged ₹1,250" → *Wrong: 20% off ₹1,500.00 is ₹1,200.00, not
+  ₹1,250.00.*, with the working shown like a receipt.
+- "Asha paid 600, Ravi paid 300 and I paid 0 for dinner" → *You pay Asha 300.00.*
+- "EMI for 10 lakh at 10% for 3 years", "FD of 1 lakh at 7% for 5 years", "3 pm IST in New York", "5 feet 8 inches in
+  cm", "SGPA with credits 4, 3, 3 and grades 9, 8, 10", "recipe for 4 needs 200 g flour, make it for 6", and more.
 
-The built-in assistant is free and needs no AI model. With a model connected, the model understands any request,
-and Cascade Guard checks the model's own answer before you see it.
+These are worked out exactly and need no AI model.
 
-Also new: **use Cascade Guard inside Claude.** Set `MCP_CONNECTOR_TOKEN` on your server and add the link shown under
-"Use in Claude" as a custom connector in Claude; then ask Claude to check a bill and it uses Cascade Guard. For the
-Claude desktop app, `cascade-guard mcp --install-claude` does the setup.
+With an AI model connected (a **free** Groq key works), it also writes emails and messages, explains, translates and
+answers questions, and **Cascade Guard checks every answer before you see it**: numbers against the exact tools, sums
+recomputed, and an independent second pass for wrong or made-up facts. An answer that stays wrong is replaced or
+clearly marked "not confirmed".
 
-Earlier in 1.1: build your own agent chains without code, and plug in the agents you already have (INTEGRATION.md).
+Free model setup: get a key at console.groq.com, then set `LLM_PROVIDER=auto`, `OPENAI_API_KEY=<your key>`,
+`OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `LLM_REASONING_EFFORT=low`, `LLM_PRICE_IN=0` and `LLM_PRICE_OUT=0`.
+
+Also: `check_everyday` in the MCP server and the Claude connector, so Claude can use the calculators too.
 
 Get it: `pip install --upgrade cascade-guard-ai`. Full list: CHANGELOG.md

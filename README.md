@@ -10,10 +10,12 @@ confidently wrong. Cascade Guard checks every hand-off against the step's own in
 and tells the agent *what* was wrong. If the step still fails, it stops the job safely and sends it to a person.
 A wrong answer is never passed on silently.
 
-- **Ask in plain English:** open `/assistant` on the server (or run `cascade-guard ask`) and type a request:
-  "check this invoice: 3 x $4.00, 2 x $1.50, total $16.00", "is 17 x 23 = 401?", "run support ticket triage on: …".
-  Bills, invoices (also PDFs, rupees and GST), sums and claims about numbers are recomputed exactly, with the working
-  shown; it needs no AI model and no key.
+- **An everyday assistant that checks itself:** open `/assistant` on the server (or run `cascade-guard ask`) and
+  ask anything. Everyday sums are worked out exactly with the working shown, with no AI model and no key: bills and
+  invoices (also PDFs, rupees and GST), discounts, splitting a bill and who owes whom, EMIs, interest, FDs and SIPs,
+  dates, ages and time zones, units, travel time and fuel, SGPA and recipes. With an AI model connected (a free one
+  works), it also writes emails and messages, explains, translates and answers questions, and Cascade Guard checks
+  every answer before you see it: exact numbers against the tools, and an independent second pass.
 - **Build your own agent, no code:** design a multi-step agent chain on the dashboard (instructions, output
   format, checks per step), save it, and run it with the guard on every step.
 - **Plug in the agents you already have:** any agent with an HTTP endpoint, in any language, can be a step in a
@@ -28,7 +30,7 @@ A wrong answer is never passed on silently.
 - **Any model:** Anthropic Claude by default; any OpenAI-format API (OpenAI, Gemini, Groq, OpenRouter, a local model
   through Ollama), or a free offline simulator.
 
-> **Status: v1.2.0.** The software is complete, tested (Python 3.12 to 3.14, SQLite and PostgreSQL, Docker) and
+> **Status: v1.3.0.** The software is complete, tested (Python 3.12 to 3.14, SQLite and PostgreSQL, Docker) and
 > documented. The headline numbers below are from **simulations**; the evaluation on a real paid model is built and
 > waiting to be run. See [Limits](#limits).
 
@@ -95,12 +97,30 @@ cascade-guard ask                             # a conversation; type exit to sto
 | `run support ticket triage on: …` | runs a saved chain or template with the guard on every step |
 | `show me Cascade Guard catching a mistake` | a sample invoice through four agents with planted mistakes, without and with the guard |
 | `list my agent chains`, `which agents are connected?`, `review queue`, `status` | what it says |
+| `I bought a shirt for ₹1,500 at 20% off, they charged ₹1,250`, `₹1,180 including 18% GST, what is the base price?`, `my salary went from 40000 to 46000 what is the hike percentage` | discounts (also stacked), GST added or taken out, percentages and changes, checked against any figure you give |
+| `split ₹2,400 among 3 people`, `Asha paid 600, Ravi paid 300 and I paid 0 for dinner`, `15% tip on $80 split 4 ways` | equal shares to the paisa, and the fewest payments to settle up |
+| `EMI for 10 lakh at 10% for 3 years`, `FD of 1 lakh at 7% for 5 years`, `SIP of 5000 per month at 12% for 10 years` | EMIs, simple and compound interest, FDs, SIPs, with total paid and interest |
+| `what day is 15 August 2027?`, `how many days till 25 December`, `3 pm IST in New York`, `born 12 May 2000, how old am I?` | dates, weekdays, ages, time between and time zones (daylight saving included) |
+| `5 feet 8 inches in cm`, `100 F in C`, `fuel cost for 450 km at 15 km/l and ₹105 per litre`, `450 km at 60 km/h` | units (also tola, gaj, acre, cups), fuel cost, travel time, speed and distance |
+| `SGPA with credits 4, 3, 3 and grades 9, 8, 10`, `I scored 432 out of 500`, `recipe for 4 needs 200 g flour, make it for 6` | SGPA / CGPA, marks, scaled recipes |
+| anything else: `write a polite email to my landlord…`, `explain compound interest simply`, `translate … to Hindi` | needs an AI model (see below); the answer is checked before you see it |
 
-Nothing is guessed: a line with an amount that cannot be read is reported, never dropped. The built-in assistant needs
-no model and no key. With a real model configured and an admin key, the model reads the request and calls the same
-exact tools, and **Cascade Guard checks the model's own answer**: every number in it must come from a tool result and
-its verdict must match the tool's; a wrong answer goes back to the model with the reason, and if it is still wrong the
-built-in answer is shown instead. API: `POST /assistant/ask` `{"message": "...", "pdf_base64": "..."}`.
+Nothing is guessed: a line with an amount that cannot be read is reported, never dropped, and a request the exact
+tools cannot read says so. These need no model and no key.
+
+**With an AI model** (Claude, or a free one such as Groq: see [Models and providers](#models-and-providers)), the model
+handles everything else and can call the same exact tools, and **Cascade Guard checks every answer** before you see it:
+
+1. *Exact check:* after a calculation, every number in the answer must come from a tool result or your message, the
+   verdict (correct / wrong) must match the tool's, and any sum written in the answer (`12 x 4 = 48`) is recomputed.
+2. *Independent second pass:* a separate call that did not write the answer reads it against your request and the
+   exact results, looking for wrong facts, made-up specifics and missed parts of the request.
+3. A rejected answer goes back with the reason (up to twice). A number that is still wrong is replaced by the exact
+   built-in answer; an answer the checker still doubts is shown marked "not confirmed", with the reason.
+
+Requests the exact tools answer completely skip the model (free and instant). If the model is busy or over its free
+limit, the built-in assistant answers and says so. By default only admin keys use the model; `ASSISTANT_MODEL_ROLE=viewer`
+opens it to every key (sensible for a free model). API: `POST /assistant/ask` `{"message": "...", "pdf_base64": "..."}`.
 
 ## Deploy online (Render)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kanav10213/cascade-guard)
@@ -234,6 +254,7 @@ Claude Code: run the printed `claude mcp add ...` command.
 |---|---|
 | `check_bill` | recompute any bill or invoice exactly and say what is wrong (no model needed) |
 | `check_math` | check a sum or a claim about a list of numbers exactly (no model needed) |
+| `check_everyday` | everyday sums in words: discounts, GST, splits, EMIs, interest, dates, time zones, units, travel, SGPA, recipes (no model needed) |
 | `show_cascade_demo` | a sample invoice through four agents with planted mistakes, without and with the guard |
 | `verify_output` | check any output against its source with the model checker |
 | `check_invoice` | run an invoice through the guarded invoice workflow |
@@ -251,8 +272,13 @@ into approving things, so people decide on the dashboard or through the API with
 | Anthropic (default) | `ANTHROPIC_API_KEY=...` (model `claude-haiku-5-5` unless `LLM_MODEL` is set) |
 | OpenAI | `LLM_PROVIDER=openai`, `OPENAI_API_KEY=...`, `LLM_MODEL=<model>` |
 | Gemini / Groq / OpenRouter / Together | as OpenAI, plus `OPENAI_BASE_URL=` the provider's OpenAI-compatible URL |
+| Groq (free tier, no card) | `LLM_PROVIDER=auto`, `OPENAI_API_KEY=<gsk_… key from console.groq.com>`, `OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `LLM_REASONING_EFFORT=low`, `LLM_PRICE_IN=0`, `LLM_PRICE_OUT=0` (model `openai/gpt-oss-120b` unless `LLM_MODEL` is set) |
 | Ollama (free, local) | `LLM_PROVIDER=openai`, `OPENAI_BASE_URL=http://localhost:11434/v1`, `LLM_MODEL=llama3.2` |
 | No key, just try it | `LLM_PROVIDER=fake` (simulated answers, clearly labelled, no cost) |
+| Whichever key is set | `LLM_PROVIDER=auto`: Anthropic if `ANTHROPIC_API_KEY` is set, else OpenAI-compatible if `OPENAI_API_KEY` is set, else the simulator |
+
+Free tiers have limits (Groq's, in October 2026: 30 requests a minute and 1,000 a day for `openai/gpt-oss-120b`). An
+assistant answer takes two or three model calls; when a limit is hit the built-in assistant answers instead.
 
 The Anthropic and OpenAI wire formats are covered by the tests (against a local stand-in server, with the real client
 libraries); other OpenAI-compatible providers use the same code but have not been tried live.
@@ -263,10 +289,14 @@ Settings come from the environment or from `.env` in the working folder (the rea
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `LLM_PROVIDER` | `anthropic` | `anthropic`, `openai` (any OpenAI-compatible API) or `fake` |
+| `LLM_PROVIDER` | `anthropic` | `anthropic`, `openai` (any OpenAI-compatible API), `auto` (whichever key is set) or `fake` |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | | the provider key |
 | `LLM_MODEL` | `claude-haiku-5-5` | model name |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | for other OpenAI-compatible providers |
+| `LLM_REASONING_EFFORT` | | `low`, `medium` or `high` for reasoning models on OpenAI-compatible APIs (dropped if the model refuses it) |
+| `ASSISTANT_MODEL_ROLE` | `admin` | the lowest key role that may use the model on `/assistant`: `viewer`, `reviewer` or `admin` |
+| `ASSISTANT_MAX_TOKENS` | `1500` | longest answer the assistant's model may write |
+| `CASCADE_TZ` | `Asia/Kolkata` | the time zone that decides "today" for date questions |
 | `LLM_PRICE_IN`, `LLM_PRICE_OUT` | built in for Haiku 5.5 | USD per million tokens, for cost tracking and the spend cap |
 | `LLM_MAX_COST`, `LLM_MAX_CALLS` | `1.00`, `1000` | per server process; the server stops calling the model after either |
 | `API_KEY`, `REVIEWER_KEY`, `VIEWER_KEY` | none | access keys (see [Security](#security)) |

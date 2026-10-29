@@ -12,7 +12,7 @@ services:
         generateValue: true
       - key: MCP_CONNECTOR_TOKEN   # the secret in the Claude connector link (/mcp/<this>); see "Use in Claude" on /assistant
         generateValue: true
-      - key: LLM_PROVIDER      # "fake" = free simulated model; set ANTHROPIC_API_KEY and change this to use Claude
-        value: fake
+      - key: LLM_PROVIDER      # auto: a key if one is set (ANTHROPIC_API_KEY, or OPENAI_API_KEY e.g. a free Groq key), else the simulator
+        value: auto
       - key: LLM_MAX_COST      # spend cap per server run, USD
         value: "1.00"

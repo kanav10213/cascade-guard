@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-10-30
+
+### Added
+- Everyday calculations in plain words, exact and with the working shown, needing no model
+  (`cascade_guard.everyday`, 25 calculators): percentages, discounts (also stacked and flat amounts), GST and tax
+  added or taken out, percentage change, marks, tips, equal splits to the paisa, settling up who owes whom, loan EMIs,
+  simple and compound interest, FDs, SIPs, days between dates, adding days or months, weekdays, ages, time between,
+  time zones (daylight saving included), unit conversions (length, mass incl. tola and quintal, volume incl. cups,
+  area incl. gaj and acre, temperature, speed, time, data, fuel economy, feet and inches), travel time, speed and
+  distance, fuel cost, SGPA / CGPA and scaling recipes. A figure given in the request is checked ("they charged
+  ₹1,250" → wrong, ₹1,200.00). Lakh and crore, ₹ and Indian digit grouping are understood.
+- The assistant is now a general assistant. With an AI model it writes emails and messages, explains, translates,
+  plans and answers questions, and can call the calculators (`calculate`, `check_everyday` tools). Every model answer
+  is checked: numbers and verdicts against the exact tools, any sum written in the answer recomputed, and an
+  independent second pass (a separate checker call) for wrong facts, made-up specifics and missed parts of the
+  request. Rejected answers are revised up to twice; a still-wrong number is replaced by the exact answer, and an
+  answer the checker still doubts is shown marked "not confirmed" with the reason.
+- Requests the exact tools answer completely skip the model. If the model is busy or over a free limit, the built-in
+  assistant answers and says so.
+- Free models: `LLM_PROVIDER=auto` (whichever key is set, else the simulator), Groq's `openai/gpt-oss-120b` as the
+  default model on Groq, `LLM_REASONING_EFFORT`, and a long rate-limit wait is reported at once instead of sleeping.
+- `ASSISTANT_MODEL_ROLE` lets viewer or reviewer keys use the model on `/assistant` (default admin).
+- MCP and Claude connector tool `check_everyday`; the assistant page groups examples by area, shows calculations as a
+  receipt with the wrong figure struck through, marks checked AI answers, and has a Copy button for long answers.
+- Dependency: `tzdata` (time zones on systems without them, such as Windows).
+
 ## [1.2.0] - 2026-10-29
 
 ### Added

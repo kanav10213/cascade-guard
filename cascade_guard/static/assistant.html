@@ -152,6 +152,12 @@ textarea:focus-visible{outline:none}
 .foot label{display:inline-flex;gap:6px;align-items:center}
 .foot b{color:var(--ink);font-weight:600}
 @media(max-width:560px){#hint{display:none}}
+.calc .head{font-size:13px}
+.calc .rl .d{white-space:normal;overflow:visible}
+@media(max-width:560px){.calc .rl{flex-wrap:wrap}.calc .rl .fill{min-width:8px}}
+.copybtn{font-size:13px;padding:3px 12px;border-radius:99px;border:1px solid var(--rule);background:var(--sheet);color:var(--blue);cursor:pointer;margin:0 0 10px}
+.reply b{font-weight:650}
+.tries .what.ai::after{content:" · AI";color:var(--blue)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .still .pen::after{animation:none}
 @media (prefers-reduced-motion:reduce){.pen::after{animation:none}.dots i{animation:none;opacity:.7}}
@@ -166,14 +172,14 @@ textarea:focus-visible{outline:none}
     <circle cx="26" cy="16" r="5" fill="#1d7a50"/>
     <path d="M23.6 16.1l1.7 1.7 3.2-3.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
   </svg>
-  <div class="brand"><h1>Ask Cascade Guard</h1><p>Checks the work before anyone relies on it</p></div>
+  <div class="brand"><h1>Ask Cascade Guard</h1><p>Works things out exactly, and checks every answer before you rely on it</p></div>
   <nav class="links" aria-label="More"><button class="linkbtn" id="claudebtn" type="button"><span class="long">Use in Claude</span><span class="short">Claude</span></button><button class="linkbtn" id="keybtn" type="button"><span class="long">Access key</span><span class="short">Key</span></button><a class="linkbtn" href="/">Dashboard</a></nav>
 </div></header>
 
 <main><div class="log" id="log" aria-live="polite">
   <section class="intro" id="intro">
-    <h2>What should I check?</h2>
-    <p>Paste a bill, a sum, or a task for one of your agent chains. I'll check it and show my working. Anything I can't read is reported, never guessed.</p>
+    <h2>What do you need worked out?</h2>
+    <p id="introtext">Money, bills, splitting with friends, loans, dates, time zones, units, travel, marks and recipes: I work them out exactly and show the working. Anything I can't read is reported, never guessed.</p>
     <ul class="tries" id="tries"></ul>
   </section>
 </div></main>
@@ -186,10 +192,10 @@ textarea:focus-visible{outline:none}
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.4 11.1l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg>
     </button>
     <label class="sr" for="msg">Your message</label>
-    <textarea id="msg" rows="1" placeholder="Ask, or paste a bill" maxlength="20000"></textarea>
-    <button class="send" id="send" type="submit">Check</button>
+    <textarea id="msg" rows="1" placeholder="Ask anything, or paste a bill" maxlength="20000"></textarea>
+    <button class="send" id="send" type="submit">Ask</button>
   </form>
-  <div class="foot"><span id="mode">Connecting…</span><span id="hint">Shift+Enter for a new line</span><label id="modelwrap" hidden><input type="checkbox" id="usemodel" checked> Let the AI model read my request</label></div>
+  <div class="foot"><span id="mode">Connecting…</span><span id="hint">Shift+Enter for a new line</span><label id="modelwrap" hidden><input type="checkbox" id="usemodel" checked> Use the AI model for writing and questions</label></div>
 </div></footer>
 
 <script>
@@ -206,12 +212,17 @@ let info = null, busy = false, pdf = null;
 let convo = store.load('cg_assistant') || [];   // [{me:{text,pdf}} | {bot:result}]
 
 const TRIES = [
+  ['Shopping', 'I bought a shirt for ₹1,500 at 20% off, they charged ₹1,250'],
   ['A bill', 'Check this invoice: 3 x $4.00, 2 x $1.50, total $16.00'],
-  ['Rupees and GST', '2 pens at ₹15 each, Notebook 3 x ₹40, GST 18%, Total ₹177'],
-  ['A sum', 'Is 17 x 23 = 401?'],
-  ['A list', 'The average of 3, 7, 2, 9 is 5.5'],
-  ['An agent chain', 'Run support ticket triage on: I was charged twice for INV-1007 and want a refund before Friday'],
-  ['A demo', 'Show me Cascade Guard catching a mistake'],
+  ['Friends', 'Asha paid 600, Ravi paid 300 and I paid 0 for dinner'],
+  ['Loans', 'EMI for 10 lakh at 10% for 3 years'],
+  ['Dates', 'What day is 15 August 2027?'],
+  ['Travel', 'Fuel cost for 450 km at 15 km/l and ₹105 per litre'],
+  ['Studies', 'SGPA with credits 4, 3, 3 and grades 9, 8, 10'],
+  ['Kitchen', 'Recipe for 4 needs 200 g flour, 2 eggs; make it for 6'],
+  ['Writing', 'Write a polite email to my landlord asking him to fix the geyser this week', 'ai'],
+  ['Questions', 'Explain compound interest simply, with an example', 'ai'],
+  ['The guard', 'Show me Cascade Guard catching a mistake'],
 ];
 
 function h(tag, attrs, ...kids){
@@ -262,9 +273,11 @@ async function loadInfo(showCard = true){
   try{
     info = await call('/assistant/info');
     const m = info.model;
-    if(info.model_available){ $('#mode').innerHTML = ''; $('#mode').append('AI model: ', h('b', {text: m.model}), ', checked by Cascade Guard'); $('#modelwrap').hidden = false; $('#hint').hidden = true; }
-    else if(info.model_needs_admin){ $('#mode').textContent = 'Built-in checker (an admin key lets the AI model answer)'; }
-    else { $('#mode').innerHTML = ''; $('#mode').append(h('b', {text: 'Built-in checker'}), ' (free, no AI model needed)'); }
+    if(info.model_available){ $('#mode').innerHTML = ''; $('#mode').append('AI model: ', h('b', {text: m.model}), ', every answer checked'); $('#modelwrap').hidden = false; $('#hint').hidden = true;
+      $('#introtext').textContent = 'Ask anything: emails and messages, explanations, translations, plans, and everyday sums about money, dates, travel, studies and cooking. Calculations are worked out exactly; every AI answer is checked by Cascade Guard before you see it.'; }
+    else if(info.model_needs_admin){ $('#mode').textContent = 'Exact calculations (a key with more access lets the AI model answer too)'; }
+    else { $('#mode').innerHTML = ''; $('#mode').append(h('b', {text: 'Exact calculations'}), ' (free; writing and questions need an AI model)'); }
+    renderTries();
     return true;
   }catch(e){
     if(e.kind === 'key'){ $('#mode').textContent = 'Needs an access key'; if(showCard) showKeyCard(); }
@@ -276,8 +289,9 @@ async function loadInfo(showCard = true){
 /* ------------------------------------------------------------------ rendering */
 function renderTries(){
   const ul = $('#tries'); ul.textContent = '';
-  for(const [what, say] of TRIES){
-    ul.append(h('li', {}, h('button', {type: 'button', onclick: () => send(say)}, h('span', {class: 'what', text: what}), h('span', {class: 'say', text: say}))));
+  for(const [what, say, ai] of TRIES){
+    if(ai && !(info && info.model_available)) continue;
+    ul.append(h('li', {}, h('button', {type: 'button', onclick: () => send(say)}, h('span', {class: 'what' + (ai ? ' ai' : ''), text: what}), h('span', {class: 'say', text: say}))));
   }
 }
 
@@ -339,6 +353,31 @@ function sumCard(d){
   if(d.status === 'wrong') line.append(h('s', {class: 'pen', text: d.claimed}), h('b', {class: 'fix', text: d.value}));
   else line.append(h('b', {text: d.value}));
   return line;
+}
+
+function calcCard(d){
+  const card = h('div', {class: 'receipt calc'});
+  if(d.title) card.append(h('div', {class: 'head', text: d.title.charAt(0).toUpperCase() + d.title.slice(1)}));
+  let sep = false;
+  for(const l of d.lines || []){
+    if(l.total && !sep){ card.append(h('div', {class: 'rsep'})); sep = true; }
+    const amt = h('span', {class: 'a'});
+    if(l.wrong) amt.append(h('s', {class: 'pen', text: l.wrong}), h('b', {class: 'fix', text: l.value}));
+    else amt.append(l.value);
+    card.append(h('div', {class: 'rl' + (l.total ? ' total' : ' sub')}, h('span', {class: 'd', title: l.label, text: l.label}), h('span', {class: 'fill'}), amt,
+      h('span', {class: 'm ' + (l.wrong ? 'no' : l.total && d.status === 'correct' ? 'ok' : '')}, l.wrong ? '✗' : l.total && d.status === 'correct' ? '✓' : '')));
+  }
+  for(const n of d.notes || []) card.append(h('div', {class: 'small', text: n}));
+  return card;
+}
+
+function richText(text){
+  const p = h('p', {class: 'reply'});
+  String(text || '').split(/(\*\*[^*\n]+\*\*)/).forEach(part => {
+    if(/^\*\*[^*\n]+\*\*$/.test(part)) p.append(h('b', {text: part.slice(2, -2)}));
+    else p.append(part.replace(/^#{1,4} +/gm, ''));
+  });
+  return p;
 }
 
 function chainCard(d){
@@ -406,9 +445,10 @@ function workingPanel(res){
   if((g.assumptions || []).length) parts.push(h('div', {class: 'k', text: 'Assumed'}), h('ul', {}, g.assumptions.map(c => h('li', {text: c}))));
   const rc = g.reply_check;
   if(rc){
-    parts.push(h('div', {class: 'k', text: "The AI model's answer was checked too"}), h('ul', {}, rc.attempts.map((a, i) =>
-      h('li', {class: a.passed ? 'ok' : 'no', text: 'Answer ' + (i + 1) + ': ' + (a.passed ? 'accepted' : 'rejected, ' + a.reason)})),
-      rc.replaced ? h('li', {class: 'no', text: 'Still wrong after the retries, so the built-in answer is shown instead.'}) : null));
+    parts.push(h('div', {class: 'k', text: "The AI model's answer was checked"}), h('ul', {}, rc.attempts.map((a, i) =>
+      h('li', {class: a.passed ? 'ok' : 'no', text: 'Answer ' + (i + 1) + ': ' + (a.passed ? 'accepted' : (a.by === 'checker' ? 'sent back, ' : 'rejected, ') + a.reason)})),
+      rc.replaced ? h('li', {class: 'no', text: 'Still wrong after the retries, so the exact built-in answer is shown instead.'}) : null,
+      rc.flagged ? h('li', {class: 'no', text: 'The checker still had doubts after the retries, so the answer is marked as not confirmed.'}) : null));
   }
   if(res.extracted_text) parts.push(h('div', {class: 'k', text: 'Text read from ' + (res.pdf_name || 'the PDF')}), h('div', {class: 'out', text: res.extracted_text}));
   if(!parts.length) return null;
@@ -429,6 +469,17 @@ function verdictFor(res){
   }
   if(k === 'run_chain' && d.status) return d.status === 'halted' ? verdictLine('bad', 'Stopped safely') : verdictLine(d.detected ? 'info' : 'good', d.detected ? 'Finished, after the guard caught ' + d.detected + ' wrong answer' + (d.detected === 1 ? '' : 's') : 'Finished, every step checked');
   if(k === 'demo'){ const n = d.with_guard.trace.filter(t => t.rejected).length; return verdictLine('good', 'Caught ' + n + ' planted mistake' + (n === 1 ? '' : 's') + ', right result delivered'); }
+  if(k === 'check_everyday' || k === 'calculate'){
+    if(d.status === 'wrong') return verdictLine('bad', 'Wrong');
+    if(d.status === 'correct') return verdictLine('good', 'Correct');
+  }
+  const g = res.guard || {};
+  if(k === 'chat' || g.verdict === 'flagged'){
+    if(g.verdict === 'flagged') return verdictLine('bad', 'Not confirmed: check it before relying on it');
+    if(g.verdict === 'caught') return verdictLine('good', 'Checked: a problem was found and fixed');
+    if(g.verdict === 'unchecked') return verdictLine('info', 'Not double-checked (the AI model was busy)');
+    if(g.verdict === 'passed') return verdictLine('good', 'Checked by a second, independent pass');
+  }
   return null;
 }
 
@@ -436,18 +487,25 @@ function addBot(res, animate){
   const box = h('div', {class: 'msg bot'});
   const v = verdictFor(res); if(v) box.append(v);
   if(res.notice) box.append(h('p', {class: 'notice', text: res.notice}));
-  box.append(h('p', {class: 'reply', text: res.reply}));
+  box.append(richText(res.reply));
   const d = res.data || {};
+  if((res.answered_by || {}).mode === 'model' && (res.reply || '').length > 160){
+    const btn = h('button', {class: 'copybtn', type: 'button', onclick: async () => {
+      try{ await navigator.clipboard.writeText(res.reply); btn.textContent = 'Copied'; }catch(e){ btn.textContent = 'Select the text to copy'; }
+    }}, 'Copy');
+    box.append(btn);
+  }
   if(!d.error){
     if(res.kind === 'check_bill' && d.lines && d.lines.length) box.append(billCard(d));
     else if((res.kind === 'check_math' || res.kind === 'check_stats') && (d.status === 'wrong' || d.status === 'correct' || d.status === 'computed')) box.append(sumCard(d));
     else if(res.kind === 'run_chain' && d.steps) box.append(chainCard(d));
     else if(res.kind === 'demo' && d.with_guard) box.append(demoCard(d));
+    else if((res.kind === 'check_everyday' || res.kind === 'calculate') && (d.lines || []).length) box.append(calcCard(d));
     else { const l = listCard(res.kind, d); if(l) box.append(l); }
   }
   const w = workingPanel(res); if(w) box.append(w);
   const ab = res.answered_by || {};
-  box.append(h('div', {class: 'by', text: ab.mode === 'model' ? 'Answered by the AI model (' + ab.model + '); its answer was checked by Cascade Guard' : 'Answered by the built-in checker'}));
+  box.append(h('div', {class: 'by', text: ab.mode === 'model' ? 'Written by the AI model (' + ab.model + '), checked by Cascade Guard' + (res.kind === 'chat' ? ' with an independent second pass' : ' against the exact numbers and by an independent second pass') : ab.why ? 'Worked out exactly by the built-in tools, no AI needed' : 'Worked out by the built-in tools'}));
   if(!animate) box.classList.add('still');
   document.querySelectorAll('.next').forEach(n => n.remove());
   const sugg = (res.suggestions || []).slice(0, 3);
@@ -525,7 +583,7 @@ async function send(text){
   addMe(text || 'Check this PDF', sentPdf && sentPdf.name);
   convo.push({me: {text: text || 'Check this PDF', pdf: sentPdf && sentPdf.name}});
   $('#msg').value = ''; grow(); clearPdf();
-  const wait = h('div', {class: 'msg thinking'}, h('span', {class: 'dots'}, h('i'), h('i'), h('i')), h('span', {text: 'Checking…'}));
+  const wait = h('div', {class: 'msg thinking'}, h('span', {class: 'dots'}, h('i'), h('i'), h('i')), h('span', {text: 'Working it out…'}));
   $('#log').append(wait); wait.scrollIntoView({block: 'end', behavior: 'smooth'});
   const slow = setTimeout(() => { wait.lastChild.textContent = 'Waking the server up. Free hosting sleeps when no one uses it, so the first request can take up to a minute.'; }, 5000);
   const history = convo.slice(-9, -1).map(c => c.me ? {role: 'user', text: c.me.text.slice(0, 4000)} :
