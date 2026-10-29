@@ -324,8 +324,9 @@ python -m build               # wheel and source package in dist/
 ```
 CI (`.github/workflows/ci.yml`) runs lint and types, the tests on Python 3.12/3.13/3.14 (Linux) plus Windows and
 macOS, PostgreSQL, the oldest allowed dependency versions, a clean install of the built wheel, and the Docker image.
-Releases: bump `__version__` in `cascade_guard/__init__.py`, update `CHANGELOG.md` and `RELEASE_NOTES.md`, push a tag
-`vX.Y.Z`; `release.yml` publishes to PyPI, GitHub Releases and the GitHub container registry. See
+Releases: bump `__version__` in `cascade_guard/__init__.py`, update `CHANGELOG.md` and `RELEASE_NOTES.md`, then
+either publish a GitHub release with a new tag `vX.Y.Z` or push that tag; `release.yml` publishes to PyPI, GitHub
+Releases and the GitHub container registry. See
 `CONTRIBUTING.md`. Repository: https://github.com/kanav10213/cascade-guard
 
 ## Limits

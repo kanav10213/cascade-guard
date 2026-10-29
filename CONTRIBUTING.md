@@ -20,6 +20,7 @@ PostgreSQL tests run when `CASCADE_TEST_PG=postgresql://user:pass@host:5432/db` 
 ## Releasing (maintainers)
 1. Set `__version__` in `cascade_guard/__init__.py`, move "Unreleased" in `CHANGELOG.md` to the new version, update
    `RELEASE_NOTES.md`.
-2. Commit, then `git tag vX.Y.Z && git push --tags`.
+2. Commit and push to `main`. Then either publish a release on GitHub (Releases > "Draft a new release", new tag
+   `vX.Y.Z` on `main`) or run `git tag -a vX.Y.Z -m "..." && git push origin vX.Y.Z`.
 3. `release.yml` checks that the tag matches the version, runs the tests, and publishes to PyPI, GitHub Releases and
    `ghcr.io/<owner>/cascade-guard`.

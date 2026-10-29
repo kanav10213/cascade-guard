@@ -1,12 +1,23 @@
-# Push a tag like v1.0.0 to build, publish to PyPI and create a GitHub release.
+# Release: build, publish to PyPI, attach the files to the GitHub release, push the Docker image.
+# Start it either way:
+#   - on GitHub: Releases > "Draft a new release" > tag v1.0.0 (create on publish, target main) > Publish
+#   - from a terminal: git tag -a v1.0.0 -m "Cascade Guard 1.0.0" && git push origin v1.0.0
+# Both can fire for the same tag; every step below is safe to run twice.
 # One-time setup: on pypi.org add a "trusted publisher" for this repository and the workflow
 # file release.yml (environment: pypi). No API token is stored anywhere.
 name: release
 on:
   push:
     tags: ["v*"]
+  release:
+    types: [published]
 permissions:
   contents: read
+concurrency:
+  group: release-${{ github.event.release.tag_name || github.ref_name }}
+  cancel-in-progress: false
+env:
+  TAG: ${{ github.event.release.tag_name || github.ref_name }}
 
 jobs:
   build:
@@ -19,7 +30,7 @@ jobs:
       - name: the tag must match the package version
         run: |
           v=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('cascade_guard/__init__.py').read())[1])")
-          test "v$v" = "${GITHUB_REF_NAME}" || { echo "tag ${GITHUB_REF_NAME} != version $v"; exit 1; }
+          test "v$v" = "$TAG" || { echo "tag $TAG != version $v"; exit 1; }
       - run: pip install -r requirements-dev.txt && ruff check . && pytest -q
       - run: python -m build && twine check dist/*
       - uses: actions/upload-artifact@v4
@@ -39,6 +50,8 @@ jobs:
           name: dist
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true   # a second run for the same tag is a no-op
 
   github-release:
     needs: build
@@ -51,7 +64,13 @@ jobs:
         with:
           name: dist
           path: dist/
-      - run: gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md
+      - name: create the release, or add the files to the one made on GitHub
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* --clobber
+          else
+            gh release create "$TAG" dist/* --title "$TAG" --notes-file RELEASE_NOTES.md --verify-tag
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -71,5 +90,5 @@ jobs:
       - name: build and push ghcr.io/<owner>/cascade-guard
         run: |
           img=ghcr.io/$(echo "$GITHUB_REPOSITORY_OWNER" | tr A-Z a-z)/cascade-guard
-          docker build -t "$img:${GITHUB_REF_NAME#v}" -t "$img:latest" .
-          docker push "$img:${GITHUB_REF_NAME#v}" && docker push "$img:latest"
+          docker build -t "$img:${TAG#v}" -t "$img:latest" .
+          docker push "$img:${TAG#v}" && docker push "$img:latest"
