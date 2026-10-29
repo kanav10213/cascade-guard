@@ -15,6 +15,10 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   safety rules (no link-local or metadata addresses; private addresses only on your own computer or with
   `AGENT_ALLOW_PRIVATE=1`). A sample agent at `/demo/agent`, `cascade_guard.remote.RemoteGuard` to use a
   deployed server from Python, runnable examples in `examples/`, and the guide `INTEGRATION.md`.
+- Connected agents: register an outside agent once (dashboard section 10, `/agents`, `cascade-guard agent`, or
+  the `CASCADE_AGENTS` setting, which survives restarts), test it with one probe that explains problems in
+  plain words, and choose it by name in any chain step; a new `agents` table. Agent calls wait up to 90 s by
+  default, so a sleeping free host can wake up.
 - `HEAD` on `/` and `/health` for uptime monitors.
 
 ## [1.0.0] - 2026-10-29

@@ -22,7 +22,7 @@ import os
 import socket
 from urllib.parse import urlparse
 
-TIMEOUT_DEFAULT = 60.0
+TIMEOUT_DEFAULT = 90.0  # free hosts can take ~60 s to wake a sleeping agent
 MAX_REPLY = 2_000_000
 
 
@@ -79,6 +79,9 @@ def call_agent(step, step_input, original: str, attempt: int, feedback, http_cli
     client = http_client or httpx.Client(timeout=step.timeout or TIMEOUT_DEFAULT, follow_redirects=False)
     try:
         r = client.post(step.url, json=body, headers=headers)
+    except httpx.TimeoutException as e:
+        raise AgentCallError(f"agent for step {step.name!r} did not answer within {step.timeout or TIMEOUT_DEFAULT:.0f} s "
+                             "(a free host may be waking up; try again in a minute or raise the timeout)") from e
     except httpx.HTTPError as e:
         raise AgentCallError(f"agent for step {step.name!r} could not be reached: {type(e).__name__}: {e}") from e
     finally:

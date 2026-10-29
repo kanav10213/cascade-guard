@@ -184,6 +184,53 @@ def cmd_chain(args) -> int:
     return 0 if result["status"] == "completed" else 1
 
 
+def cmd_agent(args) -> int:
+    """Connected agents from the command line: list, add, test, remove."""
+    from pydantic import ValidationError
+
+    from cascade_guard.agents_registry import AgentDef, all_agents, find_agent, test_agent
+    from cascade_guard.config import load_env, use_home
+    use_home(args.home)
+    load_env()
+    from cascade_guard.storage.db import get_store
+    store = get_store()
+    if args.action == "list":
+        agents = all_agents()
+        for a in agents:
+            token = f", token in {a['auth_env']}" + ("" if a["token_set"] else " (NOT SET)") if a["auth_env"] else ""
+            print(f"{a['name']:<20} {a['url']}  [{a['source']}{token}]  {a['description']}")
+        if not agents:
+            print("No connected agents yet. Add one: cascade-guard agent add my-agent https://.../agent")
+        return 0
+    if not args.name:
+        raise SystemExit("Name the agent, e.g. cascade-guard agent test my-agent")
+    if args.action == "add":
+        if store is None:
+            raise SystemExit("Storage is off; list agents in the CASCADE_AGENTS setting instead.")
+        try:
+            agent = AgentDef(name=args.name, url=args.url or "", auth_env=args.token_var or "", timeout=args.timeout,
+                             description=args.description or "")
+        except ValidationError as e:
+            raise SystemExit(f"Not a valid agent:\n{e}") from e
+        store.save_agent(agent.model_dump())
+        print(f"Connected {agent.name} -> {agent.url}. Test it: cascade-guard agent test {agent.name}")
+        return 0
+    if args.action == "remove":
+        if store is None or not store.delete_agent(args.name.lower()):
+            raise SystemExit(f"No agent called {args.name!r} in the database.")
+        print(f"Removed {args.name.lower()}")
+        return 0
+    found = find_agent(args.name)
+    if found is None:
+        raise SystemExit(f"No connected agent called {args.name!r}.")
+    r = test_agent(found)
+    print(("OK" if r["ok"] else "PROBLEM") + f": {found.name} ({found.url})" + (f", {r['seconds']} s" if "seconds" in r else ""))
+    if r.get("reply"):
+        print(f"  reply: {str(r['reply'])[:200]}")
+    print(f"  {r['hint']}")
+    return 0 if r["ok"] else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="cascade-guard", description="Stop errors from cascading through "
                                 "chains of AI agents.", epilog="Docs: README.md, and /docs on a running server.")
@@ -224,6 +271,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--inject", type=float, default=0.0, help="chance of a planted test mistake per step (0 to 1)")
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--json", action="store_true", help="print the full result as JSON")
+
+    s = add("agent", cmd_agent, "connected agents: list, add, test, remove")
+    s.add_argument("action", choices=["list", "add", "test", "remove"])
+    s.add_argument("name", nargs="?", default="")
+    s.add_argument("url", nargs="?", default="", help="for add: the agent's URL")
+    s.add_argument("--token-var", help="for add: the server environment variable that holds the agent's token")
+    s.add_argument("--timeout", type=float, help="for add: seconds to wait (default 90)")
+    s.add_argument("--description", help="for add: one line about the agent")
 
     for name, module, help_ in (("compare", "compare", "rule-based paired comparison; writes report.json"),
                                 ("baseline", "baseline", "rule-based chain without the guard"),

@@ -79,7 +79,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   <span><span class="pill" id="role" style="display:none"></span> <span class="pill" id="health">checking server…</span></span>
 </header>
 <p class="sub">In a chain of AI agents, one agent's mistake gets accepted by the next and builds up until it reaches the final answer. Cascade Guard checks every step, re-runs a failing step, and stops the order if it can't be fixed, so a wrong answer is never delivered silently.</p>
-<p class="topnav">New: <a href="#builder">build your own agent chain</a> (section 9).</p>
+<p class="topnav">New: <a href="#builder">build your own agent chain</a> (section 9) and <a href="#agents">connect the agents you already have</a> (section 10).</p>
 
 <div class="card" id="keybox">
   <h2>API key needed</h2>
@@ -273,6 +273,27 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   </div>
   <div class="err" id="cb-run-err"></div>
   <div id="cb-out"></div>
+</div>
+
+<div class="card" id="agents">
+  <h2>10. Connected agents</h2>
+  <p class="hint">Connect an agent you already have (any language, any framework) once, test it, and then choose it by name in any chain step ("Done by"). Cascade Guard sends it the step's instruction and input, checks its answer, retries it with the reason, and stops the chain if it stays wrong. The agent must answer <span class="mono">{"output": ...}</span>; see INTEGRATION.md or <span class="mono">examples/my_agent_server.py</span>. A token is never stored here: give the <b>name</b> of a server setting that holds it.</p>
+  <table><thead><tr><th>Name</th><th>URL</th><th>Token setting</th><th>From</th><th></th></tr></thead><tbody id="ag-list"><tr><td colspan="5" class="hint">loading…</td></tr></tbody></table>
+  <div class="hint" id="ag-test-out" style="margin-top:8px"></div>
+  <h3 style="margin:16px 0 6px;font-size:15px">Connect an agent</h3>
+  <div class="row">
+    <label>Name<input id="ag-name" placeholder="e.g. support-bot" maxlength="40"></label>
+    <label style="flex:2">URL<input id="ag-url" placeholder="https://my-agent.example.com/agent" maxlength="2000"></label>
+    <label>Token setting<input id="ag-token" placeholder="e.g. SUPPORT_BOT_TOKEN" maxlength="64"></label>
+    <label>Timeout (s)<input id="ag-timeout" type="number" min="1" max="300" placeholder="90" style="width:80px"></label>
+  </div>
+  <div class="row">
+    <label style="flex:1">Description<input id="ag-desc" placeholder="optional, one line" maxlength="300"></label>
+    <button class="ghost" id="ag-sample">Fill in the sample agent</button>
+    <button class="ghost" id="ag-test">Test</button>
+    <button id="ag-add">Connect</button>
+  </div>
+  <div class="err" id="ag-err"></div>
 </div>
 <p class="note">Sections 1 and 3 use rule-based agents, so they show how the chain's design lets errors through. Sections 2, 5 and 8 use your configured model (or the simulator); section 8 gives the measured error rates.</p>
 </div>
@@ -737,7 +758,7 @@ $('#ev-run').addEventListener('click', runEval);
 $('#ev-json').addEventListener('click', () => download(evalName('json'), JSON.stringify(evalJob.report, null, 2), 'application/json'));
 $('#ev-md').addEventListener('click', () => download(evalName('md'), evalJob.markdown, 'text/markdown'));
 // ---------------------------------------------------------------- build your own agent chain
-const CB = {steps: [], id: null, saved: [], templates: [], lastResult: null};
+const CB = {steps: [], id: null, saved: [], templates: [], lastResult: null, agents: []};
 function cbBlankStep(i){ return {name: 'step ' + (i + 1), instruction: '', output: 'text', keys: [], check: 'model', criteria: '', max_chars: null,
                                   agent: 'model', url: '', auth_env: '', timeout: null}; }
 function cbOpt(sel, value, label){ const o = document.createElement('option'); o.value = value; o.textContent = label; sel.append(o); return o; }
@@ -746,7 +767,7 @@ function cbLabel(text, control, flex){ const l = el('label'); if(flex) l.style.f
 
 function cbRenderFlow(){
   const f = $('#cb-flow'); f.replaceChildren(el('span', null, 'input'));
-  CB.steps.forEach(s => { f.append(el('span', null, '→'), el('span', 'n', (s.agent === 'url' ? '⇄ ' : '') + (s.name || '?') + (s.check === 'none' ? '' : ' ✓'))); });
+  CB.steps.forEach(s => { f.append(el('span', null, '→'), el('span', 'n', (s.agent !== 'model' && s.agent ? '⇄ ' : '') + (s.name || '?') + (s.check === 'none' ? '' : ' ✓'))); });
   f.append(el('span', null, '→'), el('span', null, 'output'));
 }
 function cbRender(){
@@ -783,7 +804,9 @@ function cbRender(){
     const row = el('div', 'row'); row.style.marginTop = '8px';
     row.append(cbLabel('Returns', out), keysL, cbLabel('Check', check), critL, cbLabel('Max characters', maxc));
     // who does the step: the configured model, or the user's own agent at a URL
-    const who = cbSelect([['model', 'the model'], ['url', 'your agent (URL)']], s.agent || 'model');
+    const whoOptions = [['model', 'the model'], ...CB.agents.map(a => ['c:' + a.name, 'agent: ' + a.name]), ['url', 'another agent (URL)']];
+    if(s.agent === 'connected' && !CB.agents.some(a => a.name === s.agent_name)) whoOptions.splice(1, 0, ['c:' + s.agent_name, 'agent: ' + s.agent_name + ' (not connected)']);
+    const who = cbSelect(whoOptions, s.agent === 'connected' ? 'c:' + s.agent_name : (s.agent || 'model'));
     const url = el('input'); url.value = s.url || ''; url.placeholder = 'https://my-agent.example.com/agent'; url.maxLength = 2000;
     url.addEventListener('input', () => { s.url = url.value.trim(); });
     const tok = el('input'); tok.value = s.auth_env || ''; tok.placeholder = 'e.g. MY_AGENT_TOKEN (optional)'; tok.maxLength = 64;
@@ -799,11 +822,22 @@ function cbRender(){
     const agentNote = el('p', 'hint', 'Cascade Guard sends your agent a POST with the instruction, the input and, on a retry, the reason the last answer was rejected; '
       + 'it replies {"output": ...}. See INTEGRATION.md for the format and a ready-made agent server.');
     agentNote.style.margin = '6px 0 0';
-    const showAgent = () => { const on = who.value === 'url'; agentRow.style.display = on ? '' : 'none'; agentNote.style.display = on ? '' : 'none'; };
-    who.addEventListener('change', () => { s.agent = who.value; showAgent(); cbRenderFlow(); });
+    const connNote = el('p', 'hint'); connNote.style.margin = '6px 0 0';
+    const showAgent = () => {
+      const on = who.value === 'url'; agentRow.style.display = on ? '' : 'none'; agentNote.style.display = on ? '' : 'none';
+      const conn = who.value.startsWith('c:') ? CB.agents.find(a => 'c:' + a.name === who.value) : null;
+      connNote.style.display = who.value.startsWith('c:') ? '' : 'none';
+      connNote.textContent = conn ? 'Done by the connected agent ' + conn.name + ' (' + conn.url + '). Manage it in section 10.'
+                                  : 'This agent is not connected on this server; add it in section 10 or pick another.';
+    };
+    who.addEventListener('change', () => {
+      if(who.value.startsWith('c:')){ s.agent = 'connected'; s.agent_name = who.value.slice(2); }
+      else { s.agent = who.value; s.agent_name = ''; }
+      showAgent(); cbRenderFlow();
+    });
     row.prepend(cbLabel('Done by', who));
     showAgent();
-    card.append(head, cbLabel('Instruction', instr), row, agentRow, agentNote);
+    card.append(head, cbLabel('Instruction', instr), row, agentRow, agentNote, connNote);
     box.append(card);
   });
   $('#cb-add').disabled = CB.steps.length >= 10;
@@ -815,7 +849,8 @@ function cbDefinition(){
           steps: CB.steps.map(s => ({name: s.name, instruction: s.instruction, output: s.output,
                                      keys: s.output === 'json' ? s.keys : [], check: s.check,
                                      criteria: s.check === 'model' ? (s.criteria || '') : '', max_chars: s.max_chars || null,
-                                     agent: s.agent || 'model', url: s.agent === 'url' ? (s.url || '') : '',
+                                     agent: s.agent || 'model', agent_name: s.agent === 'connected' ? s.agent_name : '',
+                                     url: s.agent === 'url' ? (s.url || '') : '',
                                      auth_env: s.agent === 'url' ? (s.auth_env || '') : '', timeout: s.agent === 'url' ? (s.timeout || null) : null}))};
 }
 function cbLoad(def, id){
@@ -824,7 +859,7 @@ function cbLoad(def, id){
   $('#cb-retries').value = def.max_retries ?? 2; $('#cb-repair').value = def.repair || 'guided';
   CB.steps = (def.steps || []).map(s => ({name: s.name, instruction: s.instruction, output: s.output || 'text', keys: s.keys || [],
                                           check: s.check || 'model', criteria: s.criteria || '', max_chars: s.max_chars || null,
-                                          agent: s.agent || 'model', url: s.url || '', auth_env: s.auth_env || '', timeout: s.timeout || null}));
+                                          agent: s.agent || 'model', agent_name: s.agent_name || '', url: s.url || '', auth_env: s.auth_env || '', timeout: s.timeout || null}));
   if(!CB.steps.length) CB.steps.push(cbBlankStep(0));
   $('#cb-delete').style.display = CB.id ? '' : 'none';
   $('#cb-saved-note').textContent = CB.id ? 'Editing saved chain #' + CB.id : 'Not saved yet';
@@ -928,7 +963,66 @@ $('#cb-import').addEventListener('change', async (ev) => {
   catch(e){ $('#cb-err').textContent = 'That file is not a chain definition (JSON): ' + e.message; }
   ev.target.value = '';
 });
-cbInit();
+// ---------------------------------------------------------------- connected agents
+async function agLoad(){
+  try{ CB.agents = await api('/agents'); }catch(e){ CB.agents = []; $('#ag-err').textContent = e.message; }
+  const body = $('#ag-list'); body.replaceChildren();
+  if(!CB.agents.length){ const tr = el('tr'); const td = el('td', 'hint', 'No connected agents yet. Connect one below (try "Fill in the sample agent").'); td.colSpan = 5; tr.append(td); body.append(tr); }
+  for(const a of CB.agents){
+    const tr = el('tr');
+    const tok = a.auth_env ? a.auth_env + (a.token_set ? '' : ' (not set on this server)') : '—';
+    tr.append(el('td', null, a.name + (a.description ? ' — ' + a.description : '')), el('td', 'mono', a.url), el('td', 'mono', tok),
+              el('td', null, a.source === 'settings' ? 'server settings' : 'dashboard'));
+    const td = el('td');
+    const t = el('button', 'ghost mini', 'Test'); t.addEventListener('click', () => agTest(a));
+    const u = el('button', 'ghost mini', 'Use in a new chain'); u.addEventListener('click', () => agUse(a));
+    td.append(t, ' ', u);
+    if(a.source !== 'settings'){ const d = el('button', 'ghost mini', 'Remove'); d.addEventListener('click', () => agRemove(a)); td.append(' ', d); }
+    tr.append(td); body.append(tr);
+  }
+  cbRender();
+}
+function agForm(){
+  return {name: $('#ag-name').value.trim(), url: $('#ag-url').value.trim(), auth_env: $('#ag-token').value.trim(),
+          timeout: $('#ag-timeout').value ? Number($('#ag-timeout').value) : null, description: $('#ag-desc').value.trim()};
+}
+function agShowTest(r){
+  const o = $('#ag-test-out');
+  o.textContent = (r.ok ? '\u2713 ' : '\u2717 ') + (r.agent || '') + ': ' + r.hint + (r.seconds !== undefined ? ' (' + r.seconds + ' s)' : '')
+    + (r.reply ? ' \u00b7 reply: ' + String(r.reply).slice(0, 160) : '');
+  o.style.color = r.ok ? 'var(--good)' : 'var(--bad)';
+}
+async function agTest(a){
+  $('#ag-test-out').textContent = 'Sending a test request to ' + (a ? a.name : 'the agent') + '\u2026 (a sleeping free host can take up to a minute)';
+  $('#ag-test-out').style.color = '';
+  try{ agShowTest(a ? await apiMethod('POST', '/agents/' + encodeURIComponent(a.name) + '/test') : await apiMethod('POST', '/agents/test', agForm())); }
+  catch(e){ $('#ag-test-out').textContent = e.message; $('#ag-test-out').style.color = 'var(--bad)'; }
+}
+async function agAdd(){
+  $('#ag-err').textContent = '';
+  try{ await apiMethod('POST', '/agents', agForm()); for(const id of ['ag-name', 'ag-url', 'ag-token', 'ag-timeout', 'ag-desc']) $('#' + id).value = ''; await agLoad(); }
+  catch(e){ $('#ag-err').textContent = e.message; }
+}
+async function agRemove(a){
+  if(!confirm('Disconnect the agent "' + a.name + '"? Chains that use it will stop at that step until it is connected again.')) return;
+  try{ await apiMethod('DELETE', '/agents/' + encodeURIComponent(a.name)); await agLoad(); }catch(e){ $('#ag-err').textContent = e.message; }
+}
+function agUse(a){
+  cbLoad({name: 'Chain with ' + a.name, description: 'Uses the connected agent ' + a.name + ', checked by Cascade Guard.', steps: [
+    {name: a.name.replace(/[^A-Za-z0-9 _.-]/g, '-').slice(0, 60), instruction: 'Summarise the input in two sentences. Keep every number, name and date.',
+     output: 'text', check: 'model', agent: 'connected', agent_name: a.name},
+    {name: 'classify', instruction: 'Give the category (billing, delivery, product or other) and a one-line reason.',
+     output: 'json', keys: ['category', 'reason'], check: 'model'}]});
+  if(!$('#cb-input').value) $('#cb-input').value = 'I was charged twice for invoice INV-1007 ($69.24). Please refund it before Friday.';
+  location.hash = 'builder';
+}
+$('#ag-add').addEventListener('click', agAdd);
+$('#ag-test').addEventListener('click', () => agTest(null));
+$('#ag-sample').addEventListener('click', () => {
+  $('#ag-name').value = 'sample-agent'; $('#ag-url').value = location.origin + '/demo/agent?mistakes=0.5';
+  $('#ag-desc').value = "this server's built-in sample agent (makes mistakes on purpose)";
+});
+cbInit().then(agLoad);
 health(); snippet(); whoami().then(loadHistory); runDemo(); llmStatus();
 loadSample(7);
 </script>

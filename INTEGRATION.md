@@ -18,7 +18,18 @@ All four work with the free simulated checker (no key) and with a real model.
 
 ## A. Plug your agent into a chain (no code in Cascade Guard)
 
-On the dashboard (section 9), set a step's **Done by** to **your agent (URL)** and enter your agent's URL.
+**The quick way: connect it once.** Dashboard section 10, **Connected agents**: give the agent a name, its URL and
+(if it needs one) the name of the server setting that holds its token, press **Test**, then **Connect**. From then
+on every chain step can pick it under **Done by**, and **Use in a new chain** builds a two-step chain around it.
+The test sends one probe request and tells you in plain words what is wrong if it fails (wrong path, missing or
+refused token, a sleeping free host, a reply in the wrong format).
+
+To keep connected agents across restarts (Render's free plan wipes its disk), list them in the server setting
+`CASCADE_AGENTS` instead, for example:
+`[{"name": "support-bot", "url": "https://support-bot.example.com/agent", "auth_env": "SUPPORT_BOT_TOKEN"}]`.
+From the command line: `cascade-guard agent add NAME URL --token-var VAR`, `cascade-guard agent test NAME`.
+
+You can also type a URL directly in a step (**Done by: another agent (URL)**).
 Cascade Guard then sends your agent this request for that step:
 
 ```json

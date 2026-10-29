@@ -268,3 +268,114 @@ def test_example_agent_server_protocol(monkeypatch):
     assert c.post("/agent", json={"step": "s", "instruction": "x", "input": "A."}).status_code == 401
     assert c.post("/agent", json={"step": "s", "instruction": "x", "input": "A."},
                   headers={"Authorization": "Bearer t"}).status_code == 200
+
+
+# ---------------------------------------------------------------- connected agents (registry)
+
+@pytest.fixture
+def reg_store(tmp_path):
+    from cascade_guard.storage.db import Store, reset_store
+    s = Store(str(tmp_path / "agents.db"))
+    reset_store(s)
+    yield s
+    reset_store(None)
+
+
+def test_agent_definitions_are_validated():
+    from cascade_guard.agents_registry import AgentDef
+    a = AgentDef(name="Support Bot", url=" https://agent.example.com/agent ")
+    assert a.name == "support-bot" and a.url == "https://agent.example.com/agent"
+    for bad in ({"name": "x!", "url": "https://a.example.com"}, {"name": "x", "url": "ftp://a"},
+                {"name": "x", "url": "https://a.example.com", "auth_env": "sk-123"}):
+        with pytest.raises(ValueError):
+            AgentDef.model_validate(bad)
+
+
+def test_settings_and_dashboard_agents(reg_store, monkeypatch):
+    from cascade_guard.agents_registry import all_agents, find_agent
+    monkeypatch.setenv("CASCADE_AGENTS", json.dumps([
+        {"name": "from-settings", "url": "https://agent.example.com/a", "auth_env": "T1"},
+        {"name": "bad name!", "url": "https://x.example.com"}]))           # skipped, not fatal
+    assert api.post("/agents", json={"name": "mine", "url": "https://agent.example.com/b"}).status_code == 201
+    assert api.post("/agents", json={"name": "mine", "url": "https://agent.example.com/b"}).status_code == 409
+    assert api.post("/agents", json={"name": "from-settings", "url": "https://agent.example.com/b"}).status_code == 409
+    names = {a["name"]: a for a in api.get("/agents").json()}
+    assert set(names) == {"from-settings", "mine"} and names["from-settings"]["source"] == "settings"
+    assert names["from-settings"]["token_set"] is False and "token" not in json.dumps(names).lower().replace("token_set", "")
+    assert find_agent("MINE").url.endswith("/b") and len(all_agents()) == 2
+    r = api.put("/agents/mine", json={"name": "mine", "url": "https://agent.example.com/c"})
+    assert r.status_code == 200 and find_agent("mine").url.endswith("/c")
+    assert api.put("/agents/from-settings", json={"name": "from-settings", "url": "https://a.example.com"}).status_code == 409
+    assert api.delete("/agents/mine").status_code == 200 and api.delete("/agents/mine").status_code == 404
+    monkeypatch.setenv("CASCADE_AGENTS", "not json")
+    assert api.get("/agents").json() == []
+
+
+def test_connection_test_explains_problems(monkeypatch):
+    from cascade_guard.agents_registry import AgentDef, test_agent
+    a = AgentDef(name="a", url="https://agent.example.com/agent", auth_env="A_TOKEN")
+    assert test_agent(a)["stage"] == "token"
+    monkeypatch.setenv("A_TOKEN", "t")
+
+    def agent(status, payload):
+        return FakeAgent(lambda b: (status, payload)).client
+    assert test_agent(a, agent(200, {"output": "pong"}))["stage"] == "done"
+    assert test_agent(a, agent(200, {"output": ""}))["stage"] == "empty"
+    assert test_agent(a, agent(401, {"detail": "no"}))["stage"] == "auth"
+    assert test_agent(a, agent(404, {"detail": "no"}))["stage"] == "path"
+    assert test_agent(a, agent(200, {"answer": "x"}))["stage"] == "format"
+
+    def slow(request):
+        raise httpx.ReadTimeout("slow")
+    r = test_agent(a, httpx.Client(transport=httpx.MockTransport(slow)))
+    assert r["stage"] == "timeout" and "waking up" in r["hint"]
+    assert test_agent(AgentDef(name="m", url="http://169.254.169.254/x"))["stage"] == "address"
+
+
+def test_chain_steps_use_connected_agents_by_name(reg_store):
+    from cascade_guard.chains import ChainDef
+    assert api.post("/agents", json={"name": "bot", "url": "https://agent.example.com/agent"}).status_code == 201
+    calls = FakeAgent(lambda b: (200, {"output": "fine answer" if b["attempt"] else ""}))
+    chain = ChainDef.model_validate({"name": "c", "steps": [
+        {"name": "s1", "instruction": "Summarise.", "agent": "connected", "agent_name": "Bot"}]})
+    assert chain.steps[0].agent_name == "bot" and chain.steps[0].url == ""
+    r = run_chain_def(chain, TEXT, FakeLLMClient(), http_client=calls.client)
+    assert r["status"] == "completed" and [a["passed"] for a in r["steps"][0]["attempts"]] == [False, True]
+    assert all(q["body"]["instruction"] == "Summarise." for q in calls.requests)
+    with pytest.raises(ValueError, match="name which one"):
+        ChainDef.model_validate({"name": "c", "steps": [{"name": "s", "instruction": "x", "agent": "connected"}]})
+    from cascade_guard.agent_call import AgentCallError
+    ghost = ChainDef.model_validate({"name": "c", "steps": [{"name": "s", "instruction": "x", "agent": "connected",
+                                                             "agent_name": "ghost"}]})
+    with pytest.raises(AgentCallError, match="does not exist"):
+        run_chain_def(ghost, TEXT, FakeLLMClient())
+
+
+def test_viewers_can_run_connected_agents_but_not_manage_them(reg_store, monkeypatch):
+    monkeypatch.setenv("API_KEY", "adm")
+    monkeypatch.setenv("VIEWER_KEY", "view")
+    view, adm = {"X-API-Key": "view"}, {"X-API-Key": "adm"}
+    assert api.post("/agents", json={"name": "bot", "url": "https://agent.example.com/agent"}, headers=view).status_code == 403
+    assert api.post("/agents", json={"name": "bot", "url": "https://agent.example.com/agent"}, headers=adm).status_code == 201
+    assert api.get("/agents", headers=view).status_code == 200
+    assert api.post("/agents/bot/test", headers=view).status_code == 403
+
+
+def test_cli_agent_commands(tmp_path, monkeypatch, capsys):
+    from cascade_guard import cli
+    from cascade_guard.storage.db import reset_store
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("CASCADE_DB", str(tmp_path / "c.db"))
+    reset_store(None)
+    try:
+        assert cli.main(["agent", "list"]) == 0 and "No connected agents" in capsys.readouterr().out
+        assert cli.main(["agent", "add", "bot", "https://agent.example.com/agent", "--token-var", "BOT_TOKEN"]) == 0
+        assert "Connected bot" in capsys.readouterr().out
+        assert cli.main(["agent", "list"]) == 0 and "BOT_TOKEN (NOT SET)" in capsys.readouterr().out
+        assert cli.main(["agent", "test", "bot"]) == 1 and "BOT_TOKEN" in capsys.readouterr().out
+        assert cli.main(["agent", "remove", "bot"]) == 0
+        with pytest.raises(SystemExit):
+            cli.main(["agent", "test", "bot"])
+    finally:
+        reset_store(None)
+        os.chdir(ROOT)

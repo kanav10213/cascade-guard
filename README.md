@@ -104,7 +104,7 @@ Each step has:
 | check | `model` (format, then the model checker against the step's input), `format` (shape only) or `none` |
 | extra acceptance criteria | optional rules for the model checker, e.g. "every owner must appear in the notes" |
 | max characters | optional limit for text output |
-| done by | the configured model, or **your own agent at a URL** (with an optional token variable and timeout) |
+| done by | the configured model, a **connected agent** by name, or any agent URL (with an optional token variable and timeout) |
 
 A chain has up to 10 steps, a number of retries per step and the retry style (guided or blind). It runs on
 LangGraph, built from the definition at run time: one guarded node per step. A rejected step is retried with the
@@ -134,6 +134,17 @@ Four ways, from no code to a single HTTP call; the full guide with request forma
 | Python code you own | `@guard_step(...)` around it (`examples/guard_inside_my_agent.py`) |
 | a LangGraph graph | `guarded_node(...)` around each node (`examples/langgraph_agent.py`) |
 | anything else | `POST /llm/verify` per answer, or `RemoteGuard` from Python |
+
+**Connected agents** (dashboard section 10, `/agents`, `cascade-guard agent ...`): register an agent once with a
+name, URL, token setting and timeout, press **Test** (it sends one probe and explains any problem: wrong path,
+token, timeout, format), then pick it by name in any step. Agents listed in the `CASCADE_AGENTS` setting (a JSON
+list) survive restarts, which matters on hosts that wipe the disk.
+
+```bash
+cascade-guard agent add support-bot https://support-bot.example.com/agent --token-var SUPPORT_BOT_TOKEN
+cascade-guard agent test support-bot
+cascade-guard agent list
+```
 
 Agent URLs are never link-local or cloud-metadata addresses; on a shared server (with keys) private and local
 addresses need `AGENT_ALLOW_PRIVATE=1`. A token for your agent stays in a server environment variable; the
@@ -224,6 +235,7 @@ Settings come from the environment or from `.env` in the working folder (the rea
 | `MAX_TRIALS` | `2000` | cap on `/experiment` size |
 | `LLM_EVAL_MAX_COST` | `5.0` | highest cost cap a dashboard or API evaluation may use, USD |
 | `AGENT_ALLOW_PRIVATE` | off | `1` lets chain steps call agents on private or local addresses on a shared server |
+| `CASCADE_AGENTS` | | connected agents as a JSON list of `{name, url, auth_env, timeout, description}`; survive restarts |
 | `ALLOW_OPEN_NETWORK` | off | `1` drops the address check while no keys are set (Docker Compose uses it; the Host check stays) |
 | `ALLOWED_HOSTS` | | extra Host names accepted while no keys are set, comma-separated |
 | `AUDIT_REFUSED_PER_MIN` | `30` | refused requests recorded per caller per minute (a flood cannot fill the table) |
@@ -252,6 +264,9 @@ Interactive documentation: `/docs` on a running server.
 | `POST /chains/{id}/run`, `POST /chains/run` | run a saved chain, or a definition without saving it (`simulated`: viewer; real: admin) | viewer / admin |
 | `GET /chains/{id}/graph` | the chain as a Mermaid diagram | viewer |
 | `POST /demo/agent` | a sample outside agent that speaks the agent format (`?mistakes=0.5` to make it err) | any |
+| `GET /agents` | connected agents (never their tokens) | viewer |
+| `POST /agents`, `PUT /agents/{name}`, `DELETE /agents/{name}` | connect, change or remove an agent | admin |
+| `POST /agents/{name}/test`, `POST /agents/test` | send one probe and explain the result | admin |
 | `GET /llm/status` | model, calls and spend, or what is missing | viewer |
 | `POST /pilot/invoice` | one invoice through the guarded workflow (`guard`, `agents`: `rules` free, `llm` paid) | viewer / admin |
 | `POST /pilot/invoice-pdf` | the same for a PDF (`pdf_base64`) | viewer / admin |
@@ -345,7 +360,8 @@ summary), every node wrapped with `guarded_node`; rule or model agents, rule or 
 (PDFs need a text layer; scanned images need OCR first).
 
 **Storage.** SQLite by default or PostgreSQL, same tables: `runs`, `steps` (every attempt), `verdicts` (what the checker
-said and why), `review_queue`, `usage`, `audit`, `chains` (the agent chains people build).
+said and why), `review_queue`, `usage`, `audit`, `chains` (the agent chains people build), `agents` (connected
+agents: URL and token setting name, never the token).
 
 **Metrics.** *Unsafe* = a wrong output delivered silently, or a crash (a halt is a controlled stop).
 CRI = (unsafe without guard - unsafe with guard) / unsafe without guard. CRS = caught step errors repaired by retry /
@@ -385,7 +401,7 @@ being scored; seeds control inputs and faults, not the model.
 ## Development
 ```bash
 pip install -r requirements-dev.txt     # tested versions, this folder in editable mode, dev tools
-pytest -q                     # 199 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
+pytest -q                     # 205 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
 ruff check . && mypy cascade_guard
 python -m build               # wheel and source package in dist/
 ```

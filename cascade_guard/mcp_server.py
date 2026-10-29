@@ -152,7 +152,16 @@ def list_agent_chains() -> dict:
     return {"saved": [{"id": r["id"], "name": r["name"], "description": r["description"], "steps": r["steps"]}
                       for r in saved],
             "templates": [{"name": t["name"], "description": t.get("description", ""),
-                           "steps": [st["name"] for st in t["steps"]]} for t in templates]}
+                           "steps": [st["name"] for st in t["steps"]]} for t in templates],
+            "connected_agents": [{"name": a["name"], "description": a["description"]} for a in _connected()]}
+
+
+def _connected():
+    from cascade_guard.agents_registry import all_agents
+    try:
+        return all_agents()
+    except Exception:  # an agent listing must never break the tool
+        return []
 
 
 @server.tool()

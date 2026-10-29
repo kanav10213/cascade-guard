@@ -1,10 +1,10 @@
-"""Storage: runs, steps, verdicts, review_queue, usage, audit, chains. SQLite or PostgreSQL.
+"""Storage: runs, steps, verdicts, review_queue, usage, audit, chains, agents. SQLite or PostgreSQL.
 
     CASCADE_DB=data/cascade.db                          SQLite file (default; built into Python)
     CASCADE_DB=postgresql://user:pass@host:5432/dbname  PostgreSQL (needs the psycopg package)
     CASCADE_DB=off                                      no storage
 
-The same seven tables and the same queries run on both; only placeholders,
+The same eight tables and the same queries run on both; only placeholders,
 the id column type and a few start-up commands differ.
 
     store = get_store()
@@ -101,6 +101,13 @@ CREATE TABLE IF NOT EXISTS chains (
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL,
     created_by  TEXT
+);
+CREATE TABLE IF NOT EXISTS agents (
+    id          {ID},
+    name        TEXT NOT NULL UNIQUE,
+    definition  TEXT NOT NULL,          -- url, token variable NAME (never the token), timeout, description
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_audit_at ON audit(at);
 CREATE INDEX IF NOT EXISTS idx_steps_run ON steps(run_id);
@@ -308,13 +315,43 @@ class Store:
             c.execute("DELETE FROM chains WHERE id = ?", (chain_id,))
             return found
 
+    # ------------------------------------------------------------ connected agents
+    def save_agent(self, definition: dict) -> None:
+        """Create or replace the agent with this name."""
+        name, body = definition["name"], json.dumps(definition)
+        with self._tx() as c:
+            if c.execute("SELECT id FROM agents WHERE name = ?", (name,)).fetchone() is None:
+                c.insert("INSERT INTO agents (name, definition, created_at, updated_at) VALUES (?, ?, ?, ?)",
+                         (name, body, _now(), _now()))
+            else:
+                c.execute("UPDATE agents SET definition = ?, updated_at = ? WHERE name = ?", (body, _now(), name))
+
+    def list_agents(self) -> list:
+        rows = self._read("SELECT name, definition, created_at, updated_at FROM agents ORDER BY name")
+        for r in rows:
+            r["definition"] = json.loads(r["definition"])
+        return rows
+
+    def get_agent(self, name: str) -> dict | None:
+        rows = self._read("SELECT name, definition, created_at, updated_at FROM agents WHERE name = ?", (name,))
+        if not rows:
+            return None
+        rows[0]["definition"] = json.loads(rows[0]["definition"])
+        return rows[0]
+
+    def delete_agent(self, name: str) -> bool:
+        with self._tx() as c:
+            found = c.execute("SELECT id FROM agents WHERE name = ?", (name,)).fetchone() is not None
+            c.execute("DELETE FROM agents WHERE name = ?", (name,))
+            return found
+
     def ping(self) -> bool:
         return bool(self._read("SELECT 1 AS ok"))
 
     def clear(self):
         """Delete everything (tests only)."""
         with self._tx() as c:
-            for t in ("chains", "audit", "usage", "review_queue", "verdicts", "steps", "runs"):
+            for t in ("agents", "chains", "audit", "usage", "review_queue", "verdicts", "steps", "runs"):
                 c.execute(f"DELETE FROM {t}")  # noqa: S608 - fixed table names, no user input
 
     # ------------------------------------------------------------ reads

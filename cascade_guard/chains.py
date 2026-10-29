@@ -59,10 +59,12 @@ class StepDef(BaseModel):
     check: Literal["model", "format", "none"] = "model"
     criteria: str = Field("", max_length=1000, description="extra acceptance criteria for the model checker")
     max_chars: int | None = Field(None, ge=1, le=20_000, description="longest acceptable text output")
-    agent: Literal["model", "url"] = Field("model", description="model: the configured model; url: your own agent")
+    agent: Literal["model", "url", "connected"] = Field(
+        "model", description="model: the configured model; connected: a connected agent by name; url: any agent URL")
+    agent_name: str = Field("", max_length=40, description="the connected agent's name (agent=connected)")
     url: str = Field("", max_length=2000, description="your agent's HTTP endpoint (agent=url)")
     auth_env: str = Field("", max_length=64, description="server environment variable that holds the agent's bearer token")
-    timeout: float | None = Field(None, gt=0, le=300, description="seconds to wait for your agent (default 60)")
+    timeout: float | None = Field(None, gt=0, le=300, description="seconds to wait for your agent (default 90)")
 
     @field_validator("name")
     @classmethod
@@ -102,8 +104,14 @@ class StepDef(BaseModel):
             self.url = self.url.strip()
             if self.auth_env and not re.match(r"^[A-Z_][A-Z0-9_]{0,63}$", self.auth_env):
                 raise ValueError("auth_env is the NAME of an environment variable, like MY_AGENT_TOKEN, not the token")
-        else:
+            self.agent_name = ""
+        elif self.agent == "connected":
+            self.agent_name = self.agent_name.strip().lower()
+            if not self.agent_name:
+                raise ValueError(f"step {self.name!r} is done by a connected agent, so name which one")
             self.url, self.auth_env, self.timeout = "", "", None
+        else:
+            self.url, self.auth_env, self.timeout, self.agent_name = "", "", None, ""
         return self
 
 
@@ -172,7 +180,7 @@ def format_problem(step: StepDef, out) -> str | None:
 
 
 def checker_task(step: StepDef) -> str:
-    t = f"Step \"{step.name}\"{' (external agent)' if step.agent == 'url' else ''}: {step.instruction}"
+    t = f"Step \"{step.name}\"{' (external agent)' if step.agent != 'model' else ''}: {step.instruction}"
     if step.criteria:
         t += f"\nAlso check these acceptance criteria: {step.criteria}"
     if step.output == "json":
@@ -212,6 +220,7 @@ def build_chain_graph(chain: ChainDef, client, *, inject: float = 0.0, seed: int
     from langgraph.graph import END, START, StateGraph
 
     retries = chain.max_retries if max_retries is None else max_retries
+    resolved = resolve_connected(chain)
     guided = (repair or chain.repair) == "guided"
     log = [] if log is None else log
     g = StateGraph(ChainState)
@@ -227,9 +236,10 @@ def build_chain_graph(chain: ChainDef, client, *, inject: float = 0.0, seed: int
 
         def node(state, attempt=0, feedback=None, step=step, get_source=get_source):
             src = get_source(state)
-            if step.agent == "url":
+            if step.agent != "model":
                 from cascade_guard.agent_call import call_agent
-                out = call_agent(step, src, state["input"], attempt, feedback if guided else None, http_client)
+                out = call_agent(resolved.get(step.name, step), src, state["input"], attempt,
+                                 feedback if guided else None, http_client)
                 reply = json.dumps(out, default=str) if out is not None else "(no usable output)"
             else:
                 system, user = step_messages(step, src, state["input"], feedback if guided else None)
@@ -268,12 +278,28 @@ def build_chain_graph(chain: ChainDef, client, *, inject: float = 0.0, seed: int
     return g.compile(), log
 
 
+def resolve_connected(chain: ChainDef) -> dict:
+    """Steps done by a connected agent, with that agent's URL, token variable and timeout filled in.
+    Raises AgentCallError for an unknown agent, before anything runs."""
+    from cascade_guard.agent_call import AgentCallError
+    from cascade_guard.agents_registry import find_agent
+    out = {}
+    for s in chain.steps:
+        if s.agent == "connected":
+            a = find_agent(s.agent_name)
+            if a is None:
+                raise AgentCallError(f"step {s.name!r} uses the connected agent {s.agent_name!r}, which does not exist "
+                                     "(see Connected agents)")
+            out[s.name] = s.model_copy(update={"url": a.url, "auth_env": a.auth_env, "timeout": a.timeout})
+    return out
+
+
 def mermaid(chain: ChainDef) -> str:
     lines = ["flowchart LR", "  start([input])"]
     prev = "start"
     for i, s in enumerate(chain.steps):
         label = s.name.replace('"', "'")
-        who = "your agent" if s.agent == "url" else "model"
+        who = {"url": "your agent", "connected": f"agent {s.agent_name}"}.get(s.agent, "model")
         lines.append(f'  s{i}["{label}<br/><small>{who} · check: {s.check}</small>"]')
         lines.append(f"  {prev} --> s{i}")
         if s.check != "none":

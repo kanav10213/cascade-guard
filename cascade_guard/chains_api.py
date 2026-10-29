@@ -11,6 +11,13 @@
     POST   /chains/run             run a definition without saving it (try before you save)
     POST   /demo/agent             a tiny sample "outside agent" to try steps done by your own agent
 
+    GET    /agents                 connected agents (viewer)
+    POST   /agents                 connect an agent: name, url, token variable, timeout (admin)
+    PUT    /agents/{name}          change it (admin)
+    DELETE /agents/{name}          remove it (admin)
+    POST   /agents/{name}/test     send one test request and explain the result (admin)
+    POST   /agents/test            test an agent before saving it (admin)
+
 A step can be done by the configured model or by your own agent at a URL (see agent_call.py).
 
 Runs on the simulated model are free and open to any key; runs on the configured model need an
@@ -166,7 +173,7 @@ def run_saved(chain_id: int, opts: RunOptions, role: str = Depends(require("view
 @router.post("/chains/run")
 def run_adhoc(body: AdhocRun, role: str = Depends(require("viewer")),
               req_key: str = Header(default="", alias="X-API-Key")):
-    if any(s.agent == "url" for s in body.chain.steps):
+    if any(s.agent == "url" for s in body.chain.steps):  # connected agents were set up by an admin: fine
         ensure(role, "admin")  # an unsaved definition must not make the server call any URL a viewer picks
     return _run(body.chain, body, role, req_key)
 
@@ -201,3 +208,75 @@ def demo_agent(req: AgentRequest, mistakes: float = 0.0):
     if req.output == "json":
         return {"output": {k: answer for k in req.keys}}
     return {"output": answer}
+
+
+# ---------------------------------------------------------------- connected agents
+
+def _agent_store():
+    store = _store(required=False)
+    if store is None:
+        raise HTTPException(status_code=503, detail="Storage is off, so agents cannot be added here. "
+                                                    "List them in the CASCADE_AGENTS setting instead.")
+    return store
+
+
+@router.get("/agents", dependencies=[Depends(require("viewer"))], tags=["agents"])
+def list_agents():
+    from cascade_guard.agents_registry import all_agents
+    return all_agents()
+
+
+@router.post("/agents", status_code=201, dependencies=[Depends(require("admin"))], tags=["agents"])
+def add_agent(agent: "AgentDef"):
+    from cascade_guard.agents_registry import find_agent, settings_agents
+    if any(a.name == agent.name for a in settings_agents()):
+        raise HTTPException(status_code=409, detail=f"{agent.name!r} is set in the server settings (CASCADE_AGENTS)")
+    if find_agent(agent.name) is not None:
+        raise HTTPException(status_code=409, detail=f"an agent called {agent.name!r} is already connected")
+    _agent_store().save_agent(agent.model_dump())
+    return agent.model_dump()
+
+
+@router.put("/agents/{name}", dependencies=[Depends(require("admin"))], tags=["agents"])
+def change_agent(name: str, agent: "AgentDef"):
+    from cascade_guard.agents_registry import settings_agents
+    store = _agent_store()
+    if store.get_agent(name.lower()) is None:
+        if any(a.name == name.lower() for a in settings_agents()):
+            raise HTTPException(status_code=409, detail="this agent comes from the server settings (CASCADE_AGENTS); "
+                                                        "change it there")
+        raise HTTPException(status_code=404, detail="no such agent")
+    if agent.name != name.lower():
+        raise HTTPException(status_code=422, detail="the name cannot change; remove the agent and add it again")
+    store.save_agent(agent.model_dump())
+    return agent.model_dump()
+
+
+@router.delete("/agents/{name}", dependencies=[Depends(require("admin"))], tags=["agents"])
+def remove_agent(name: str):
+    if not _agent_store().delete_agent(name.lower()):
+        raise HTTPException(status_code=404, detail="no such agent (agents from the server settings cannot be "
+                                                    "removed here)")
+    return {"deleted": name.lower()}
+
+
+@router.post("/agents/test", dependencies=[Depends(require("admin"))], tags=["agents"])
+def test_unsaved_agent(agent: "AgentDef", req_key: str = Header(default="", alias="X-API-Key")):
+    from cascade_guard.agents_registry import test_agent
+    from cascade_guard.pilot_api import _llm_rate_limit
+    _llm_rate_limit(req_key)
+    return test_agent(agent)
+
+
+@router.post("/agents/{name}/test", dependencies=[Depends(require("admin"))], tags=["agents"])
+def test_saved_agent(name: str, req_key: str = Header(default="", alias="X-API-Key")):
+    from cascade_guard.agents_registry import find_agent, test_agent
+    from cascade_guard.pilot_api import _llm_rate_limit
+    agent = find_agent(name)
+    if agent is None:
+        raise HTTPException(status_code=404, detail="no such agent")
+    _llm_rate_limit(req_key)
+    return test_agent(agent)
+
+
+from cascade_guard.agents_registry import AgentDef  # noqa: E402  (used in the signatures above)
