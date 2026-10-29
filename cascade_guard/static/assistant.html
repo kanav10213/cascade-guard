@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask Cascade Guard</title>
+<style>
+:root{
+  --paper:#f2f5f1;--sheet:#ffffff;--ink:#1d2528;--muted:#5d6b6f;--rule:#d3dddf;--rule2:#e6ecec;
+  --pen:#c62f28;--pen-soft:#fbe9e7;--ok:#1d7a50;--ok-soft:#e3f2ea;--amber:#8a5a00;--amber-soft:#fff2d6;
+  --blue:#23527c;--blue-soft:#e4edf6;--focus:#23527c;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#13181a;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;--rule2:#252e31;
+  --pen:#ff7b70;--pen-soft:#3b1f1c;--ok:#5ccf96;--ok-soft:#163326;--amber:#f0c25a;--amber-soft:#3a2e12;
+  --blue:#8db8e8;--blue-soft:#1f2d3c;--focus:#8db8e8;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15.5px/1.55 var(--sans);display:flex;flex-direction:column}
+a{color:var(--blue)}
+button,input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+
+/* header */
+.top{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--rule)}
+.top .in{max-width:780px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center}
+.mark{width:30px;height:30px;flex:none}
+.brand{flex:1;min-width:0}
+.brand h1{font-size:18px;line-height:1.2;margin:0;font-weight:650;letter-spacing:-.01em}
+.brand p{margin:0;font-size:13px;color:var(--muted)}
+.links{display:flex;gap:12px;flex:none}
+.short{display:none}
+@media(max-width:560px){.brand p{display:none}.brand h1{font-size:16.5px}.short{display:inline}.long{display:none}}
+.linkbtn{background:none;border:0;padding:4px 2px;color:var(--blue);cursor:pointer;font-size:13px;text-decoration:underline;text-underline-offset:2px}
+
+/* conversation */
+main{flex:1}
+.log{max-width:780px;margin:0 auto;padding:22px 16px 28px}
+.intro h2{font-size:28px;line-height:1.15;font-weight:650;letter-spacing:-.02em;margin:18px 0 6px}
+.intro p{margin:0 0 18px;color:var(--muted);max-width:60ch}
+.tries{list-style:none;margin:0 0 8px;padding:0;border-top:1px solid var(--rule)}
+.tries li{border-bottom:1px solid var(--rule)}
+.tries button{width:100%;text-align:left;background:none;border:0;padding:11px 4px;cursor:pointer;display:flex;gap:12px;align-items:baseline}
+.tries button:hover{background:var(--sheet)}
+.tries .what{flex:none;width:7.5em;font-size:13px;color:var(--muted)}
+.tries .say{flex:1;min-width:0}
+@media(max-width:560px){.tries button{flex-direction:column;gap:0}.tries .what{width:auto}}
+
+.msg{margin:22px 0}
+.me{display:flex;justify-content:flex-end}
+.me .bubble{background:var(--blue-soft);border-radius:14px 14px 4px 14px;padding:9px 14px;max-width:85%;white-space:pre-wrap;word-break:break-word}
+.me .file{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+.bot .reply{margin:0 0 10px;max-width:68ch;white-space:pre-wrap;word-break:break-word}
+.bot .notice{font-size:13.5px;background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:8px 12px;margin:0 0 10px}
+.verdict{display:flex;gap:8px;align-items:center;font-weight:600;margin:0 0 8px}
+.verdict svg{flex:none}
+.verdict.bad{color:var(--pen)}.verdict.good{color:var(--ok)}.verdict.info{color:var(--amber)}
+.by{font-size:12.5px;color:var(--muted);margin-top:8px}
+.thinking{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center}
+.dots{display:inline-flex;gap:3px}.dots i{width:6px;height:6px;border-radius:50%;background:var(--muted);opacity:.35;animation:blink 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{50%{opacity:1}}
+
+/* the receipt: the one bold element */
+.receipt{background:var(--sheet);border:1px solid var(--rule);border-bottom:0;max-width:520px;padding:14px 16px 16px;font:14px/1.6 var(--mono);font-variant-numeric:tabular-nums;position:relative;margin-bottom:12px}
+.receipt::after{content:"";position:absolute;left:-1px;right:-1px;bottom:-8px;height:8px;
+  background:linear-gradient(-45deg,transparent 5px,var(--sheet) 0) 0 0/10px 8px repeat-x,linear-gradient(45deg,transparent 5px,var(--sheet) 0) 0 0/10px 8px repeat-x;
+  filter:drop-shadow(0 1px 0 var(--rule))}
+.receipt .head{font-size:12.5px;color:var(--muted);margin-bottom:6px;font-family:var(--sans)}
+.rl{display:flex;gap:8px;align-items:baseline}
+.rl .d{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rl .fill{flex:1;border-bottom:1px dotted var(--rule);transform:translateY(-4px);min-width:12px}
+.rl .a{flex:none;text-align:right}
+.rl .m{flex:none;width:1.2em;text-align:center}
+.rl .m.ok{color:var(--ok)}.rl .m.no{color:var(--pen)}
+.rl.sub{color:var(--muted)}
+.rsep{border-top:1px dashed var(--rule);margin:8px 0}
+.rl.total{font-weight:700;font-size:15px}
+.pen{color:var(--pen);text-decoration:none;position:relative;white-space:nowrap}
+.pen::after{content:"";position:absolute;left:-2px;top:52%;height:2px;width:calc(100% + 4px);background:var(--pen);transform-origin:left;transform:rotate(-6deg) scaleX(1);animation:strike .45s ease-out .15s both}
+@keyframes strike{from{transform:rotate(-6deg) scaleX(0)}to{transform:rotate(-6deg) scaleX(1)}}
+.fix{color:var(--pen);font-weight:700;margin-left:.45em}
+.diffnote{font-family:var(--sans);font-size:13.5px;color:var(--pen);margin-top:6px}
+.oknote{font-family:var(--sans);font-size:13.5px;color:var(--ok);margin-top:6px}
+.small{font-family:var(--sans);font-size:13px;color:var(--muted);margin:6px 0 0}
+.small.warn{color:var(--amber)}
+
+.sumline{font:20px/1.4 var(--mono);font-variant-numeric:tabular-nums;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:12px 16px;display:inline-block;margin-bottom:10px;max-width:100%;overflow-x:auto}
+
+/* sequences: chain steps and the demo trace really are ordered */
+.steps{margin:0 0 12px;padding:0;list-style:none;counter-reset:s;max-width:620px}
+.steps>li{position:relative;padding:0 0 12px 34px;counter-increment:s}
+.steps>li::before{content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--rule);font-size:12px;display:grid;place-items:center;color:var(--muted);background:var(--sheet)}
+.steps>li::after{content:"";position:absolute;left:11px;top:25px;bottom:2px;border-left:1.5px solid var(--rule)}
+.steps>li:last-child::after{display:none}
+.steps .name{font-weight:600}
+.try{font-size:14px;margin:2px 0}
+.try.no{color:var(--pen)}.try.ok{color:var(--ok)}
+.out{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;font:13px/1.5 var(--mono);white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;margin:6px 0 10px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
+@media(max-width:620px){.two{grid-template-columns:1fr}}
+.side{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:12px 14px}
+.side h3{font-size:14px;margin:0 0 6px}
+.side.no h3{color:var(--pen)}.side.ok h3{color:var(--ok)}
+.side p{margin:0;font:13px/1.5 var(--mono)}
+ul.plain{margin:0 0 12px;padding-left:20px}
+ul.plain li{margin:3px 0}
+.runbtn{margin-left:8px;font-size:13px;padding:2px 10px;border-radius:99px;border:1px solid var(--rule);background:var(--sheet);color:var(--blue);cursor:pointer}
+
+details.working{margin-top:4px;font-size:14px}
+details.working summary{cursor:pointer;color:var(--blue);width:max-content}
+details.working ul{margin:8px 0 0;padding-left:20px}
+details.working li{margin:3px 0}
+details.working li.no{color:var(--pen)}details.working li.ok{color:var(--ok)}
+details.working .k{color:var(--muted);font-size:13px;margin:10px 0 2px}
+
+.next{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.next button{background:var(--sheet);border:1px solid var(--rule);border-radius:99px;padding:5px 12px;font-size:13.5px;cursor:pointer;text-align:left}
+.next button:hover{border-color:var(--blue)}
+
+.guide ol{margin:6px 0 10px;padding-left:22px}.guide li{margin:5px 0}
+.guide .linkrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.guide .linkrow input{flex:1;min-width:220px;font:13px var(--mono);border:1px solid var(--rule);border-radius:8px;padding:7px 9px;background:var(--paper)}
+.guide .say{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;display:inline-block;margin-top:4px}
+.keycard{background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--amber);border-radius:8px;padding:12px 14px;max-width:560px}
+.keycard p{margin:0 0 8px}
+.keycard .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.keycard input[type=password]{flex:1;min-width:200px;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;background:var(--paper)}
+.keycard label{font-size:13px;color:var(--muted);display:flex;gap:6px;align-items:center}
+.err{color:var(--pen)}
+
+/* composer */
+.composer{position:sticky;bottom:0;background:var(--paper);border-top:1px solid var(--rule)}
+.composer .in{max-width:780px;margin:0 auto;padding:10px 16px 14px}
+.box{display:flex;gap:8px;align-items:flex-end;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:6px}
+.box:focus-within{border-color:var(--blue)}
+textarea{flex:1;border:0;background:transparent;resize:none;min-height:40px;max-height:220px;padding:9px 6px;outline:none}
+textarea:focus-visible{outline:none}
+.iconbtn{width:40px;height:40px;flex:none;border:0;border-radius:10px;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center}
+.iconbtn:hover{background:var(--paper);color:var(--ink)}
+.send{height:40px;flex:none;border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:600;padding:0 18px;cursor:pointer}
+@media (prefers-color-scheme:dark){.send{color:#0f1a24}}
+.send:disabled{opacity:.5;cursor:wait}
+.attached{display:none;font-size:13px;margin:0 0 8px;align-items:center;gap:8px}
+.attached .chip{background:var(--sheet);border:1px solid var(--rule);border-radius:99px;padding:3px 6px 3px 12px;display:inline-flex;gap:6px;align-items:center}
+.attached .chip button{border:0;background:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1}
+.foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin-top:6px}
+.foot label{display:inline-flex;gap:6px;align-items:center}
+.foot b{color:var(--ink);font-weight:600}
+@media(max-width:560px){#hint{display:none}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.still .pen::after{animation:none}
+@media (prefers-reduced-motion:reduce){.pen::after{animation:none}.dots i{animation:none;opacity:.7}}
+</style>
+</head>
+<body>
+<header class="top"><div class="in">
+  <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+    <circle cx="6" cy="16" r="3.2" fill="none" stroke="currentColor" stroke-width="2" opacity=".55"/>
+    <circle cx="16" cy="16" r="3.2" fill="none" stroke="currentColor" stroke-width="2" opacity=".55"/>
+    <path d="M9.2 16h3.6M19.2 16h2.6" stroke="currentColor" stroke-width="2" opacity=".55"/>
+    <circle cx="26" cy="16" r="5" fill="#1d7a50"/>
+    <path d="M23.6 16.1l1.7 1.7 3.2-3.4" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <div class="brand"><h1>Ask Cascade Guard</h1><p>Checks the work before anyone relies on it</p></div>
+  <nav class="links" aria-label="More"><button class="linkbtn" id="claudebtn" type="button"><span class="long">Use in Claude</span><span class="short">Claude</span></button><button class="linkbtn" id="keybtn" type="button"><span class="long">Access key</span><span class="short">Key</span></button><a class="linkbtn" href="/">Dashboard</a></nav>
+</div></header>
+
+<main><div class="log" id="log" aria-live="polite">
+  <section class="intro" id="intro">
+    <h2>What should I check?</h2>
+    <p>Paste a bill, a sum, or a task for one of your agent chains. I'll check it and show my working. Anything I can't read is reported, never guessed.</p>
+    <ul class="tries" id="tries"></ul>
+  </section>
+</div></main>
+
+<footer class="composer"><div class="in">
+  <div class="attached" id="attached"></div>
+  <form class="box" id="form">
+    <input type="file" id="file" accept="application/pdf,.pdf" class="sr" tabindex="-1">
+    <button class="iconbtn" type="button" id="attach" title="Attach a PDF invoice" aria-label="Attach a PDF invoice">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.4 11.1l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l8.6-8.6a3.7 3.7 0 0 1 5.2 5.2l-8.6 8.6a1.8 1.8 0 0 1-2.6-2.6l7.9-7.9"/></svg>
+    </button>
+    <label class="sr" for="msg">Your message</label>
+    <textarea id="msg" rows="1" placeholder="Ask, or paste a bill" maxlength="20000"></textarea>
+    <button class="send" id="send" type="submit">Check</button>
+  </form>
+  <div class="foot"><span id="mode">Connecting…</span><span id="hint">Shift+Enter for a new line</span><label id="modelwrap" hidden><input type="checkbox" id="usemodel" checked> Let the AI model read my request</label></div>
+</div></footer>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return sessionStorage.getItem(k) || localStorage.getItem(k) || ''; }catch(e){ return ''; } },
+  set(k, v, remember){ try{ sessionStorage.setItem(k, v); if(remember) localStorage.setItem(k, v); else localStorage.removeItem(k); }catch(e){} },
+  load(k){ try{ return JSON.parse(sessionStorage.getItem(k) || 'null'); }catch(e){ return null; } },
+  save(k, v){ try{ sessionStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+};
+let apiKey = store.get('cg_key');
+let info = null, busy = false, pdf = null;
+let convo = store.load('cg_assistant') || [];   // [{me:{text,pdf}} | {bot:result}]
+
+const TRIES = [
+  ['A bill', 'Check this invoice: 3 x $4.00, 2 x $1.50, total $16.00'],
+  ['Rupees and GST', '2 pens at ₹15 each, Notebook 3 x ₹40, GST 18%, Total ₹177'],
+  ['A sum', 'Is 17 x 23 = 401?'],
+  ['A list', 'The average of 3, 7, 2, 9 is 5.5'],
+  ['An agent chain', 'Run support ticket triage on: I was charged twice for INV-1007 and want a refund before Friday'],
+  ['A demo', 'Show me Cascade Guard catching a mistake'],
+];
+
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for(const [k, v] of Object.entries(attrs || {})){
+    if(v === null || v === undefined || v === false) continue;
+    if(k === 'class') e.className = v; else if(k === 'text') e.textContent = v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v);
+  }
+  for(const c of kids.flat()){ if(c === null || c === undefined || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+const svg = (kind) => {
+  const ns = 'http://www.w3.org/2000/svg', s = document.createElementNS(ns, 'svg');
+  s.setAttribute('width', '18'); s.setAttribute('height', '18'); s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS(ns, 'path');
+  p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor'); p.setAttribute('stroke-width', '2.4'); p.setAttribute('stroke-linecap', 'round'); p.setAttribute('stroke-linejoin', 'round');
+  p.setAttribute('d', kind === 'good' ? 'M5 12.5l4.5 4.5L19 7.5' : kind === 'bad' ? 'M6 6l12 12M18 6L6 18' : 'M12 7v6M12 17h.01');
+  s.append(p); return s;
+};
+
+function money(v, cur){
+  if(v === null || v === undefined) return '';
+  const neg = v < 0, a = Math.abs(v);
+  let [w, f] = a.toFixed(2).split('.');
+  if(cur === '₹' && w.length > 3){ let head = w.slice(0, -3); const g = [w.slice(-3)]; while(head.length > 2){ g.unshift(head.slice(-2)); head = head.slice(0, -2); } w = (head ? head + ',' : '') + g.join(','); }
+  else w = w.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (neg ? '-' : '') + (cur || '') + w + '.' + f;
+}
+
+/* ------------------------------------------------------------------ server */
+async function call(path, body){
+  const headers = {'Content-Type': 'application/json'};
+  if(apiKey) headers['X-API-Key'] = apiKey;
+  let r;
+  try{ r = await fetch(path, body === undefined ? {headers} : {method: 'POST', headers, body: JSON.stringify(body)}); }
+  catch(e){ throw {kind: 'network'}; }
+  if(r.status === 401) throw {kind: 'key'};
+  if(!r.ok){
+    const j = await r.json().catch(() => ({}));
+    let d = j.detail; if(Array.isArray(d)) d = d.map(x => x.msg || JSON.stringify(x)).join('; ');
+    throw {kind: 'http', status: r.status, detail: d || ('The server answered ' + r.status + '.')};
+  }
+  return r.json();
+}
+
+async function loadInfo(showCard = true){
+  try{
+    info = await call('/assistant/info');
+    const m = info.model;
+    if(info.model_available){ $('#mode').innerHTML = ''; $('#mode').append('AI model: ', h('b', {text: m.model}), ', checked by Cascade Guard'); $('#modelwrap').hidden = false; $('#hint').hidden = true; }
+    else if(info.model_needs_admin){ $('#mode').textContent = 'Built-in checker (an admin key lets the AI model answer)'; }
+    else { $('#mode').innerHTML = ''; $('#mode').append(h('b', {text: 'Built-in checker'}), ' (free, no AI model needed)'); }
+    return true;
+  }catch(e){
+    if(e.kind === 'key'){ $('#mode').textContent = 'Needs an access key'; if(showCard) showKeyCard(); }
+    else { $('#mode').textContent = 'Server not reachable'; }
+    return false;
+  }
+}
+
+/* ------------------------------------------------------------------ rendering */
+function renderTries(){
+  const ul = $('#tries'); ul.textContent = '';
+  for(const [what, say] of TRIES){
+    ul.append(h('li', {}, h('button', {type: 'button', onclick: () => send(say)}, h('span', {class: 'what', text: what}), h('span', {class: 'say', text: say}))));
+  }
+}
+
+function addMe(text, pdfName){
+  const b = h('div', {class: 'bubble'}, text);
+  if(pdfName) b.append(h('span', {class: 'file', text: 'Attached: ' + pdfName}));
+  $('#log').append(h('div', {class: 'msg me'}, b));
+}
+
+function verdictLine(kind, text){ return h('div', {class: 'verdict ' + kind}, svg(kind), h('span', {text})); }
+
+function billCard(d){
+  const cur = d.currency || '';
+  const card = h('div', {class: 'receipt'});
+  if(d.invoice_id) card.append(h('div', {class: 'head', text: 'Invoice ' + d.invoice_id}));
+  for(const l of d.lines){
+    const calc = l.qty + ' × ' + money(l.unit_price, cur);
+    const amt = h('span', {class: 'a'});
+    if(l.ok) amt.append(money(l.line_total, cur));
+    else amt.append(h('s', {class: 'pen', text: money(l.stated_line_total, cur)}), h('b', {class: 'fix', text: money(l.line_total, cur)}));
+    card.append(h('div', {class: 'rl'}, h('span', {class: 'd', title: l.text}, (l.description ? l.description + '  ' : '') + calc), h('span', {class: 'fill'}), amt,
+      h('span', {class: 'm ' + (l.ok ? 'ok' : 'no'), 'aria-label': l.ok ? 'checked' : 'wrong'}, l.ok ? '✓' : '✗')));
+  }
+  const extra = d.discount || d.taxes.length || d.charges.length || (d.stated && d.stated.subtotal !== null);
+  if(extra){
+    card.append(h('div', {class: 'rsep'}));
+    const subOk = !d.stated || d.stated.subtotal === null || Math.abs(d.stated.subtotal - d.subtotal) < 0.005;
+    const subAmt = h('span', {class: 'a'});
+    if(subOk) subAmt.append(money(d.subtotal, cur)); else subAmt.append(h('s', {class: 'pen', text: money(d.stated.subtotal, cur)}), h('b', {class: 'fix', text: money(d.subtotal, cur)}));
+    card.append(h('div', {class: 'rl sub'}, h('span', {class: 'd', text: 'Subtotal'}), h('span', {class: 'fill'}), subAmt, h('span', {class: 'm'})));
+    if(d.discount) card.append(h('div', {class: 'rl sub'}, h('span', {class: 'd', text: d.discount.label}), h('span', {class: 'fill'}), h('span', {class: 'a', text: '-' + money(d.discount.amount, cur)}), h('span', {class: 'm'})));
+    for(const t of d.taxes){
+      const a = h('span', {class: 'a'});
+      if(t.stated !== null && t.stated !== undefined && Math.abs(t.stated - t.amount) >= 0.005) a.append(h('s', {class: 'pen', text: money(t.stated, cur)}), h('b', {class: 'fix', text: money(t.amount, cur)}));
+      else a.append(t.included ? '(' + money(t.amount, cur) + ')' : money(t.amount, cur));
+      card.append(h('div', {class: 'rl sub'}, h('span', {class: 'd', text: t.label}), h('span', {class: 'fill'}), a, h('span', {class: 'm'})));
+    }
+    for(const c of d.charges) card.append(h('div', {class: 'rl sub'}, h('span', {class: 'd', text: c.label}), h('span', {class: 'fill'}), h('span', {class: 'a', text: money(c.amount, cur)}), h('span', {class: 'm'})));
+  }
+  card.append(h('div', {class: 'rsep'}));
+  const stated = d.stated ? d.stated.total : null;
+  const totalOk = stated === null || Math.abs(stated - d.total) < 0.005;
+  const amt = h('span', {class: 'a'});
+  if(stated !== null && !totalOk) amt.append(h('s', {class: 'pen', text: money(stated, cur)}), h('b', {class: 'fix', text: money(d.total, cur)}));
+  else amt.append(money(d.total, cur));
+  card.append(h('div', {class: 'rl total'}, h('span', {class: 'd', text: 'Total'}), h('span', {class: 'fill'}), amt,
+    h('span', {class: 'm ' + (stated === null ? '' : totalOk ? 'ok' : 'no')}, stated === null ? '' : totalOk ? '✓' : '✗')));
+  if(stated !== null && !totalOk) card.append(h('div', {class: 'diffnote', text: 'The bill says ' + money(stated, cur) + ': ' + money(Math.abs(d.difference), cur) + (d.difference > 0 ? ' too much.' : ' too little.')}));
+  else if(stated === null) card.append(h('div', {class: 'small', text: 'The bill gives no total; this is what it should come to.'}));
+  else card.append(h('div', {class: 'oknote', text: 'Matches the bill.'}));
+  for(const u of d.unread || []) card.append(h('div', {class: 'small warn', text: 'Not read: ' + u}));
+  return card;
+}
+
+function sumCard(d){
+  const line = h('div', {class: 'sumline'});
+  const expr = d.operation ? ('the ' + d.operation + ' of ' + d.numbers.join(', ') + ' is') : (d.expression + ' =');
+  line.append(h('span', {text: expr + ' '}));
+  if(d.status === 'wrong') line.append(h('s', {class: 'pen', text: d.claimed}), h('b', {class: 'fix', text: d.value}));
+  else line.append(h('b', {text: d.value}));
+  return line;
+}
+
+function chainCard(d){
+  const wrap = h('div', {});
+  const ol = h('ol', {class: 'steps'});
+  for(const s of d.steps){
+    const li = h('li', {}, h('div', {class: 'name', text: s.step}));
+    for(const a of s.attempts){
+      li.append(h('div', {class: 'try ' + (a.passed ? 'ok' : 'no'), text: 'Try ' + (a.attempt + 1) + ': ' + (a.passed ? 'accepted' : 'rejected, ' + (a.reason || 'did not pass the check'))}));
+    }
+    if(s.status === 'halted') li.append(h('div', {class: 'try no', text: 'Stopped here: nothing wrong was passed on.'}));
+    ol.append(li);
+  }
+  wrap.append(ol);
+  if(d.final_output !== null && d.final_output !== undefined){
+    wrap.append(h('div', {class: 'small', text: 'Final answer' + (d.simulated ? ' (from the free simulator, so it is a placeholder)' : '')}),
+      h('div', {class: 'out', text: typeof d.final_output === 'string' ? d.final_output : JSON.stringify(d.final_output, null, 2)}));
+  }
+  return wrap;
+}
+
+function demoCard(d){
+  const wrap = h('div', {});
+  wrap.append(h('div', {class: 'two'},
+    h('div', {class: 'side no'}, h('h3', {text: 'Without Cascade Guard: delivered wrong'}), h('p', {text: d.without_guard.final_output || '(nothing)'})),
+    h('div', {class: 'side ok'}, h('h3', {text: 'With Cascade Guard: right result'}), h('p', {text: d.with_guard.final_output || '(stopped)'}))));
+  const ol = h('ol', {class: 'steps'});
+  const byStep = {};
+  for(const t of d.with_guard.trace){ (byStep[t.step] = byStep[t.step] || []).push(t); }
+  const names = {extract: 'Read the invoice', price: 'Price it', approve: 'Approve or flag', report: 'Write the summary'};
+  for(const [step, tries] of Object.entries(byStep)){
+    const li = h('li', {}, h('div', {class: 'name', text: names[step] || step}));
+    for(const t of tries){
+      li.append(h('div', {class: 'try ' + (t.rejected ? 'no' : 'ok'), text: 'Try ' + (t.attempt + 1) + ': ' + (t.rejected ? 'rejected, ' + t.rejected + (t.planted_label ? ' (the planted mistake: ' + t.planted_label + ')' : '') : 'accepted')}));
+    }
+    ol.append(li);
+  }
+  wrap.append(ol);
+  wrap.append(h('details', {class: 'working'}, h('summary', {text: 'See the invoice'}), h('div', {class: 'out', text: d.invoice_text})));
+  return wrap;
+}
+
+function listCard(kind, d){
+  const ul = h('ul', {class: 'plain'});
+  if(kind === 'list_chains'){
+    for(const c of d.saved) ul.append(h('li', {}, c.name + ' (' + c.steps + ' steps)', h('button', {class: 'runbtn', type: 'button', onclick: () => prefill('Run ' + c.name + ' on: ')}, 'Run')));
+    for(const t of d.templates) ul.append(h('li', {}, t.name + ': ' + t.steps.join(', then '), h('button', {class: 'runbtn', type: 'button', onclick: () => prefill('Run ' + t.name + ' on: ')}, 'Run')));
+  } else if(kind === 'list_agents'){
+    for(const a of d.agents) ul.append(h('li', {}, a.name + (a.description ? ': ' + a.description : '')));
+  } else if(kind === 'review_queue'){
+    for(const q of d.items) ul.append(h('li', {}, '#' + q.id + ' ' + q.kind + ': ' + (q.reason || '')));
+  }
+  return ul.children.length ? ul : null;
+}
+
+function workingPanel(res){
+  const g = res.guard || {};
+  const parts = [];
+  if((g.checked || []).length && res.kind !== 'run_chain' && res.kind !== 'demo'){
+    parts.push(h('div', {class: 'k', text: 'Checked'}), h('ul', {}, g.checked.map(c => h('li', {text: c}))));
+  }
+  if((g.caught || []).length) parts.push(h('div', {class: 'k', text: 'Caught'}), h('ul', {}, g.caught.map(c => h('li', {class: 'no', text: c}))));
+  if((g.fixed || []).length) parts.push(h('div', {class: 'k', text: 'Fixed'}), h('ul', {}, g.fixed.map(c => h('li', {class: 'ok', text: c}))));
+  if((g.hints || []).length) parts.push(h('div', {class: 'k', text: 'Likely cause'}), h('ul', {}, g.hints.map(c => h('li', {text: c}))));
+  if((g.assumptions || []).length) parts.push(h('div', {class: 'k', text: 'Assumed'}), h('ul', {}, g.assumptions.map(c => h('li', {text: c}))));
+  const rc = g.reply_check;
+  if(rc){
+    parts.push(h('div', {class: 'k', text: "The AI model's answer was checked too"}), h('ul', {}, rc.attempts.map((a, i) =>
+      h('li', {class: a.passed ? 'ok' : 'no', text: 'Answer ' + (i + 1) + ': ' + (a.passed ? 'accepted' : 'rejected, ' + a.reason)})),
+      rc.replaced ? h('li', {class: 'no', text: 'Still wrong after the retries, so the built-in answer is shown instead.'}) : null));
+  }
+  if(res.extracted_text) parts.push(h('div', {class: 'k', text: 'Text read from ' + (res.pdf_name || 'the PDF')}), h('div', {class: 'out', text: res.extracted_text}));
+  if(!parts.length) return null;
+  return h('details', {class: 'working'}, h('summary', {text: 'Show the working'}), ...parts);
+}
+
+function verdictFor(res){
+  const d = res.data || {}, k = res.kind;
+  if(d.error) return null;
+  if(k === 'check_bill'){
+    if(d.status === 'wrong') return verdictLine('bad', d.stated.total !== null && Math.abs(d.stated.total - d.total) >= 0.005 ? 'Wrong total' : 'A wrong amount on the bill');
+    if(d.status === 'correct') return verdictLine(d.uncertain ? 'info' : 'good', d.uncertain ? 'Adds up, but a line could not be read' : 'Correct');
+    if(d.status === 'no_total') return verdictLine('info', 'No total on the bill');
+  }
+  if(k === 'check_math' || k === 'check_stats'){
+    if(d.status === 'wrong') return verdictLine('bad', 'Wrong');
+    if(d.status === 'correct') return verdictLine('good', 'Correct');
+  }
+  if(k === 'run_chain' && d.status) return d.status === 'halted' ? verdictLine('bad', 'Stopped safely') : verdictLine(d.detected ? 'info' : 'good', d.detected ? 'Finished, after the guard caught ' + d.detected + ' wrong answer' + (d.detected === 1 ? '' : 's') : 'Finished, every step checked');
+  if(k === 'demo'){ const n = d.with_guard.trace.filter(t => t.rejected).length; return verdictLine('good', 'Caught ' + n + ' planted mistake' + (n === 1 ? '' : 's') + ', right result delivered'); }
+  return null;
+}
+
+function addBot(res, animate){
+  const box = h('div', {class: 'msg bot'});
+  const v = verdictFor(res); if(v) box.append(v);
+  if(res.notice) box.append(h('p', {class: 'notice', text: res.notice}));
+  box.append(h('p', {class: 'reply', text: res.reply}));
+  const d = res.data || {};
+  if(!d.error){
+    if(res.kind === 'check_bill' && d.lines && d.lines.length) box.append(billCard(d));
+    else if((res.kind === 'check_math' || res.kind === 'check_stats') && (d.status === 'wrong' || d.status === 'correct' || d.status === 'computed')) box.append(sumCard(d));
+    else if(res.kind === 'run_chain' && d.steps) box.append(chainCard(d));
+    else if(res.kind === 'demo' && d.with_guard) box.append(demoCard(d));
+    else { const l = listCard(res.kind, d); if(l) box.append(l); }
+  }
+  const w = workingPanel(res); if(w) box.append(w);
+  const ab = res.answered_by || {};
+  box.append(h('div', {class: 'by', text: ab.mode === 'model' ? 'Answered by the AI model (' + ab.model + '); its answer was checked by Cascade Guard' : 'Answered by the built-in checker'}));
+  if(!animate) box.classList.add('still');
+  document.querySelectorAll('.next').forEach(n => n.remove());
+  const sugg = (res.suggestions || []).slice(0, 3);
+  if(sugg.length) box.append(h('div', {class: 'next'}, sugg.map(s => h('button', {type: 'button', onclick: () => send(s)}, s))));
+  $('#log').append(box);
+  return box;
+}
+
+function showKeyCard(message){
+  document.querySelectorAll('.keycard').forEach(k => k.closest('.msg').remove());
+  const input = h('input', {type: 'password', autocomplete: 'off', 'aria-label': 'Access key', placeholder: 'Paste the access key'});
+  const remember = h('input', {type: 'checkbox'});
+  const err = h('div', {class: 'err small'});
+  const use = async () => {
+    const k = input.value.trim(); if(!k) return;
+    const before = apiKey;
+    apiKey = k; err.textContent = '';
+    if(await loadInfo(false)){ store.set('cg_key', k, remember.checked); card.closest('.msg').remove(); if(message) send(message); }
+    else { apiKey = before; err.textContent = $('#mode').textContent === 'Server not reachable' ? 'The server did not answer. Try again in a moment.' : 'That key was not accepted. Check it and try again.'; input.select(); }
+  };
+  input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); use(); } });
+  const card = h('div', {class: 'keycard'},
+    h('p', {}, 'This server is protected: paste an access key to use it. Ask whoever runs it for a viewer key; the admin key works too.'),
+    h('div', {class: 'row'}, input, h('button', {class: 'send', type: 'button', onclick: use}, 'Use key')),
+    h('label', {}, remember, 'Remember on this computer'), err);
+  $('#log').append(h('div', {class: 'msg'}, card));
+  input.focus();
+}
+
+async function showClaude(){
+  document.querySelectorAll('.guide').forEach(g => g.closest('.msg').remove());
+  const card = h('div', {class: 'keycard guide'});
+  const box = h('div', {class: 'msg'}, card);
+  $('#log').append(box);
+  const example = 'Use Cascade Guard to check this invoice: 3 x $4.00, 2 x $1.50, total $16.00';
+  if(!info){ card.append(h('p', {}, 'Enter an access key first.')); return; }
+  if(info.role !== 'admin'){
+    card.append(h('p', {}, 'You can use Cascade Guard inside Claude with a connector link. Only the admin of this server can see the link, so ask them for it.'));
+    return;
+  }
+  let c;
+  try{ c = await call('/connector'); }catch(e){ card.append(h('p', {class: 'err', text: 'Could not load the connector settings.'})); return; }
+  if(!c.enabled){
+    card.append(h('p', {}, 'The Claude connector is off: ' + (c.problem || 'not set up') + '.'),
+      h('p', {}, 'To turn it on, add the setting MCP_CONNECTOR_TOKEN to this server with a long random value (at least 24 characters), then restart it. On Render: the service, then Environment.'));
+    return;
+  }
+  const link = location.origin + c.path;
+  const field = h('input', {type: 'text', readonly: true, value: link, 'aria-label': 'Connector link', onfocus: e => e.target.select()});
+  const note = h('span', {class: 'small'});
+  const copy = h('button', {class: 'send', type: 'button', onclick: async () => {
+    try{ await navigator.clipboard.writeText(link); note.textContent = 'Copied.'; }
+    catch(e){ field.focus(); field.select(); note.textContent = 'Press Ctrl+C to copy.'; }
+  }}, 'Copy link');
+  card.append(h('p', {}, h('b', {text: 'Use Cascade Guard inside Claude'})),
+    h('ol', {},
+      h('li', {}, 'In Claude (claude.ai or the app), open Customize, then Connectors, and choose Add custom connector.'),
+      h('li', {}, 'Name it Cascade Guard and paste this link:', h('div', {class: 'linkrow'}, field, copy), note),
+      h('li', {}, 'If Claude asks how people sign in, choose No sign-in. Then press Add.'),
+      h('li', {}, 'In a new chat, press +, then Connectors, and turn on Cascade Guard. Then ask:', h('br'), h('span', {class: 'say', text: example}))),
+    h('p', {class: 'small', text: 'Keep the link private: anyone who has it can use these tools (' + (c.role === 'admin' ? 'including the ones that cost money' : 'only the free ones') + '). To stop an old link working, give MCP_CONNECTOR_TOKEN a new value. The free server sleeps when idle, so if Claude says it cannot connect, wait a minute and try again.'}));
+  box.scrollIntoView({block: 'start', behavior: 'smooth'});
+}
+
+function prefill(text){ const t = $('#msg'); t.value = text; t.focus(); grow(); }
+
+/* ------------------------------------------------------------------ sending */
+async function send(text){
+  if(busy) return;
+  text = (text === undefined ? $('#msg').value : text).trim();
+  if(!text && !pdf) return;
+  busy = true; $('#send').disabled = true;
+  $('#intro').hidden = true;
+  const sentPdf = pdf;
+  addMe(text || 'Check this PDF', sentPdf && sentPdf.name);
+  convo.push({me: {text: text || 'Check this PDF', pdf: sentPdf && sentPdf.name}});
+  $('#msg').value = ''; grow(); clearPdf();
+  const wait = h('div', {class: 'msg thinking'}, h('span', {class: 'dots'}, h('i'), h('i'), h('i')), h('span', {text: 'Checking…'}));
+  $('#log').append(wait); wait.scrollIntoView({block: 'end', behavior: 'smooth'});
+  const slow = setTimeout(() => { wait.lastChild.textContent = 'Waking the server up. Free hosting sleeps when no one uses it, so the first request can take up to a minute.'; }, 5000);
+  const history = convo.slice(-9, -1).map(c => c.me ? {role: 'user', text: c.me.text.slice(0, 4000)} :
+    {role: 'assistant', text: (c.bot.reply || '').slice(0, 4000), kind: c.bot.kind, example: typeof (c.bot.data || {}).example === 'number' ? c.bot.data.example : null});
+  const body = {message: text, history};
+  if(sentPdf){ body.pdf_base64 = sentPdf.data; body.pdf_name = sentPdf.name; }
+  if(info && info.model_available) body.use_model = $('#usemodel').checked;
+  try{
+    const res = await call('/assistant/ask', body);
+    wait.remove();
+    convo.push({bot: res}); store.save('cg_assistant', convo.slice(-30));
+    addBot(res, true).scrollIntoView({block: 'start', behavior: 'smooth'});
+  }catch(e){
+    wait.remove(); convo.pop();
+    if(e.kind === 'key'){ showKeyCard(text); }
+    else {
+      const msg = e.kind === 'network' ? 'The server did not answer. If it was asleep, wait half a minute and press Check again.'
+        : e.status === 429 ? 'Too many requests at once. ' + e.detail : e.detail;
+      $('#log').append(h('div', {class: 'msg bot'}, verdictLine('bad', 'Not checked'), h('p', {class: 'reply', text: msg})));
+    }
+  }finally{
+    clearTimeout(slow); busy = false; $('#send').disabled = false; $('#msg').focus();
+  }
+}
+
+/* ------------------------------------------------------------------ PDF */
+function clearPdf(){ pdf = null; $('#file').value = ''; const a = $('#attached'); a.style.display = 'none'; a.textContent = ''; }
+$('#attach').addEventListener('click', () => $('#file').click());
+$('#file').addEventListener('change', () => {
+  const f = $('#file').files[0]; if(!f) return;
+  if(f.size > 5_000_000){ clearPdf(); $('#log').append(h('div', {class: 'msg bot'}, h('p', {class: 'reply err', text: 'That PDF is over 5 MB. Attach a smaller one.'}))); return; }
+  const r = new FileReader();
+  r.onload = () => {
+    pdf = {name: f.name, data: String(r.result).split(',').pop()};
+    const a = $('#attached'); a.textContent = ''; a.style.display = 'flex';
+    a.append(h('span', {class: 'chip'}, f.name, h('button', {type: 'button', 'aria-label': 'Remove the PDF', onclick: clearPdf}, '×')), h('span', {class: 'small', text: 'Press Check to read it.'}));
+  };
+  r.readAsDataURL(f);
+});
+
+/* ------------------------------------------------------------------ composer */
+function grow(){ const t = $('#msg'); t.style.height = 'auto'; t.style.height = Math.min(220, t.scrollHeight) + 'px'; }
+$('#msg').addEventListener('input', grow);
+$('#msg').addEventListener('keydown', e => { if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
+$('#form').addEventListener('submit', e => { e.preventDefault(); send(); });
+$('#keybtn').addEventListener('click', () => showKeyCard());
+$('#claudebtn').addEventListener('click', showClaude);
+
+renderTries();
+if(convo.length){ $('#intro').hidden = true; for(const c of convo){ if(c.me) addMe(c.me.text, c.me.pdf); else addBot(c.bot, false); } }
+loadInfo();
+</script>
+</body>
+</html>

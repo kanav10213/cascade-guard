@@ -2,7 +2,10 @@
 
     cascade-guard init                 create .env in this folder from the template
     cascade-guard serve                dashboard + API on http://localhost:8000
+    cascade-guard ask "check this invoice: 3 x $4.00, 2 x $1.50, total $16.00"   ask in plain English
+    cascade-guard ask                  the same, as a conversation (type exit to stop)
     cascade-guard mcp                  MCP server for Claude Desktop, Claude Code and other AI tools
+    cascade-guard mcp --install-claude add Cascade Guard to the Claude desktop app's settings
     cascade-guard compare              rule-based paired comparison, writes report.json
     cascade-guard eval all --dry-run   real-model evaluation (shows the cost first)
     cascade-guard chain run support-triage --input "..."   run your own agent chain
@@ -85,7 +88,119 @@ def cmd_mcp(args) -> int:
     if args.home:
         os.environ["CASCADE_HOME"] = str(Path(args.home).expanduser().resolve())
     from cascade_guard import mcp_server
+    if args.install_claude:
+        return mcp_server.install_claude()
     return mcp_server.main(["--print-config"] if args.print_config else [])
+
+
+def _console_safe():
+    """Never crash on a character the console cannot show (₹, ×, ✓ on an old Windows code page)."""
+    import contextlib
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(ValueError):
+                reconfigure(errors="replace")
+
+
+def show_answer(res: dict) -> str:
+    """An assistant answer as plain text for the terminal."""
+    from cascade_guard.bills import fmt
+    out = [res["reply"]]
+    d, kind = res.get("data") or {}, res.get("kind")
+    if res.get("notice"):
+        out.insert(0, res["notice"])
+    if kind == "check_bill" and d.get("lines"):
+        cur = d["currency"]
+        for line in d["lines"]:
+            left = (line["description"] + "  " if line["description"] else "") + f"{line['qty']} x {fmt(line['unit_price'], cur)}"
+            mark = "ok" if line["ok"] else f"WRONG (bill says {fmt(line['stated_line_total'], cur)})"
+            out.append(f"  {left[:44]:<44} {fmt(line['line_total'], cur):>14}  {mark}")
+        for t in d["taxes"]:
+            out.append(f"  {t['label'][:44]:<44} {fmt(t['amount'], cur):>14}")
+        for c in d["charges"]:
+            out.append(f"  {c['label'][:44]:<44} {fmt(c['amount'], cur):>14}")
+        if d["discount"]:
+            out.append(f"  {d['discount']['label'][:44]:<44} {'-' + fmt(d['discount']['amount'], cur):>14}")
+        stated = d["stated"]["total"]
+        mark = "" if stated is None else ("ok" if abs(stated - d["total"]) < 0.005 else f"WRONG (bill says {fmt(stated, cur)})")
+        out.append(f"  {'Total':<44} {fmt(d['total'], cur):>14}  {mark}")
+        out += [f"  Likely cause: {x}" for x in d["hints"]] + [f"  Assumed: {x}" for x in d["assumptions"]]
+    elif kind == "run_chain" and d.get("steps"):
+        for s in d["steps"]:
+            for a in s["attempts"]:
+                out.append(f"  {s['step']}, try {a['attempt'] + 1}: " + ("accepted" if a["passed"] else f"rejected ({a['reason']})"))
+        if d.get("final_output") is not None:
+            out.append("  Final answer: " + str(d["final_output"])[:500])
+    elif kind == "demo" and d.get("with_guard"):
+        out.append("  Without the guard: " + str(d["without_guard"]["final_output"]))
+        out.append("  With the guard:    " + str(d["with_guard"]["final_output"]))
+        for t in d["with_guard"]["trace"]:
+            out.append(f"  {t['step']}, try {t['attempt'] + 1}: " + (f"rejected ({t['rejected']})" if t["rejected"] else "accepted"))
+    rc = (res.get("guard") or {}).get("reply_check")
+    if rc and not rc["attempts"][0]["passed"]:
+        out.append("  Cascade Guard rejected the model's first answer: " + str(rc["attempts"][0]["reason"]))
+    if res.get("suggestions") and kind in ("help", "unknown"):
+        out.append("  Try: " + " | ".join(res["suggestions"][:4]))
+    return "\n".join(out)
+
+
+def cmd_ask(args) -> int:
+    """Ask Cascade Guard in plain English, once or as a conversation."""
+    import json as _json
+
+    from cascade_guard.assistant import ask
+    from cascade_guard.config import load_env, use_home
+    _console_safe()
+    use_home(args.home)
+    load_env()
+    client = None
+    if args.model:
+        from cascade_guard.llm.client import NotConfigured, make_client
+        try:
+            client = make_client(max_cost=float(os.getenv("LLM_MAX_COST", "1.0")), strict_prices=False,
+                                 cache_path=os.getenv("LLM_CACHE", ".llm_cache/ask.jsonl") or None)
+        except (NotConfigured, ValueError) as e:
+            print(f"No model configured ({e}); the built-in assistant will answer.", file=sys.stderr)
+
+    def answer(text: str, history: list) -> dict:
+        res = ask(text, history, client=client, use_model=client is not None)
+        history += [{"role": "user", "text": text[:4000]},
+                    {"role": "assistant", "text": res["reply"][:4000], "kind": res["kind"],
+                     "example": (res.get("data") or {}).get("example")}]
+        print(_json.dumps(res, indent=2, default=str, ensure_ascii=False) if args.json else show_answer(res))
+        return res
+
+    message = " ".join(args.message).strip()
+    if args.file:
+        f = Path(args.file)
+        if not f.exists():
+            raise SystemExit(f"No such file: {f}")
+        if f.suffix.lower() == ".pdf":
+            from cascade_guard.pilot.pdf import PDFError, pdf_to_text
+            try:
+                text = pdf_to_text(f.read_bytes())
+            except PDFError as e:
+                raise SystemExit(str(e)) from e
+        else:
+            text = f.read_text(encoding="utf-8", errors="replace")
+        message = (message + "\n\n" if message else "Check this bill:\n") + text
+    history: list = []
+    if message:
+        res = answer(message, history)
+        return 1 if (res.get("data") or {}).get("status") == "wrong" and args.exit_code else 0
+    print("Ask Cascade Guard. Paste a bill or ask a question; type exit to stop.")
+    while True:
+        try:
+            text = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            return 0
+        if text.lower() in ("exit", "quit", "q", "bye"):
+            return 0
+        if text:
+            answer(text, history)
+            print()
 
 
 def _experiment(module: str):
@@ -259,8 +374,17 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--log-level", default=None, choices=["critical", "error", "warning", "info", "debug"],
                    help="default: LOG_LEVEL, else info")
 
+    s = add("ask", cmd_ask, "ask Cascade Guard in plain English: check a bill, a sum, run a chain")
+    s.add_argument("message", nargs="*", help="your request; leave it out for a conversation")
+    s.add_argument("--file", help="a bill to check: a PDF or a text file")
+    s.add_argument("--model", action="store_true", help="let the configured AI model read the request (costs money)")
+    s.add_argument("--json", action="store_true", help="print the full answer as JSON")
+    s.add_argument("--exit-code", action="store_true", help="exit with 1 when a bill or sum is wrong (for scripts)")
+
     s = add("mcp", cmd_mcp, "run the MCP server over stdio (for Claude Desktop, Claude Code and others)")
     s.add_argument("--print-config", action="store_true", help="print the setup to paste into your AI tool")
+    s.add_argument("--install-claude", action="store_true",
+                   help="add Cascade Guard to the Claude desktop app's settings file (keeps everything else)")
 
     s = add("chain", cmd_chain, "your own agent chains: templates, list, import, export, run")
     s.add_argument("action", choices=["templates", "list", "import", "export", "run"])

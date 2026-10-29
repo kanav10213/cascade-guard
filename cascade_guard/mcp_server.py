@@ -3,10 +3,13 @@ MCP-capable AI tool.
 
     cascade-guard mcp                  # stdio (what Claude Desktop and Claude Code use)
     cascade-guard mcp --print-config   # the exact setup to paste, for this folder
+    cascade-guard mcp --install-claude # add it to the Claude desktop app's settings file
 
 Tools
+    check_bill        recompute any bill or invoice exactly and say what is wrong (no model needed)
+    check_math        check a sum or a claim about a list of numbers exactly (no model needed)
     verify_output     check any agent's output against its source with the LLM validator
-    check_invoice     run an invoice through the guarded invoice workflow
+    check_invoice     run an invoice through the guarded four-agent invoice workflow
     guard_status      which model is connected, spend so far, open review items
     list_review_queue jobs the guard stopped and checks that did not pass (read-only)
     list_agent_chains the agent chains built on the dashboard, and the starter templates
@@ -41,10 +44,12 @@ from cascade_guard.storage.db import get_store  # noqa: E402
 server = MCPServer(
     "cascade-guard",
     instructions=(
-        "Cascade Guard checks AI agents' work before it is used. Call verify_output after a step "
-        "produces something that can be checked against its input (numbers, totals, extracted fields, "
-        "summaries of a given text): pass the task, the input and the output. If it is rejected, fix the "
-        "output using the reason and verify again; do not pass a rejected output on."),
+        "Cascade Guard checks AI agents' work before it is used. For any bill, invoice or receipt, call "
+        "check_bill with the text exactly as given; for arithmetic or a claim about a list of numbers, call "
+        "check_math. Both are exact and need no model: report their numbers as they are. Call verify_output "
+        "after a step produces something that can be checked against its input (extracted fields, summaries "
+        "of a given text): pass the task, the input and the output. If it is rejected, fix the output using "
+        "the reason and verify again; do not pass a rejected output on."),
 )
 
 _client = None
@@ -71,6 +76,41 @@ def _llm():
 
 def _model(c):
     return {"provider": c.provider, "model": c.model, "simulated": c.is_fake}
+
+
+@server.tool()
+def check_bill(bill_text: str) -> dict:
+    """Check a bill, invoice or receipt: recompute every line, discount, tax and the total exactly, compare
+    them with what the bill says, and explain any mistake in plain words. Works on bills written any way,
+    e.g. "3 x $4.00, 2 x $1.50, total $16.00", "2 pens at Rs 15 each, GST 18%, Total Rs 177", or one item
+    per line. Needs no model. Returns status (correct | wrong | no_total | unreadable), summary, the lines,
+    the recomputed total, what the bill states, problems and the likely cause."""
+    from cascade_guard.bills import check_bill as _check
+    r = _check(_as_text(bill_text)[:20_000])
+    return {k: r[k] for k in ("status", "summary", "currency", "invoice_id", "lines", "subtotal", "discount",
+                              "taxes", "charges", "total", "stated", "difference", "problems", "hints",
+                              "assumptions", "unread")}
+
+
+@server.tool()
+def check_math(claim: str) -> dict:
+    """Check arithmetic or a claim about a list of numbers exactly, e.g. "17 x 23 = 391", "what is 15% of
+    240", "the average of 3, 7, 2, 9 is 5.25" (sum, average, median, maximum, minimum, count). Needs no
+    model. Returns status (correct | wrong | computed | unreadable), the right value and a summary."""
+    from cascade_guard.claims import check_math as _math
+    from cascade_guard.claims import check_stats, looks_like_stats
+    text = _as_text(claim)[:500]
+    return check_stats(text) if looks_like_stats(text) else _math(text)
+
+
+@server.tool()
+def show_cascade_demo(example: int = 0) -> dict:
+    """Show Cascade Guard at work: a sample invoice goes through four agents (read, price, approve, report)
+    with mistakes planted in their answers, once without the guard and once with it. example 0, 1 or 2
+    picks the sample. Returns a summary, both results and every attempt with the guard's verdict."""
+    from cascade_guard.assistant import Context, describe, t_demo
+    d = t_demo({"example": example}, Context())
+    return {"summary": describe("demo", d), **d}
 
 
 @server.tool()
@@ -104,9 +144,10 @@ def verify_output(task: str, source: Text, output: Text,
 @server.tool()
 def check_invoice(invoice_text: str, guard: Literal["rules", "llm", "none"] = "rules",
                   agents: Literal["rules", "llm"] = "rules") -> dict:
-    """Run an invoice through the guarded workflow: read, price, approve, summary.
+    """Run an invoice through the guarded four-agent workflow: read, price, approve, summary.
 
-    The text needs 'INVOICE <id>', item lines like '3 x Claw hammer @ $14.99' and 'Tax: 8%'.
+    The text needs 'INVOICE <id>', item lines like '3 x Claw hammer @ $14.99' and 'Tax: 8%'. To simply
+    check whether a bill written any other way adds up, use check_bill instead.
     guard='rules' and agents='rules' are free; 'llm' uses the configured model."""
     try:
         client = _llm() if "llm" in (guard, agents) else None
@@ -199,12 +240,9 @@ def run_agent_chain(chain: str, input: str, simulated: bool = False) -> dict:
     except (BudgetExceeded, LLMCallError) as e:
         return {"error": str(e)}
     if store is not None:
-        final = result["final_output"]
-        result["run_id"] = store.save_pipeline_run(
-            dict(result, final_output=final if isinstance(final, str) or final is None else _json.dumps(final)),
-            input, guard="chain", engine="langgraph", model=_model(client), kind="chain", usage_delta=result["usage"],
-            validator_log=[{"stage": c["step"], "verdict": c["verdict"], "reason": c["reason"]}
-                           for c in result["checks"]], prompt=f"chain:{definition['name']}"[:100])
+        from cascade_guard.chains import save_chain_run
+        result["run_id"] = save_chain_run(store, result, definition["name"], input, _model(client),
+                                          row["id"] if row else None)
     result.pop("trace", None)  # the steps already carry every attempt
     return result
 
@@ -234,6 +272,86 @@ def print_config():
     print(json.dumps(cfg, indent=2))
     print(f"\nClaude Code:  claude mcp add cascade-guard -e CASCADE_HOME=\"{here}\" -- "
           f"\"{sys.executable}\" -m cascade_guard mcp", file=sys.stderr)
+
+
+# --------------------------------------------------------------------------- the web connector's tool set
+
+def _check_invoice_free(invoice_text: str) -> dict:
+    """Run an invoice through the guarded four-agent workflow (read, price, approve, summary) with the
+    rule-based agents and guard. The text needs 'INVOICE <id>', item lines like '3 x Claw hammer @ $14.99' and
+    'Tax: 8%'. To check whether a bill written any other way adds up, use check_bill instead."""
+    return check_invoice(invoice_text, "rules", "rules")
+
+
+def _run_chain_free(chain: str, input: str) -> dict:
+    """Run a saved agent chain (by name or id) or a starter template (by name) on an input, with the guard
+    checking every step, on the free offline simulator. Returns every step's attempts and verdicts."""
+    return run_agent_chain(chain, input, simulated=True)
+
+
+def build_remote_server(role: str = "viewer"):
+    """The MCP server for the web connector. viewer: exact checks, the demo, free chain runs, status;
+    reviewer: also the review queue (read-only); admin: also verify_output and runs on the model."""
+    remote = MCPServer("cascade-guard", instructions=server.instructions if hasattr(server, "instructions")
+                       else None)
+    for fn in (check_bill, check_math, show_cascade_demo, list_agent_chains, guard_status):
+        remote.add_tool(fn)
+    if role == "admin":
+        remote.add_tool(check_invoice)
+        remote.add_tool(run_agent_chain)
+        remote.add_tool(verify_output)
+    else:
+        remote.add_tool(_check_invoice_free, name="check_invoice")
+        remote.add_tool(_run_chain_free, name="run_agent_chain")
+    if role in ("reviewer", "admin"):
+        remote.add_tool(list_review_queue)
+    return remote
+
+
+def claude_config_paths() -> list[Path]:
+    """Where the Claude desktop app keeps claude_desktop_config.json on this computer."""
+    home = Path.home()
+    if sys.platform == "win32":
+        appdata = Path(os.getenv("APPDATA") or home / "AppData" / "Roaming")
+        local = Path(os.getenv("LOCALAPPDATA") or home / "AppData" / "Local")
+        paths = [appdata / "Claude"]  # the installer version
+        paths += sorted((local / "Packages").glob("Claude_*/LocalCache/Roaming/Claude"))  # the Microsoft Store version
+        return [p / "claude_desktop_config.json" for p in paths]
+    if sys.platform == "darwin":
+        return [home / "Library" / "Application Support" / "Claude" / "claude_desktop_config.json"]
+    return [Path(os.getenv("XDG_CONFIG_HOME") or home / ".config") / "Claude" / "claude_desktop_config.json"]
+
+
+def install_claude(paths: list[Path] | None = None) -> int:
+    """Add (or update) the cascade-guard entry in the Claude desktop app's settings, keeping everything else."""
+    import json
+    here = str(Path(os.getenv("CASCADE_HOME") or os.getcwd()).expanduser().resolve())
+    entry = {"command": sys.executable, "args": ["-m", "cascade_guard", "mcp"], "env": {"CASCADE_HOME": here}}
+    done = 0
+    for path in paths or claude_config_paths():
+        config: dict = {}
+        if path.exists() and path.read_text(encoding="utf-8").strip():
+            try:
+                config = json.loads(path.read_text(encoding="utf-8"))
+            except ValueError:
+                print(f"Not changed: {path} is not valid JSON. Fix or delete it, then run this again.")
+                continue
+            if not isinstance(config, dict):
+                print(f"Not changed: {path} does not hold a JSON object.")
+                continue
+            path.with_name(path.name + ".bak").write_text(path.read_text(encoding="utf-8"), encoding="utf-8")
+        servers = config.get("mcpServers")
+        config["mcpServers"] = servers if isinstance(servers, dict) else {}
+        config["mcpServers"]["cascade-guard"] = entry
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+        print(f"Saved: {path}")
+        done += 1
+    if not done:
+        return 1
+    print("Done. Quit the Claude app completely (right-click its icon near the clock, then Quit) and open it again.\n"
+          "Then ask Claude, for example: Use cascade guard to check this invoice: 3 x $4.00, 2 x $1.50, total $16.00")
+    return 0
 
 
 def main(argv=None):

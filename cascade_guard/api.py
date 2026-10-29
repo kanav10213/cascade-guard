@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
@@ -17,10 +18,19 @@ from cascade_guard.evaluation.judgement import get_failure_reason  # noqa: E402
 from cascade_guard.evaluation.runner import run_chain, run_experiment  # noqa: E402
 from cascade_guard.guard.cascade_guard import CascadeGuard  # noqa: E402
 
+
+@asynccontextmanager
+async def lifespan(_app):
+    from cascade_guard import connector
+    async with connector.lifespan():  # the Claude web connector, when MCP_CONNECTOR_TOKEN is set
+        yield
+
+
 app = FastAPI(
     title="Cascade Guard",
     version=__version__,
     description="Detect, halt and recover from error cascades in a multi-agent chain.",
+    lifespan=lifespan,
 )
 
 
@@ -127,11 +137,28 @@ from cascade_guard.pilot_api import router as pilot_router  # noqa: E402
 
 app.include_router(pilot_router)
 
+from cascade_guard.assistant_api import router as assistant_router  # noqa: E402
+
+app.include_router(assistant_router)
+
 
 from cascade_guard import ops  # noqa: E402
 
 ops.install(app)
 app.include_router(ops.router)
+
+from cascade_guard.connector import ConnectorMiddleware  # noqa: E402
+
+app.add_middleware(ConnectorMiddleware)  # added last, so it runs first: /mcp/<secret> never reaches the routes
+
+
+@app.get("/connector", dependencies=[Depends(require("admin"))])
+def connector_info():
+    """The Claude web connector: on or off, its role, and the link to paste into Claude (admin only)."""
+    from cascade_guard import connector
+    out = connector.status()
+    out["path"] = connector.PREFIX + connector.token() if out["enabled"] else None
+    return out
 
 
 @app.get("/whoami")

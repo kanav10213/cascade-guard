@@ -79,7 +79,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   <span><span class="pill" id="role" style="display:none"></span> <span class="pill" id="health">checking server…</span></span>
 </header>
 <p class="sub">In a chain of AI agents, one agent's mistake gets accepted by the next and builds up until it reaches the final answer. Cascade Guard checks every step, re-runs a failing step, and stops the order if it can't be fixed, so a wrong answer is never delivered silently.</p>
-<p class="topnav">New: <a href="#builder">build your own agent chain</a> (section 9) and <a href="#agents">connect the agents you already have</a> (section 10).</p>
+<p class="topnav">New: <a href="/assistant">Ask Cascade Guard</a>, an assistant you talk to in plain English (check a bill, a sum or an agent chain's answer). Also: <a href="#builder">build your own agent chain</a> (section 9) and <a href="#agents">connect the agents you already have</a> (section 10).</p>
 
 <div class="card" id="keybox">
   <h2>API key needed</h2>
@@ -300,7 +300,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 
 <script>
 const $ = s => document.querySelector(s);
-let apiKey = sessionStorage.getItem('cg_key') || '';
+let apiKey = ''; try{ apiKey = sessionStorage.getItem('cg_key') || localStorage.getItem('cg_key') || ''; }catch(e){}
 const STAGES = ['extract','analyze','reason','report'];
 
 function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
@@ -681,7 +681,7 @@ $('#p-pdf').addEventListener('change', uploadPdf);
 $('#p-pdf-sample').addEventListener('click', downloadSamplePdf);
 $('#p-new').addEventListener('click', newSample);
 $('#p-exp').addEventListener('click', runPilotExperiment);
-$('#savekey').addEventListener('click', () => { apiKey = $('#key').value.trim(); sessionStorage.setItem('cg_key', apiKey); $('#keybox').style.display = 'none'; snippet(); whoami().then(loadHistory); llmStatus(); if(!$('#p-text').value) loadSample(7); });
+$('#savekey').addEventListener('click', () => { apiKey = $('#key').value.trim(); try{ sessionStorage.setItem('cg_key', apiKey); }catch(e){} $('#keybox').style.display = 'none'; snippet(); whoami().then(loadHistory); llmStatus(); if(!$('#p-text').value) loadSample(7); });
 // ---------------------------------------------------------------- connection check + evaluation
 async function checkConnection(){
   const b = $('#l-check'), out = $('#l-check-out'); b.disabled = true; out.textContent = 'Sending one small request…';

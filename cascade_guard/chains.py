@@ -350,3 +350,16 @@ def run_chain_def(chain: ChainDef, input_text: str, client, *, inject: float = 0
         "usage": {k: round(after[k] - before[k], 6) if k == "cost_usd" else after[k] - before[k]
                   for k in ("calls", "cached_calls", "input_tokens", "output_tokens", "cost_usd")},
     }
+
+
+def save_chain_run(store, result: dict, chain_name: str, input_text: str, model: dict,
+                   chain_id: int | None = None) -> int:
+    """Save a chain run with its steps and verdicts; a stopped run goes to the review queue."""
+    final = result["final_output"]
+    saved = dict(result, final_output=final if isinstance(final, str) or final is None
+                 else json.dumps(final, default=str), chain_id=chain_id)
+    return store.save_pipeline_run(
+        saved, input_text, guard="chain", engine="langgraph", model=model, kind="chain",
+        usage_delta=result["usage"],
+        validator_log=[{"stage": c["step"], "verdict": c["verdict"], "reason": c["reason"]} for c in result["checks"]],
+        prompt=f"chain:{chain_name}"[:100])

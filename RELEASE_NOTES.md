@@ -1,22 +1,24 @@
-# Cascade Guard 1.1.0
+# Cascade Guard 1.2.0
 
-New: **build your own agent chain, without code.**
+New: **ask Cascade Guard in plain English.**
 
-On the dashboard (section 9), design a multi-step agent: give each step an instruction for the model, choose
-whether it returns text or JSON with named keys, and choose how it is checked (the model checker with your own
-acceptance criteria, format only, or none). Save it, export it as JSON, and run it on any input. Every step is
-checked before the next one uses it, retried with the checker's reason when it is wrong, and the chain stops
-safely and goes to the review queue if a step stays wrong. Chains run on LangGraph, built from your definition.
+Open `/assistant` on your server (or run `cascade-guard ask`) and type what you want checked:
 
-- Free with the simulated model; on the configured model with an admin key
-- "Plant test mistakes" shows the guard catching and repairing errors
-- Three starter templates: support ticket triage, meeting notes to action items, invoice review
-- Also from the command line (`cascade-guard chain run ...`), the API (`/chains`) and AI assistants (MCP
-  `run_agent_chain`)
+- "Check this invoice: 3 x $4.00, 2 x $1.50, total $16.00" → *The total is wrong. It should be $15.00, but the bill
+  says $16.00 ($1.00 too much).* Every line, the tax and the total are recomputed exactly and shown like a receipt,
+  with the wrong figure struck through. Rupees, GST (also CGST + SGST), discounts, delivery and PDF invoices work.
+- "Is 17 x 23 = 401?" or "the average of 3, 7, 2, 9 is 5.5" → checked exactly.
+- "Run support ticket triage on: …" → your agent chain, with the guard on every step.
+- "Show me Cascade Guard catching a mistake" → a sample invoice through four agents with planted mistakes:
+  the wrong total that would have been delivered, and how the guard caught and fixed each mistake.
 
-Also new: **integrate the agents you already have.** A chain step can be done by your own agent at a URL, in any
-language or framework; Cascade Guard sends it the instruction and input, checks its answer, retries it with the
-reason, and stops the chain safely if it stays wrong. Ready-to-run examples (an agent server, guarding an agent
-inside Python, guarding a LangGraph agent) and a step-by-step guide: INTEGRATION.md.
+The built-in assistant is free and needs no AI model. With a model connected, the model understands any request,
+and Cascade Guard checks the model's own answer before you see it.
+
+Also new: **use Cascade Guard inside Claude.** Set `MCP_CONNECTOR_TOKEN` on your server and add the link shown under
+"Use in Claude" as a custom connector in Claude; then ask Claude to check a bill and it uses Cascade Guard. For the
+Claude desktop app, `cascade-guard mcp --install-claude` does the setup.
+
+Earlier in 1.1: build your own agent chains without code, and plug in the agents you already have (INTEGRATION.md).
 
 Get it: `pip install --upgrade cascade-guard-ai`. Full list: CHANGELOG.md

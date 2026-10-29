@@ -1,6 +1,33 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-29
+
+### Added
+- Ask Cascade Guard in plain English: an assistant page at `/assistant`, the `POST /assistant/ask` API and the
+  `cascade-guard ask` command (one request, a file, or a conversation). It checks bills and invoices, sums and
+  claims about lists of numbers, runs chains, shows a demo of planted mistakes being caught, and answers questions
+  about chains, agents, the review queue and status. The built-in assistant is free and needs no model or key;
+  PDF invoices can be attached.
+- An exact bill checker (`cascade_guard.bills`) for bills written the way people write them: `3 x $4.00`,
+  `2 pens at ₹15 each`, `Rice: 2 kg x ₹60 = ₹120`, one item per line or comma-separated, with subtotals, tax,
+  GST / CGST + SGST / VAT (also included in prices), discounts, delivery and service charges, round-off, thousands
+  separators (also Indian grouping) and decimal commas. Exact decimal arithmetic; mistakes are explained (a line
+  counted twice, the tax left out, a discount not taken off, a decimal slip); unreadable lines are reported, never
+  dropped; a total that matches another common convention (tax on charges, discount after tax) is not called wrong.
+- Exact checks of arithmetic and of list statistics (`cascade_guard.claims`), with rational arithmetic.
+- With a real model and an admin key, the model reads the request and calls the same tools, and Cascade Guard
+  checks the model's own answer (every number must come from a tool result, the verdict must match); a rejected
+  answer is sent back with the reason, and the built-in answer replaces one that stays wrong.
+- Claude on the web: a connector link (`MCP_CONNECTOR_TOKEN`) serves MCP over HTTP at `/mcp/<secret>` for a
+  claude.ai custom connector, with the tool set chosen by `MCP_CONNECTOR_ROLE`; the secret never appears in logs.
+  The assistant page shows admins the link and the steps ("Use in Claude").
+- MCP tools `check_bill`, `check_math` and `show_cascade_demo`; `cascade-guard mcp --install-claude` adds Cascade
+  Guard to the Claude desktop app's settings without touching anything else in them.
+
+### Fixed
+- The MCP server no longer prints a long error when stopped with Ctrl+C, and says it is waiting when started by hand.
+
 ## [1.1.0] - 2026-10-29
 
 ### Added

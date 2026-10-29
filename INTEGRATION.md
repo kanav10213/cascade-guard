@@ -145,3 +145,12 @@ if (!passed) { /* ask your agent again with `reason`, or stop and send it to a p
 ```
 
 Your code decides what to do with a rejection; in A, B and C Cascade Guard does the retry and the stop for you.
+
+---
+
+## Using Cascade Guard yourself, in plain English or inside Claude
+
+You don't need an agent of your own to use the checks. Open `/assistant` on the server and type a request ("check
+this invoice: 3 x $4.00, 2 x $1.50, total $16.00"), or run `cascade-guard ask "..."`. To let Claude use the same
+checks, add the connector link shown under **Use in Claude** on that page as a custom connector in Claude (see the
+README section "Use it from Claude").

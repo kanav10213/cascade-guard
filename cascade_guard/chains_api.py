@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field, ValidationError
 
 from cascade_guard.agents_registry import AgentDef
 from cascade_guard.auth import ensure, require
-from cascade_guard.chains import ChainDef, mermaid, run_chain_def
+from cascade_guard.chains import ChainDef, mermaid, run_chain_def, save_chain_run
 
 router = APIRouter(tags=["chains"])
 TEMPLATES = Path(__file__).with_name("templates")
@@ -149,14 +149,7 @@ def _run(chain: ChainDef, opts: RunOptions, role: str, key: str, chain_id: int |
     result["model"], result["chain_id"] = model, chain_id
     store = _store(required=False)
     if store is not None:
-        final = result["final_output"]
-        saved = dict(result, final_output=final if isinstance(final, str) or final is None
-                     else json.dumps(final, default=str))
-        result["run_id"] = store.save_pipeline_run(
-            saved, opts.input, guard="chain", engine="langgraph", model=model, kind="chain",
-            usage_delta=result["usage"],
-            validator_log=[{"stage": c["step"], "verdict": c["verdict"], "reason": c["reason"]}
-                           for c in result["checks"]], prompt=f"chain:{chain.name}"[:100])
+        result["run_id"] = save_chain_run(store, result, chain.name, opts.input, model, chain_id)
     return result
 
 

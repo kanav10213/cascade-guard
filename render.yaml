@@ -10,6 +10,8 @@ services:
     envVars:
       - key: API_KEY           # admin key; Render generates a random one (see the service's Environment tab)
         generateValue: true
+      - key: MCP_CONNECTOR_TOKEN   # the secret in the Claude connector link (/mcp/<this>); see "Use in Claude" on /assistant
+        generateValue: true
       - key: LLM_PROVIDER      # "fake" = free simulated model; set ANTHROPIC_API_KEY and change this to use Claude
         value: fake
       - key: LLM_MAX_COST      # spend cap per server run, USD

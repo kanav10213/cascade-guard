@@ -221,11 +221,17 @@ def test_mcp_server_over_stdio(tmp_path):
                 v = await s.call_tool("verify_output", {"task": "Add the items", "source": "1, 2", "output": "3"})
                 inv = await s.call_tool("check_invoice", {"invoice_text": make_invoice(3)["text"]})
                 bad = await s.call_tool("check_invoice", {"invoice_text": "hello"})
-                return names, json.loads(v.content[0].text), json.loads(inv.content[0].text), json.loads(bad.content[0].text)
+                bill = await s.call_tool("check_bill", {"bill_text": "check this invoice: 3 x $4.00, 2 x $1.50, "
+                                                                    "total $16.00"})
+                math = await s.call_tool("check_math", {"claim": "is 17 x 23 = 401?"})
+                return (names, json.loads(v.content[0].text), json.loads(inv.content[0].text),
+                        json.loads(bad.content[0].text), json.loads(bill.content[0].text), json.loads(math.content[0].text))
 
-    names, v, inv, bad = asyncio.run(go())
-    assert names == {"verify_output", "check_invoice", "guard_status", "list_review_queue",
-                     "list_agent_chains", "run_agent_chain"}  # no tool decides review items
+    names, v, inv, bad, bill, math = asyncio.run(go())
+    assert names == {"check_bill", "check_math", "show_cascade_demo", "verify_output", "check_invoice", "guard_status",
+                     "list_review_queue", "list_agent_chains", "run_agent_chain"}  # no tool decides review items
+    assert bill["status"] == "wrong" and bill["total"] == 15.0 and bill["stated"]["total"] == 16.0
+    assert math["status"] == "wrong" and math["value"] == "391"
     assert v["verdict"] in ("accept", "reject") and v["model"]["simulated"]
     assert inv["status"] == "correct" and inv["delivered"] == inv["expected"]
     assert "error" in bad

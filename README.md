@@ -10,6 +10,10 @@ confidently wrong. Cascade Guard checks every hand-off against the step's own in
 and tells the agent *what* was wrong. If the step still fails, it stops the job safely and sends it to a person.
 A wrong answer is never passed on silently.
 
+- **Ask in plain English:** open `/assistant` on the server (or run `cascade-guard ask`) and type a request:
+  "check this invoice: 3 x $4.00, 2 x $1.50, total $16.00", "is 17 x 23 = 401?", "run support ticket triage on: …".
+  Bills, invoices (also PDFs, rupees and GST), sums and claims about numbers are recomputed exactly, with the working
+  shown; it needs no AI model and no key.
 - **Build your own agent, no code:** design a multi-step agent chain on the dashboard (instructions, output
   format, checks per step), save it, and run it with the guard on every step.
 - **Plug in the agents you already have:** any agent with an HTTP endpoint, in any language, can be a step in a
@@ -17,18 +21,20 @@ A wrong answer is never passed on silently.
 - **Drop-in for your code:** wrap any Python step or LangGraph node with `guard_step` / `guarded_node`, checked
   locally or by your deployed server (`cascade_guard.remote.RemoteGuard`).
 - **A service for everything else:** a REST API that checks any agent output against its source, plus a dashboard.
-- **Inside AI assistants:** an MCP server for Claude Desktop, Claude Code and other MCP-capable tools.
+- **Inside AI assistants:** an MCP server for Claude Desktop, Claude Code and other MCP-capable tools, and a
+  connector link for Claude on the web (claude.ai), so Claude itself checks bills and sums with Cascade Guard.
 - **Measurable:** fault injection and paired experiments that report what the guard actually buys (CRI, CRS, Wilson
   95% intervals), and a cost-gated evaluation on real models.
 - **Any model:** Anthropic Claude by default; any OpenAI-format API (OpenAI, Gemini, Groq, OpenRouter, a local model
   through Ollama), or a free offline simulator.
 
-> **Status: v1.0.0.** The software is complete, tested (Python 3.12 to 3.14, SQLite and PostgreSQL, Docker) and
+> **Status: v1.2.0.** The software is complete, tested (Python 3.12 to 3.14, SQLite and PostgreSQL, Docker) and
 > documented. The headline numbers below are from **simulations**; the evaluation on a real paid model is built and
 > waiting to be run. See [Limits](#limits).
 
 ## Contents
-[Install](#install) · [Quick start](#quick-start) · [Docker](#docker) · [Use it in your code](#use-it-in-your-code) ·
+[Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
+[Docker](#docker) · [Use it in your code](#use-it-in-your-code) ·
 [Use it from Claude (MCP)](#use-it-from-claude-and-other-ai-assistants-mcp) · [Models](#models-and-providers) ·
 [Configuration](#configuration) · [API](#api) · [Security](#security) · [Results](#results) ·
 [How it works](#how-it-works) · [Evaluate on a real model](#evaluate-on-a-real-model) · [Development](#development) ·
@@ -39,12 +45,12 @@ Python 3.12 or newer.
 
 ```bash
 pip install cascade-guard-ai                          # from PyPI, once published
-pip install cascade_guard_ai-1.0.0-py3-none-any.whl   # from a release file
+pip install cascade_guard_ai-1.2.0-py3-none-any.whl   # from a release file
 pip install .                                         # from this folder
 pip install "cascade-guard-ai[postgres]"              # with PostgreSQL support
 ```
 The package is called `cascade-guard-ai` on PyPI (the name `cascade-guard` is too close to an existing project);
-the command is `cascade-guard` and the import is `cascade_guard`. For the exact versions v1.0.0 was tested with,
+the command is `cascade-guard` and the import is `cascade_guard`. For the exact versions this release was tested with,
 from this folder: `pip install -r requirements.txt` (pins in `constraints.txt`).
 
 **Windows, no command line:** double-click `start.bat`. It sets everything up on the first run, opens the settings in
@@ -70,6 +76,31 @@ Other commands: `cascade-guard mcp` (MCP server), `cascade-guard compare` (rule-
 Every command works in a **working folder**: `--home` (before or after the command), else `CASCADE_HOME`, else the
 current folder. It holds `.env`,
 `data/` (the SQLite database) and `.llm_cache/` (cached model replies, so nothing is paid for twice).
+
+## Ask Cascade Guard in plain English
+Open **`/assistant`** on a running server (for example `http://localhost:8000/assistant`), or use the command line:
+
+```bash
+cascade-guard ask "check this invoice: 3 x $4.00, 2 x $1.50, total $16.00"
+# The total is wrong. It should be $15.00, but the bill says $16.00 ($1.00 too much).
+cascade-guard ask --file invoice.pdf          # a PDF or text file
+cascade-guard ask                             # a conversation; type exit to stop
+```
+
+| You type | It does |
+|---|---|
+| a bill, invoice or receipt, written any way (`3 x $4.00`, `2 pens at ₹15 each`, `Rice: 2 kg x ₹60 = ₹120`, GST / CGST + SGST / VAT, discounts, delivery, round-off), or a PDF | recomputes every line, the tax and the total exactly, compares them with the bill, and names the likely cause of a mistake (a line counted twice, the tax left out, a decimal slip) |
+| `is 17 x 23 = 401?`, `what is 15% of 240` | checks or works out the sum exactly |
+| `the average of 3, 7, 2, 9 is 5.5` | checks sums, averages, medians, maxima, minima, counts |
+| `run support ticket triage on: …` | runs a saved chain or template with the guard on every step |
+| `show me Cascade Guard catching a mistake` | a sample invoice through four agents with planted mistakes, without and with the guard |
+| `list my agent chains`, `which agents are connected?`, `review queue`, `status` | what it says |
+
+Nothing is guessed: a line with an amount that cannot be read is reported, never dropped. The built-in assistant needs
+no model and no key. With a real model configured and an admin key, the model reads the request and calls the same
+exact tools, and **Cascade Guard checks the model's own answer**: every number in it must come from a tool result and
+its verdict must match the tool's; a wrong answer goes back to the model with the reason, and if it is still wrong the
+built-in answer is shown instead. API: `POST /assistant/ask` `{"message": "...", "pdf_base64": "..."}`.
 
 ## Deploy online (Render)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/kanav10213/cascade-guard)
@@ -179,7 +210,19 @@ graph.add_node("total", guarded_node(total_node, checker, source_key="invoice_te
 Any other language or framework: call `POST /llm/verify` and act on `passed`.
 
 ## Use it from Claude and other AI assistants (MCP)
+**Claude on the web (claude.ai) and the Claude apps, through a connector link:** set `MCP_CONNECTOR_TOKEN` on your
+server to a long random value (at least 24 characters). The server then answers MCP at
+`https://<your server>/mcp/<that value>`; an admin finds the full link on the assistant page under **Use in Claude**.
+In Claude: Customize > Connectors > Add custom connector, paste the link, choose No sign-in, Add. Then in a chat,
+press + > Connectors, turn on Cascade Guard, and ask "Use Cascade Guard to check this invoice: 3 x $4.00, 2 x $1.50,
+total $16.00". Anyone with the link can use the connector's tools, so keep it private (a new value revokes the old
+link; the value never appears in the server's logs). `MCP_CONNECTOR_ROLE` decides the tools: `viewer` (default: the
+exact checks, the demo, free chain runs, status), `reviewer` (also the review queue), `admin` (also `verify_output` and
+chain runs on the model, which cost money).
+
+**Claude Desktop and Claude Code on your computer:**
 ```bash
+cascade-guard mcp --install-claude  # adds Cascade Guard to the Claude desktop app's settings (keeps everything else)
 cascade-guard mcp --print-config    # prints the JSON for Claude Desktop and the `claude mcp add` command for Claude Code
 ```
 Run it in the folder that holds your `.env`: the printed setup pins that folder as `CASCADE_HOME`. (Started without
@@ -189,6 +232,9 @@ Claude Code: run the printed `claude mcp add ...` command.
 
 | Tool | Does |
 |---|---|
+| `check_bill` | recompute any bill or invoice exactly and say what is wrong (no model needed) |
+| `check_math` | check a sum or a claim about a list of numbers exactly (no model needed) |
+| `show_cascade_demo` | a sample invoice through four agents with planted mistakes, without and with the guard |
 | `verify_output` | check any output against its source with the model checker |
 | `check_invoice` | run an invoice through the guarded invoice workflow |
 | `guard_status` | model, spend so far, open review items |
@@ -236,6 +282,9 @@ Settings come from the environment or from `.env` in the working folder (the rea
 | `LLM_EVAL_MAX_COST` | `5.0` | highest cost cap a dashboard or API evaluation may use, USD |
 | `AGENT_ALLOW_PRIVATE` | off | `1` lets chain steps call agents on private or local addresses on a shared server |
 | `CASCADE_AGENTS` | | connected agents as a JSON list of `{name, url, auth_env, timeout, description}`; survive restarts |
+| `MCP_CONNECTOR_TOKEN` | off | turns on the Claude connector at `/mcp/<this value>` (at least 24 characters; keep it secret) |
+| `MCP_CONNECTOR_ROLE` | `viewer` | the connector's tools: `viewer`, `reviewer` or `admin` (admin includes paid tools) |
+| `MCP_RATE_LIMIT_PER_MIN` | `120` | connector requests per minute per caller address |
 | `ALLOW_OPEN_NETWORK` | off | `1` drops the address check while no keys are set (Docker Compose uses it; the Host check stays) |
 | `ALLOWED_HOSTS` | | extra Host names accepted while no keys are set, comma-separated |
 | `AUDIT_REFUSED_PER_MIN` | `30` | refused requests recorded per caller per minute (a flood cannot fill the table) |
@@ -252,6 +301,11 @@ Interactive documentation: `/docs` on a running server.
 | Route | Purpose | Role |
 |---|---|---|
 | `GET /health` | liveness and version (always open) | none |
+| `GET /assistant` | the assistant page (its requests need a key when keys are set) | none |
+| `POST /assistant/ask` | `{"message", "history", "pdf_base64"}` answer one request; built-in, or the model with an admin key | viewer / admin |
+| `GET /assistant/info` | what this key can use (built-in only, or the model too) | viewer |
+| `GET /connector` | the Claude connector: on or off, its role and its link | admin |
+| `POST /mcp/<secret>` | MCP over HTTP for the Claude connector (only when `MCP_CONNECTOR_TOKEN` is set) | the secret link |
 | `GET /health/ready` | database reachable, model configured (for load balancers) | none |
 | `POST /llm/verify` | `{"task", "source", "output", "prompt": "recompute"}` check any output against its source | admin |
 | `POST /llm/pipeline` | one input through the chain with model agents and a model checker; full trace | admin |
