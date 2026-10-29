@@ -31,6 +31,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field, ValidationError
 
+from cascade_guard.agents_registry import AgentDef
 from cascade_guard.auth import ensure, require
 from cascade_guard.chains import ChainDef, mermaid, run_chain_def
 
@@ -227,7 +228,7 @@ def list_agents():
 
 
 @router.post("/agents", status_code=201, dependencies=[Depends(require("admin"))], tags=["agents"])
-def add_agent(agent: "AgentDef"):
+def add_agent(agent: AgentDef):
     from cascade_guard.agents_registry import find_agent, settings_agents
     if any(a.name == agent.name for a in settings_agents()):
         raise HTTPException(status_code=409, detail=f"{agent.name!r} is set in the server settings (CASCADE_AGENTS)")
@@ -238,7 +239,7 @@ def add_agent(agent: "AgentDef"):
 
 
 @router.put("/agents/{name}", dependencies=[Depends(require("admin"))], tags=["agents"])
-def change_agent(name: str, agent: "AgentDef"):
+def change_agent(name: str, agent: AgentDef):
     from cascade_guard.agents_registry import settings_agents
     store = _agent_store()
     if store.get_agent(name.lower()) is None:
@@ -261,7 +262,7 @@ def remove_agent(name: str):
 
 
 @router.post("/agents/test", dependencies=[Depends(require("admin"))], tags=["agents"])
-def test_unsaved_agent(agent: "AgentDef", req_key: str = Header(default="", alias="X-API-Key")):
+def test_unsaved_agent(agent: AgentDef, req_key: str = Header(default="", alias="X-API-Key")):
     from cascade_guard.agents_registry import test_agent
     from cascade_guard.pilot_api import _llm_rate_limit
     _llm_rate_limit(req_key)
@@ -278,5 +279,3 @@ def test_saved_agent(name: str, req_key: str = Header(default="", alias="X-API-K
     _llm_rate_limit(req_key)
     return test_agent(agent)
 
-
-from cascade_guard.agents_registry import AgentDef  # noqa: E402  (used in the signatures above)
