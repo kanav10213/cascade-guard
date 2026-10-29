@@ -2,6 +2,7 @@
 # Start it either way:
 #   - on GitHub: Releases > "Draft a new release" > tag v1.0.0 (create on publish, target main) > Publish
 #   - from a terminal: git tag -a v1.0.0 -m "Cascade Guard 1.0.0" && git push origin v1.0.0
+#   - again for an existing tag (after fixing this file on main): Actions > release > Run workflow > tag
 # Both can fire for the same tag; every step below is safe to run twice.
 # One-time setup: on pypi.org add a "trusted publisher" for this repository and the workflow
 # file release.yml (environment: pypi). No API token is stored anywhere.
@@ -11,19 +12,26 @@ on:
     tags: ["v*"]
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "existing tag to build and publish, e.g. v1.0.0"
+        required: true
 permissions:
   contents: read
 concurrency:
-  group: release-${{ github.event.release.tag_name || github.ref_name }}
+  group: release-${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
   cancel-in-progress: false
 env:
-  TAG: ${{ github.event.release.tag_name || github.ref_name }}
+  TAG: ${{ inputs.tag || github.event.release.tag_name || github.ref_name }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}   # always build the tagged code
       - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
@@ -32,7 +40,7 @@ jobs:
           v=$(python -c "import re;print(re.search(r'__version__ = \"(.+)\"', open('cascade_guard/__init__.py').read())[1])")
           test "v$v" = "$TAG" || { echo "tag $TAG != version $v"; exit 1; }
       - run: pip install -r requirements-dev.txt && ruff check . && pytest -q
-      - run: python -m build && twine check dist/*
+      - run: pip install build twine && python -m build && twine check dist/*
       - uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -60,6 +68,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}   # always build the tagged code
       - uses: actions/download-artifact@v4
         with:
           name: dist
@@ -82,6 +92,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ env.TAG }}   # always build the tagged code
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
