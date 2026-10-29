@@ -1,0 +1,11 @@
+{
+  "name": "Support ticket triage",
+  "description": "Summarise a customer message, classify it, and draft a reply.",
+  "max_retries": 2,
+  "repair": "guided",
+  "steps": [
+    {"name": "summarise", "instruction": "Summarise the customer's problem in one or two sentences. Keep every fact that matters: order or invoice numbers, amounts, dates and what the customer asks for.", "output": "text", "check": "model", "max_chars": 600},
+    {"name": "classify", "instruction": "Classify the problem. category is one of: billing, delivery, product, account, other. urgency is one of: low, normal, high. reason is one short sentence explaining the choice.", "output": "json", "keys": ["category", "urgency", "reason"], "check": "model", "criteria": "category and urgency must be one of the allowed values."},
+    {"name": "reply", "instruction": "Write a short, polite reply to the customer that acknowledges the problem, states the next step, and gives no promise the input does not support.", "output": "text", "check": "model", "criteria": "The reply must not promise refunds, dates or amounts that are not in the original message.", "max_chars": 1200}
+  ]
+}

@@ -16,6 +16,7 @@ Behaviour (deterministic per request):
 import hashlib
 import json
 import random
+import re
 
 from cascade_guard.agents.pipeline import TRENDS, compute_stats, compute_trend, parse_numbers, render_report
 from cascade_guard.llm.prompts import parse_request
@@ -53,8 +54,12 @@ class SimulatedLLM:
             if task == "validate":
                 recompute = "recompute every output value" in system
                 if req["STAGE"] == "custom":
+                    if CHAIN_TASK.search(system):
+                        return self._validate_chain_step(system, req["DATA"], recompute, rng)
                     return self._validate_custom(req["DATA"], recompute, rng)
                 return self._validate(req["STAGE"], req["DATA"], recompute, rng)
+            if task == "chain_step":
+                return json.dumps(self._chain_step(req, rng))
             if task in ("pilot_extract", "pilot_price"):
                 return json.dumps(self._pilot(task, req["DATA"], rng))
             return json.dumps(self._agent(task, req["DATA"], rng))
@@ -99,6 +104,40 @@ class SimulatedLLM:
             out["total"] = round(out["total"] + rng.choice([-1, 1]) * rng.choice([0.01, 0.10, 1.00]), 2)
         return out
 
+    # ------------------------------------------------------------ user-defined chains
+    chain_error = 0.08  # INVENTED: share of first answers with a mistake
+
+    def _chain_step(self, req, rng):
+        step, kind = req.get("STEP", "step"), req.get("OUTPUT", "text")
+        keys = [k for k in req.get("KEYS", "").split(",") if k]
+        out = sim_chain_output(step, kind, keys, req["DATA"]["input"])
+        if rng.random() < self.chain_error:  # a plausible slip: part of the input missed
+            if kind == "text":
+                out = out.split(":", 1)[0] + ": (summary of a different part of the text)"
+            else:
+                out[rng.choice(keys)] = "(not found)"
+        return {"output": out} if kind == "text" else out
+
+    def _validate_chain_step(self, system, data, recompute, rng):
+        m = CHAIN_TASK.search(system)
+        step = m.group(1)
+        km = CHAIN_KEYS.search(system)
+        keys = [k.strip() for k in km.group(1).split(",")] if km else []
+        out = data["output"]
+        expected = sim_chain_output(step, "json" if keys else "text", keys, data["source"])
+        wrong = out != expected
+        if wrong and recompute and rng.random() >= self.recompute_miss:
+            reason = "the output does not match what the input says"
+            if isinstance(out, dict):
+                bad = [k for k in keys if out.get(k) != expected.get(k)]
+                reason = f"{', '.join(bad)} does not match the input" if bad else reason
+            verdict = {"verdict": "reject", "reason": reason}
+        elif rng.random() < (self.recompute_fp if recompute else self.naive_fp):
+            verdict = {"verdict": "reject", "reason": "spurious doubt"}
+        else:
+            verdict = {"verdict": "accept", "reason": "consistent with the input"}
+        return ("Recomputing...\n" if recompute else "") + json.dumps(verdict)
+
     def _validate_custom(self, data, recompute, rng):
         """Generic checks; recognises the invoice pilot's steps and recomputes them."""
         from cascade_guard.pilot.invoice import parse_invoice, price_items, same
@@ -134,6 +173,20 @@ class SimulatedLLM:
         if recompute:
             return "Recomputing from the source...\nComparing...\n" + json.dumps(verdict)
         return json.dumps(verdict)
+
+
+CHAIN_TASK = re.compile(r'Step "(.+?)": ')
+CHAIN_KEYS = re.compile(r"The output is JSON with the keys (.+?)\.(?:\n|$)")
+
+
+def sim_chain_output(step: str, kind: str, keys: list, source):
+    """What the simulated agent answers for a user-defined step: a fixed function of its input."""
+    text = source if isinstance(source, str) else json.dumps(source, default=str)
+    words = " ".join(text.split()).split(" ")
+    gist = " ".join(words[:24]) + (" ..." if len(words) > 24 else "")
+    if kind == "text":
+        return f"[simulated {step}] {gist}"
+    return {k: f"[simulated {step}.{k}] {' '.join(words[:8])}" for k in keys}
 
 
 class _NoErrors(random.Random):

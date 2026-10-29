@@ -5,6 +5,7 @@
     cascade-guard mcp                  MCP server for Claude Desktop, Claude Code and other AI tools
     cascade-guard compare              rule-based paired comparison, writes report.json
     cascade-guard eval all --dry-run   real-model evaluation (shows the cost first)
+    cascade-guard chain run support-triage --input "..."   run your own agent chain
     cascade-guard --version
 
 Every command works in the working folder: --home, else CASCADE_HOME, else the
@@ -98,6 +99,87 @@ def _experiment(module: str):
     return run
 
 
+def cmd_chain(args) -> int:
+    """Agent chains from the command line: templates, list, import, export, run."""
+    import json as _json
+
+    from pydantic import ValidationError
+
+    from cascade_guard.chains import ChainDef, run_chain_def
+    from cascade_guard.config import load_env, use_home
+    use_home(args.home)
+    load_env()
+
+    def store():
+        from cascade_guard.storage.db import get_store
+        s = get_store()
+        if s is None:
+            raise SystemExit("Storage is off (CASCADE_DB=off), so chains cannot be saved or listed.")
+        return s
+
+    def load(ref: str) -> ChainDef:
+        p = Path(ref)
+        try:
+            if p.suffix == ".json" or p.exists():
+                return ChainDef.model_validate(_json.loads(p.read_text(encoding="utf-8")))
+            for t in sorted((Path(__file__).with_name("templates")).glob("*.json")):
+                d = _json.loads(t.read_text(encoding="utf-8"))
+                if d["name"].lower() == ref.lower() or t.stem == ref:
+                    return ChainDef.model_validate(d)
+            row = store().get_chain(int(ref)) if ref.isdigit() else store().find_chain(ref)
+        except ValidationError as e:
+            raise SystemExit(f"Not a valid chain definition:\n{e}") from e
+        if row is None:
+            raise SystemExit(f"No chain file, template or saved chain called {ref!r}.")
+        return ChainDef.model_validate(row["definition"])
+
+    if args.action == "templates":
+        for t in sorted((Path(__file__).with_name("templates")).glob("*.json")):
+            d = _json.loads(t.read_text(encoding="utf-8"))
+            print(f"{t.stem:<20} {d['name']}: {len(d['steps'])} steps. {d.get('description', '')}")
+        return 0
+    if args.action == "list":
+        rows = store().list_chains()
+        for r in rows:
+            print(f"#{r['id']:<4} {r['name']}  ({r['steps']} steps, updated {r['updated_at']})")
+        if not rows:
+            print("No saved chains yet. Import one: cascade-guard chain import my_chain.json")
+        return 0
+    if args.action == "export":
+        print(_json.dumps(load(args.ref).model_dump(), indent=2))
+        return 0
+    if args.action == "import":
+        chain = load(args.ref)
+        existing = store().find_chain(chain.name)
+        chain_id = store().save_chain(chain.model_dump(), chain_id=existing["id"] if existing else None, by="cli")
+        print(f"{'Updated' if existing else 'Saved'} chain #{chain_id}: {chain.name}")
+        return 0
+    # run
+    chain = load(args.ref)
+    text = Path(args.input_file).read_text(encoding="utf-8") if args.input_file else args.input
+    if not text:
+        raise SystemExit("Give the input with --input TEXT or --input-file FILE.")
+    from cascade_guard.llm.client import FakeLLMClient, make_client
+    client = make_client(max_cost=float(os.getenv("LLM_MAX_COST", "1.0")), cache_path=None,
+                         strict_prices=False) if args.real else FakeLLMClient()
+    result = run_chain_def(chain, text, client, inject=args.inject, seed=args.seed)
+    if args.json:
+        print(_json.dumps(result, indent=2, default=str))
+    else:
+        print(f"{chain.name}: {result['status'].upper()} ({client.provider} / {client.model}"
+              f"{', simulated' if client.is_fake else ''}; {result['usage']['calls']} calls, "
+              f"${result['usage']['cost_usd']:.4f})")
+        for s in result["steps"]:
+            tries = " -> ".join(("ok" if a["passed"] else f"rejected ({a['reason']})") for a in s["attempts"])
+            print(f"  {s['step']}: {s['status']}  [{tries}]")
+        if result["status"] == "completed":
+            out = result["final_output"]
+            print("\n" + (out if isinstance(out, str) else _json.dumps(out, indent=2)))
+        else:
+            print(f"\nStopped at {result['halted_at']}: nothing wrong was passed on.")
+    return 0 if result["status"] == "completed" else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="cascade-guard", description="Stop errors from cascading through "
                                 "chains of AI agents.", epilog="Docs: README.md, and /docs on a running server.")
@@ -128,6 +210,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = add("mcp", cmd_mcp, "run the MCP server over stdio (for Claude Desktop, Claude Code and others)")
     s.add_argument("--print-config", action="store_true", help="print the setup to paste into your AI tool")
+
+    s = add("chain", cmd_chain, "your own agent chains: templates, list, import, export, run")
+    s.add_argument("action", choices=["templates", "list", "import", "export", "run"])
+    s.add_argument("ref", nargs="?", default="", help="a chain .json file, a template, or a saved chain's name or id")
+    s.add_argument("--input", default="", help="input text for run")
+    s.add_argument("--input-file", help="read the input for run from this file")
+    s.add_argument("--real", action="store_true", help="run on the configured model (costs money); default: simulated")
+    s.add_argument("--inject", type=float, default=0.0, help="chance of a planted test mistake per step (0 to 1)")
+    s.add_argument("--seed", type=int, default=0)
+    s.add_argument("--json", action="store_true", help="print the full result as JSON")
 
     for name, module, help_ in (("compare", "compare", "rule-based paired comparison; writes report.json"),
                                 ("baseline", "baseline", "rule-based chain without the guard"),

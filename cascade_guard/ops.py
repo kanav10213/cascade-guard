@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from cascade_guard.auth import auth_enabled, require, role_for_key
 
 EXEMPT = {"/", "/health", "/health/ready", "/favicon.ico"}
-LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check")
+LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check")  # chain runs on a real model use the same limit
 
 
 def _limit(name, default):

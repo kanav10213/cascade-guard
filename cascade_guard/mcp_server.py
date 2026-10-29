@@ -9,6 +9,8 @@ Tools
     check_invoice     run an invoice through the guarded invoice workflow
     guard_status      which model is connected, spend so far, open review items
     list_review_queue jobs the guard stopped and checks that did not pass (read-only)
+    list_agent_chains the agent chains built on the dashboard, and the starter templates
+    run_agent_chain   run one of them on an input, with the guard on every step
 
 Deciding review items is deliberately NOT a tool: the queue holds text from outside
 (invoices, agent outputs) that could try to talk an AI assistant into approving
@@ -136,6 +138,63 @@ def guard_status() -> dict:
     store = get_store()
     out["storage"] = store.usage_summary() if store else "off"
     return out
+
+
+@server.tool()
+def list_agent_chains() -> dict:
+    """The agent chains people built on the dashboard (and the starter templates), with their steps."""
+    import json as _json
+
+    from cascade_guard.chains_api import TEMPLATES
+    store = get_store()
+    saved = [] if store is None else store.list_chains()
+    templates = [_json.loads(f.read_text(encoding="utf-8")) for f in sorted(TEMPLATES.glob("*.json"))]
+    return {"saved": [{"id": r["id"], "name": r["name"], "description": r["description"], "steps": r["steps"]}
+                      for r in saved],
+            "templates": [{"name": t["name"], "description": t.get("description", ""),
+                           "steps": [st["name"] for st in t["steps"]]} for t in templates]}
+
+
+@server.tool()
+def run_agent_chain(chain: str, input: str, simulated: bool = False) -> dict:
+    """Run a saved agent chain (by name or id) or a starter template (by name) on an input, with the
+    guard checking every step. simulated=True uses the free offline simulator instead of the model.
+    Returns every step's attempts, verdicts and outputs; a stopped run goes to the review queue."""
+    import json as _json
+
+    from cascade_guard.chains import ChainDef, run_chain_def
+    from cascade_guard.chains_api import TEMPLATES
+    store = get_store()
+    row = None
+    if store is not None:
+        row = store.get_chain(int(chain)) if chain.isdigit() else store.find_chain(chain)
+    if row is not None:
+        definition = row["definition"]
+    else:
+        found = [_json.loads(f.read_text(encoding="utf-8")) for f in sorted(TEMPLATES.glob("*.json"))]
+        match = [d for d in found if d["name"].lower() == chain.lower()]
+        if not match:
+            return {"error": f"no saved chain or template called {chain!r}; call list_agent_chains"}
+        definition = match[0]
+    if len(input) > 20_000:
+        return {"error": "the input is longer than 20,000 characters"}
+    try:
+        from cascade_guard.llm.client import FakeLLMClient
+        client = FakeLLMClient() if simulated else _llm()
+        result = run_chain_def(ChainDef.model_validate(definition), input, client)
+    except NotConfigured as e:
+        return {"error": f"No model configured: {e}"}
+    except (BudgetExceeded, LLMCallError) as e:
+        return {"error": str(e)}
+    if store is not None:
+        final = result["final_output"]
+        result["run_id"] = store.save_pipeline_run(
+            dict(result, final_output=final if isinstance(final, str) or final is None else _json.dumps(final)),
+            input, guard="chain", engine="langgraph", model=_model(client), kind="chain", usage_delta=result["usage"],
+            validator_log=[{"stage": c["step"], "verdict": c["verdict"], "reason": c["reason"]}
+                           for c in result["checks"]], prompt=f"chain:{definition['name']}"[:100])
+    result.pop("trace", None)  # the steps already carry every attempt
+    return result
 
 
 @server.tool()

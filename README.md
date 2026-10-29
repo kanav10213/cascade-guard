@@ -10,6 +10,8 @@ confidently wrong. Cascade Guard checks every hand-off against the step's own in
 and tells the agent *what* was wrong. If the step still fails, it stops the job safely and sends it to a person.
 A wrong answer is never passed on silently.
 
+- **Build your own agent, no code:** design a multi-step agent chain on the dashboard (instructions, output
+  format, checks per step), save it, and run it with the guard on every step.
 - **Drop-in for your code:** wrap any Python step or LangGraph node with `guard_step` / `guarded_node`.
 - **A service for everything else:** a REST API that checks any agent output against its source, plus a dashboard.
 - **Inside AI assistants:** an MCP server for Claude Desktop, Claude Code and other MCP-capable tools.
@@ -87,6 +89,37 @@ binds the port to `127.0.0.1` and sets `ALLOW_OPEN_NETWORK=1`, so your browser o
 keys (other containers and computers are refused by the Host-header check); to share it, set `API_KEY` first and
 follow the comment in `docker-compose.yml`.
 
+## Build your own agent chain
+Dashboard section 9 (or the API and command line) lets anyone design a multi-step agent without writing code.
+Each step has:
+
+| Field | Meaning |
+|---|---|
+| name | unique within the chain |
+| instruction | what this agent does, in plain words (it works on the previous step's output; the first step on your input) |
+| returns | plain text, or JSON with the keys you name |
+| check | `model` (format, then the model checker against the step's input), `format` (shape only) or `none` |
+| extra acceptance criteria | optional rules for the model checker, e.g. "every owner must appear in the notes" |
+| max characters | optional limit for text output |
+
+A chain has up to 10 steps, a number of retries per step and the retry style (guided or blind). It runs on
+LangGraph, built from the definition at run time: one guarded node per step. A rejected step is retried with the
+checker's reason; if it stays wrong the chain stops and the run goes to the review queue. "Plant test mistakes"
+puts a realistic error into a share of first answers (an empty or cut-off text, a missing or wrong key) so you can
+watch the guard work even when the model makes none. Chains are saved in the database (`chains` table), and can be
+exported and imported as JSON. Three starter templates are included: support ticket triage, meeting notes to
+action items, invoice review.
+
+```bash
+cascade-guard chain templates                                   # the starter chains
+cascade-guard chain run support-triage --input "Charged twice for INV-1007, please refund."   # simulated, free
+cascade-guard chain run my_chain.json --input-file ticket.txt --real    # on the configured model
+cascade-guard chain import my_chain.json                        # save it (then it shows on the dashboard)
+cascade-guard chain list
+```
+Simulated runs are free and need any key; runs on the real model need an admin key; creating, editing and deleting
+chains need an admin key.
+
 ## Use it in your code
 `guard_step` puts check, retry-with-reason and halt around any Python step, in any framework:
 
@@ -130,6 +163,8 @@ Claude Code: run the printed `claude mcp add ...` command.
 | `check_invoice` | run an invoice through the guarded invoice workflow |
 | `guard_status` | model, spend so far, open review items |
 | `list_review_queue` | stopped jobs and failed checks (read-only; their text is marked as untrusted data) |
+| `list_agent_chains` | the agent chains built on the dashboard, and the starter templates |
+| `run_agent_chain` | run one of them on an input, with the guard on every step |
 
 Deciding review items is deliberately **not** a tool: the queue holds outside text that could try to talk an assistant
 into approving things, so people decide on the dashboard or through the API with a reviewer key.
@@ -192,6 +227,10 @@ Interactive documentation: `/docs` on a running server.
 | `POST /llm/eval/plan` | calls and estimated cost of an evaluation; spends nothing | viewer |
 | `POST /llm/eval/run` | start the evaluation in the background (`simulated`: viewer; real: admin + `confirm: true`) | viewer / admin |
 | `GET /llm/eval/jobs`, `GET /llm/eval/jobs/{id}` | progress, then the full report and Markdown summary | viewer |
+| `GET /chains`, `GET /chains/{id}`, `GET /chains/templates` | saved agent chains and the starter templates | viewer |
+| `POST /chains`, `PUT /chains/{id}`, `DELETE /chains/{id}` | create, change or delete a chain | admin |
+| `POST /chains/{id}/run`, `POST /chains/run` | run a saved chain, or a definition without saving it (`simulated`: viewer; real: admin) | viewer / admin |
+| `GET /chains/{id}/graph` | the chain as a Mermaid diagram | viewer |
 | `GET /llm/status` | model, calls and spend, or what is missing | viewer |
 | `POST /pilot/invoice` | one invoice through the guarded workflow (`guard`, `agents`: `rules` free, `llm` paid) | viewer / admin |
 | `POST /pilot/invoice-pdf` | the same for a PDF (`pdf_base64`) | viewer / admin |
@@ -285,7 +324,7 @@ summary), every node wrapped with `guarded_node`; rule or model agents, rule or 
 (PDFs need a text layer; scanned images need OCR first).
 
 **Storage.** SQLite by default or PostgreSQL, same tables: `runs`, `steps` (every attempt), `verdicts` (what the checker
-said and why), `review_queue`, `usage`, `audit`.
+said and why), `review_queue`, `usage`, `audit`, `chains` (the agent chains people build).
 
 **Metrics.** *Unsafe* = a wrong output delivered silently, or a crash (a halt is a controlled stop).
 CRI = (unsafe without guard - unsafe with guard) / unsafe without guard. CRS = caught step errors repaired by retry /
@@ -293,7 +332,7 @@ caught step errors.
 
 **Dashboard** (`/`): live demo, the chain on your model (with a one-click connection check), the invoice pilot (text
 or PDF), measured results, check any output, review queue and history, ready-made `curl` commands, and the model
-evaluation with downloadable results.
+evaluation with downloadable results, and the agent chain builder.
 
 ## Evaluate on a real model
 ```bash
@@ -325,7 +364,7 @@ being scored; seeds control inputs and faults, not the model.
 ## Development
 ```bash
 pip install -r requirements-dev.txt     # tested versions, this folder in editable mode, dev tools
-pytest -q                     # 150 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
+pytest -q                     # 179 tests, no API key needed; CASCADE_TEST_PG=postgresql://... adds the PostgreSQL ones
 ruff check . && mypy cascade_guard
 python -m build               # wheel and source package in dist/
 ```

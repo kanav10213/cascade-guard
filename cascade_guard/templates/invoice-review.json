@@ -1,0 +1,11 @@
+{
+  "name": "Invoice review",
+  "description": "Read an invoice, recompute the total, and decide whether it can be paid automatically.",
+  "max_retries": 2,
+  "repair": "guided",
+  "steps": [
+    {"name": "extract", "instruction": "Extract the invoice id, every line item (quantity, description, unit price) and the tax rate.", "output": "json", "keys": ["invoice_id", "line_items", "tax_rate"], "check": "model", "criteria": "Every line item and number must appear in the invoice exactly."},
+    {"name": "total", "instruction": "Compute each line total, the subtotal, the tax and the grand total from the extracted data. Round money to cents.", "output": "json", "keys": ["subtotal", "tax", "total"], "check": "model", "criteria": "Recompute the arithmetic; total must equal subtotal plus tax."},
+    {"name": "decision", "instruction": "If the total is at most 500.00, the decision is auto-approve; otherwise needs sign-off. Give the decision and a one-line reason.", "output": "json", "keys": ["decision", "reason"], "check": "model"}
+  ]
+}

@@ -57,7 +57,7 @@ version = { attr = "cascade_guard.__version__" }
 include = ["cascade_guard*"]
 
 [tool.setuptools.package-data]
-cascade_guard = ["static/*", "env.example", "py.typed"]
+cascade_guard = ["static/*", "templates/*.json", "env.example", "py.typed"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

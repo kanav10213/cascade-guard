@@ -1,6 +1,17 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-29
+
+### Added
+- Build your own agent chain, without code: dashboard section 9, `/chains` API, `cascade-guard chain` command and
+  the MCP tools `list_agent_chains` and `run_agent_chain`. Each step has an instruction, an output format (text or
+  JSON keys), a check (model, format or none), optional acceptance criteria and a length limit. Chains run on a
+  LangGraph graph built from the definition, with check, guided retry and safe stop on every step; they are saved in
+  a new `chains` table (SQLite and PostgreSQL), exported and imported as JSON, and can plant test mistakes to show
+  the guard at work. Three starter templates.
+- `HEAD` on `/` and `/health` for uptime monitors.
+
 ## [1.0.0] - 2026-10-29
 First public release.
 

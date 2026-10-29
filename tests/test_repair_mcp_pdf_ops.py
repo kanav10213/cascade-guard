@@ -224,7 +224,8 @@ def test_mcp_server_over_stdio(tmp_path):
                 return names, json.loads(v.content[0].text), json.loads(inv.content[0].text), json.loads(bad.content[0].text)
 
     names, v, inv, bad = asyncio.run(go())
-    assert names == {"verify_output", "check_invoice", "guard_status", "list_review_queue"}  # no write tool
+    assert names == {"verify_output", "check_invoice", "guard_status", "list_review_queue",
+                     "list_agent_chains", "run_agent_chain"}  # no tool decides review items
     assert v["verdict"] in ("accept", "reject") and v["model"]["simulated"]
     assert inv["status"] == "correct" and inv["delivered"] == inv["expected"]
     assert "error" in bad

@@ -1,0 +1,11 @@
+{
+  "name": "Meeting notes to action items",
+  "description": "Turn raw meeting notes into decisions and owned action items.",
+  "max_retries": 2,
+  "repair": "guided",
+  "steps": [
+    {"name": "decisions", "instruction": "List every decision the meeting made, one per line. Only decisions that are in the notes.", "output": "text", "check": "model"},
+    {"name": "actions", "instruction": "From the ORIGINAL notes, list every action item as 'owner: task (due date if given)'. Use only names and dates that appear in the notes.", "output": "json", "keys": ["action_items", "unassigned"], "check": "model", "criteria": "Every owner and date must appear in the original notes; tasks without an owner go in unassigned."},
+    {"name": "email", "instruction": "Write a short follow-up email to the attendees with the decisions and the action items.", "output": "text", "check": "format", "max_chars": 2000}
+  ]
+}

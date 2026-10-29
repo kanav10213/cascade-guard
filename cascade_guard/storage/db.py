@@ -1,10 +1,10 @@
-"""Storage: runs, steps, verdicts, review_queue, usage. SQLite or PostgreSQL.
+"""Storage: runs, steps, verdicts, review_queue, usage, audit, chains. SQLite or PostgreSQL.
 
     CASCADE_DB=data/cascade.db                          SQLite file (default; built into Python)
     CASCADE_DB=postgresql://user:pass@host:5432/dbname  PostgreSQL (needs the psycopg package)
     CASCADE_DB=off                                      no storage
 
-The same five tables and the same queries run on both; only placeholders,
+The same seven tables and the same queries run on both; only placeholders,
 the id column type and a few start-up commands differ.
 
     store = get_store()
@@ -92,6 +92,15 @@ CREATE TABLE IF NOT EXISTS audit (
     path       TEXT NOT NULL,
     status     INTEGER NOT NULL,
     ms         INTEGER
+);
+CREATE TABLE IF NOT EXISTS chains (
+    id          {ID},
+    name        TEXT NOT NULL UNIQUE,
+    description TEXT,
+    definition  TEXT NOT NULL,          -- the chain as JSON (steps, instructions, checks)
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL,
+    created_by  TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_audit_at ON audit(at);
 CREATE INDEX IF NOT EXISTS idx_steps_run ON steps(run_id);
@@ -254,13 +263,58 @@ class Store:
     def list_audit(self, limit: int = 100) -> list:
         return self._read("SELECT * FROM audit ORDER BY id DESC LIMIT ?", (limit,))
 
+    # ------------------------------------------------------------ user-defined agent chains
+    def save_chain(self, definition: dict, *, chain_id: int | None = None, by: str | None = None) -> int:
+        """Create a chain, or replace chain_id's definition. Raises KeyError for an unknown id and
+        ValueError when the name is already used by another chain."""
+        name = definition["name"]
+        body = json.dumps(definition)
+        with self._tx() as c:
+            clash = c.execute("SELECT id FROM chains WHERE name = ?", (name,)).fetchone()
+            if clash is not None and dict(clash)["id"] != chain_id:
+                raise ValueError(f"a chain called {name!r} already exists")
+            if chain_id is None:
+                return c.insert("INSERT INTO chains (name, description, definition, created_at, updated_at, created_by)"
+                                " VALUES (?, ?, ?, ?, ?, ?)",
+                                (name, definition.get("description"), body, _now(), _now(), by))
+            if c.execute("SELECT id FROM chains WHERE id = ?", (chain_id,)).fetchone() is None:
+                raise KeyError(chain_id)
+            c.execute("UPDATE chains SET name = ?, description = ?, definition = ?, updated_at = ? WHERE id = ?",
+                      (name, definition.get("description"), body, _now(), chain_id))
+            return chain_id
+
+    def list_chains(self) -> list:
+        rows = self._read("SELECT id, name, description, definition, created_at, updated_at, created_by"
+                          " FROM chains ORDER BY name")
+        for r in rows:
+            r["steps"] = len(json.loads(r.pop("definition")).get("steps", []))
+        return rows
+
+    def get_chain(self, chain_id: int) -> dict | None:
+        rows = self._read("SELECT * FROM chains WHERE id = ?", (chain_id,))
+        if not rows:
+            return None
+        r = rows[0]
+        r["definition"] = json.loads(r["definition"])
+        return r
+
+    def find_chain(self, name: str) -> dict | None:
+        rows = self._read("SELECT id FROM chains WHERE name = ?", (name,))
+        return self.get_chain(rows[0]["id"]) if rows else None
+
+    def delete_chain(self, chain_id: int) -> bool:
+        with self._tx() as c:
+            found = c.execute("SELECT id FROM chains WHERE id = ?", (chain_id,)).fetchone() is not None
+            c.execute("DELETE FROM chains WHERE id = ?", (chain_id,))
+            return found
+
     def ping(self) -> bool:
         return bool(self._read("SELECT 1 AS ok"))
 
     def clear(self):
         """Delete everything (tests only)."""
         with self._tx() as c:
-            for t in ("audit", "usage", "review_queue", "verdicts", "steps", "runs"):
+            for t in ("chains", "audit", "usage", "review_queue", "verdicts", "steps", "runs"):
                 c.execute(f"DELETE FROM {t}")  # noqa: S608 - fixed table names, no user input
 
     # ------------------------------------------------------------ reads

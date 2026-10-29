@@ -59,6 +59,16 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
 .setup{background:var(--accentbg);border-radius:10px;padding:12px 14px;font-size:13.5px;margin:0 0 12px;display:none}
 .setup ol{margin:6px 0 0;padding-left:20px}
 .grid3{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cb-step{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0;background:var(--bg)}
+.cb-step .head{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.cb-step .num{font-weight:700;color:var(--accent);min-width:22px}
+.cb-step .head input{flex:1;font-weight:600}
+.cb-step button.mini{padding:4px 9px;font-size:12px}
+.cb-flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;margin:8px 0}
+.cb-flow span.n{padding:3px 9px;border-radius:99px;background:var(--accentbg);color:var(--accent)}
+.cb-res{border-top:1px dashed var(--line);padding:8px 0;font-size:13px}
+.cb-res pre{white-space:pre-wrap;max-height:220px;overflow:auto}
+.topnav{font-size:13px;margin:-10px 0 18px}.topnav a{color:var(--accent)}
 @media(max-width:760px){.grid3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -69,6 +79,7 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   <span><span class="pill" id="role" style="display:none"></span> <span class="pill" id="health">checking server…</span></span>
 </header>
 <p class="sub">In a chain of AI agents, one agent's mistake gets accepted by the next and builds up until it reaches the final answer. Cascade Guard checks every step, re-runs a failing step, and stops the order if it can't be fixed, so a wrong answer is never delivered silently.</p>
+<p class="topnav">New: <a href="#builder">build your own agent chain</a> (section 9).</p>
 
 <div class="card" id="keybox">
   <h2>API key needed</h2>
@@ -226,6 +237,42 @@ pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:
   <div id="ev-status" class="hint"></div>
   <div class="row" id="ev-dl" style="display:none"><button class="ghost" id="ev-json">Download JSON</button><button class="ghost" id="ev-md">Download summary (Markdown)</button></div>
   <pre id="ev-out" class="mono" style="white-space:pre-wrap;max-height:420px;overflow:auto;display:none"></pre>
+</div>
+<div class="card" id="builder">
+  <h2>9. Build your own agent chain</h2>
+  <p class="hint">Design your own multi-step agent: give each step an instruction for the model, choose what it returns and how it is checked. Every step works on the previous step's output, is checked before the next step uses it, is retried with the reason when it is wrong, and stops the chain safely if it stays wrong. Nothing here is fixed: chains are saved in the database and run on LangGraph, built from your definition.</p>
+  <div class="row">
+    <label>Saved chains<select id="cb-saved"><option value="">(none yet)</option></select></label>
+    <button class="ghost" id="cb-load">Open</button>
+    <label>Start from a template<select id="cb-tpl"><option value="">choose…</option></select></label>
+    <button class="ghost" id="cb-new">New empty chain</button>
+    <button class="ghost" id="cb-export">Export JSON</button>
+    <label style="cursor:pointer;flex-direction:row;background:var(--accentbg);color:var(--accent);font-weight:600;font-size:14px;padding:9px 16px;border-radius:8px">Import JSON<input id="cb-import" type="file" accept="application/json,.json" style="display:none"></label>
+  </div>
+  <div class="row">
+    <label style="flex:1">Chain name<input id="cb-name" placeholder="e.g. Support ticket triage"></label>
+    <label style="flex:2">What it does<input id="cb-desc" placeholder="one line, optional"></label>
+    <label>Retries per step<input id="cb-retries" type="number" min="0" max="5" value="2" style="width:70px"></label>
+    <label>On a retry<select id="cb-repair"><option value="guided">tell the agent why (guided)</option><option value="blind">just ask again (blind)</option></select></label>
+  </div>
+  <div class="cb-flow" id="cb-flow"></div>
+  <div id="cb-steps"></div>
+  <div class="row">
+    <button class="ghost" id="cb-add">+ Add step</button>
+    <button id="cb-save">Save chain</button>
+    <button class="ghost" id="cb-delete" style="display:none">Delete saved chain</button>
+    <span class="hint" id="cb-saved-note" style="margin:0"></span>
+  </div>
+  <div class="err" id="cb-err"></div>
+  <h3 style="margin:18px 0 6px;font-size:15px">Run it</h3>
+  <label>Input for the first step<textarea id="cb-input" placeholder="Paste a customer message, meeting notes, an invoice, any text"></textarea></label>
+  <div class="row" style="margin-top:10px">
+    <label>Model<select id="cb-model"><option value="sim">simulated (free, made-up answers)</option><option value="real">the configured model (admin key, costs money)</option></select></label>
+    <label>Plant test mistakes: <span id="cb-inject-v">0%</span><input id="cb-inject" type="range" min="0" max="100" value="0"></label>
+    <button id="cb-run">Run chain</button>
+  </div>
+  <div class="err" id="cb-run-err"></div>
+  <div id="cb-out"></div>
 </div>
 <p class="note">Sections 1 and 3 use rule-based agents, so they show how the chain's design lets errors through. Sections 2, 5 and 8 use your configured model (or the simulator); section 8 gives the measured error rates.</p>
 </div>
@@ -689,6 +736,174 @@ $('#ev-plan').addEventListener('click', planEval);
 $('#ev-run').addEventListener('click', runEval);
 $('#ev-json').addEventListener('click', () => download(evalName('json'), JSON.stringify(evalJob.report, null, 2), 'application/json'));
 $('#ev-md').addEventListener('click', () => download(evalName('md'), evalJob.markdown, 'text/markdown'));
+// ---------------------------------------------------------------- build your own agent chain
+const CB = {steps: [], id: null, saved: [], templates: [], lastResult: null};
+function cbBlankStep(i){ return {name: 'step ' + (i + 1), instruction: '', output: 'text', keys: [], check: 'model', criteria: '', max_chars: null}; }
+function cbOpt(sel, value, label){ const o = document.createElement('option'); o.value = value; o.textContent = label; sel.append(o); return o; }
+function cbSelect(options, value){ const s = document.createElement('select'); for(const [v, l] of options) cbOpt(s, v, l); s.value = value; return s; }
+function cbLabel(text, control, flex){ const l = el('label'); if(flex) l.style.flex = flex; l.append(text, control); return l; }
+
+function cbRenderFlow(){
+  const f = $('#cb-flow'); f.replaceChildren(el('span', null, 'input'));
+  CB.steps.forEach(s => { f.append(el('span', null, '→'), el('span', 'n', (s.name || '?') + (s.check === 'none' ? '' : ' ✓'))); });
+  f.append(el('span', null, '→'), el('span', null, 'output'));
+}
+function cbRender(){
+  const box = $('#cb-steps'); box.replaceChildren();
+  CB.steps.forEach((s, i) => {
+    const card = el('div', 'cb-step');
+    const head = el('div', 'head');
+    const name = el('input'); name.value = s.name; name.placeholder = 'step name'; name.maxLength = 60;
+    name.addEventListener('input', () => { s.name = name.value; cbRenderFlow(); });
+    const up = el('button', 'ghost mini', '↑'), down = el('button', 'ghost mini', '↓'), del = el('button', 'ghost mini', 'Remove');
+    up.disabled = i === 0; down.disabled = i === CB.steps.length - 1;
+    up.addEventListener('click', () => { [CB.steps[i - 1], CB.steps[i]] = [CB.steps[i], CB.steps[i - 1]]; cbRender(); });
+    down.addEventListener('click', () => { [CB.steps[i + 1], CB.steps[i]] = [CB.steps[i], CB.steps[i + 1]]; cbRender(); });
+    del.addEventListener('click', () => { CB.steps.splice(i, 1); cbRender(); });
+    head.append(el('span', 'num', String(i + 1)), name, up, down, del);
+    const instr = el('textarea'); instr.value = s.instruction; instr.maxLength = 4000;
+    instr.placeholder = i === 0 ? 'What should this agent do with the input? e.g. Summarise the customer\'s problem in two sentences.'
+                                : 'What should this agent do with the previous step\'s output?';
+    instr.addEventListener('input', () => { s.instruction = instr.value; });
+    const out = cbSelect([['text', 'text'], ['json', 'JSON with keys']], s.output);
+    const keys = el('input'); keys.value = (s.keys || []).join(', '); keys.placeholder = 'e.g. category, urgency';
+    const keysL = cbLabel('Keys (comma separated)', keys, '1');
+    keysL.style.display = s.output === 'json' ? '' : 'none';
+    out.addEventListener('change', () => { s.output = out.value; keysL.style.display = s.output === 'json' ? '' : 'none'; });
+    keys.addEventListener('input', () => { s.keys = keys.value.split(',').map(k => k.trim()).filter(Boolean); });
+    const check = cbSelect([['model', 'model checker + format'], ['format', 'format only'], ['none', 'no check']], s.check);
+    const crit = el('input'); crit.value = s.criteria || ''; crit.placeholder = 'optional, e.g. every owner must appear in the notes'; crit.maxLength = 1000;
+    const critL = cbLabel('Extra acceptance criteria', crit, '2');
+    critL.style.display = s.check === 'model' ? '' : 'none';
+    check.addEventListener('change', () => { s.check = check.value; critL.style.display = s.check === 'model' ? '' : 'none'; cbRenderFlow(); });
+    crit.addEventListener('input', () => { s.criteria = crit.value; });
+    const maxc = el('input'); maxc.type = 'number'; maxc.min = 1; maxc.style.width = '90px'; maxc.placeholder = 'no limit';
+    maxc.value = s.max_chars || ''; maxc.addEventListener('input', () => { s.max_chars = maxc.value ? Number(maxc.value) : null; });
+    const row = el('div', 'row'); row.style.marginTop = '8px';
+    row.append(cbLabel('Returns', out), keysL, cbLabel('Check', check), critL, cbLabel('Max characters', maxc));
+    card.append(head, cbLabel('Instruction', instr), row);
+    box.append(card);
+  });
+  $('#cb-add').disabled = CB.steps.length >= 10;
+  cbRenderFlow();
+}
+function cbDefinition(){
+  return {name: $('#cb-name').value.trim(), description: $('#cb-desc').value.trim(),
+          max_retries: Number($('#cb-retries').value || 0), repair: $('#cb-repair').value,
+          steps: CB.steps.map(s => ({name: s.name, instruction: s.instruction, output: s.output,
+                                     keys: s.output === 'json' ? s.keys : [], check: s.check,
+                                     criteria: s.check === 'model' ? (s.criteria || '') : '', max_chars: s.max_chars || null}))};
+}
+function cbLoad(def, id){
+  CB.id = id || null;
+  $('#cb-name').value = def.name || ''; $('#cb-desc').value = def.description || '';
+  $('#cb-retries').value = def.max_retries ?? 2; $('#cb-repair').value = def.repair || 'guided';
+  CB.steps = (def.steps || []).map(s => ({name: s.name, instruction: s.instruction, output: s.output || 'text', keys: s.keys || [],
+                                          check: s.check || 'model', criteria: s.criteria || '', max_chars: s.max_chars || null}));
+  if(!CB.steps.length) CB.steps.push(cbBlankStep(0));
+  $('#cb-delete').style.display = CB.id ? '' : 'none';
+  $('#cb-saved-note').textContent = CB.id ? 'Editing saved chain #' + CB.id : 'Not saved yet';
+  $('#cb-err').textContent = ''; $('#cb-out').replaceChildren(); cbRender();
+}
+async function cbRefreshSaved(selectId){
+  try{
+    CB.saved = await api('/chains');
+    const sel = $('#cb-saved'); sel.replaceChildren();
+    if(!CB.saved.length) cbOpt(sel, '', '(none yet)');
+    for(const c of CB.saved) cbOpt(sel, c.id, c.name + ' (' + c.steps + ' steps)');
+    if(selectId) sel.value = String(selectId);
+  }catch(e){ $('#cb-err').textContent = e.message; }
+}
+async function cbInit(){
+  try{
+    CB.templates = await api('/chains/templates');
+    const sel = $('#cb-tpl');
+    CB.templates.forEach((t, i) => cbOpt(sel, i, t.name));
+  }catch(e){ $('#cb-err').textContent = e.message; }
+  await cbRefreshSaved();
+  if(CB.templates.length){ cbLoad(CB.templates[0]); $('#cb-input').value = "Hello, my invoice INV-1007 was charged twice this month (2 x $69.24). Please refund the duplicate before Friday, it is blocking our accounts close."; }
+  else cbLoad({name: '', steps: [cbBlankStep(0)]});
+}
+async function cbSave(){
+  $('#cb-err').textContent = '';
+  try{
+    const def = cbDefinition();
+    const r = await apiMethod(CB.id ? 'PUT' : 'POST', CB.id ? '/chains/' + CB.id : '/chains', def);
+    CB.id = r.id; $('#cb-delete').style.display = '';
+    $('#cb-saved-note').textContent = 'Saved as chain #' + r.id + ' · ' + r.updated_at;
+    await cbRefreshSaved(r.id);
+  }catch(e){ $('#cb-err').textContent = e.message; }
+}
+async function apiMethod(method, path, body){
+  const headers = {'Content-Type':'application/json'};
+  if(apiKey) headers['X-API-Key'] = apiKey;
+  const r = await fetch(path, {method, headers, body: body === undefined ? undefined : JSON.stringify(body)});
+  if(r.status === 401){ $('#keybox').style.display = 'block'; throw new Error('API key required or wrong. Enter it in the box at the top.'); }
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){ let d = j.detail; if(Array.isArray(d)) d = d.map(x => (x.loc ? x.loc.slice(1).join(' › ') + ': ' : '') + x.msg).join('; '); throw new Error(d || ('Request failed (' + r.status + ')')); }
+  return j;
+}
+async function cbDelete(){
+  if(!CB.id || !confirm('Delete the saved chain "' + $('#cb-name').value + '"?')) return;
+  try{ await apiMethod('DELETE', '/chains/' + CB.id); CB.id = null; cbLoad(cbDefinition()); await cbRefreshSaved(); }
+  catch(e){ $('#cb-err').textContent = e.message; }
+}
+function cbShowValue(v){ return typeof v === 'string' ? v : JSON.stringify(v, null, 2); }
+function cbShowResult(r){
+  const out = $('#cb-out'); out.replaceChildren();
+  const head = el('div', 'row');
+  head.append(el('span', 'badge ' + (r.status === 'completed' ? 'b-good' : 'b-bad'),
+                 r.status === 'completed' ? 'Completed: every checked step passed' : 'Stopped at "' + r.halted_at + '": sent to the review queue'));
+  head.append(el('span', 'hint', r.model.provider + ' / ' + r.model.model + (r.model.simulated ? ' (simulated)' : '')
+     + ' · ' + r.usage.calls + ' model calls, $' + r.usage.cost_usd.toFixed(4)
+     + ' · caught ' + r.detected + ', repaired ' + r.recovered + (r.run_id ? ' · saved as run #' + r.run_id : '')));
+  out.append(head);
+  for(const s of r.steps){
+    const d = el('div', 'cb-res');
+    d.append(el('b', null, s.step + ' '), el('span', 'chip' + (s.status === 'halted' ? ' miss' : s.attempts.length > 1 ? ' fault' : ''),
+      s.status === 'halted' ? 'stopped' : s.status === 'unchecked' ? 'not checked' : s.attempts.length > 1 ? 'fixed on try ' + s.attempts.length : 'passed'));
+    for(const a of s.attempts){
+      const line = el('div', 'hint'); line.style.margin = '4px 0 0';
+      line.textContent = 'try ' + (a.attempt + 1) + ': ' + (a.passed ? '✓ accepted' : '✗ rejected') + (a.reason ? ' — ' + a.reason : '')
+        + (a.injected ? '  [planted test mistake: ' + a.injected + ']' : '');
+      d.append(line);
+    }
+    const pre = el('pre', 'mono', cbShowValue(s.output)); d.append(pre);
+    out.append(d);
+  }
+  if(r.status === 'completed'){ out.append(el('div', 'kv')); out.lastChild.append(el('b', null, 'Final output'), el('pre', 'mono', cbShowValue(r.final_output))); }
+}
+async function cbRun(){
+  $('#cb-run-err').textContent = ''; const b = $('#cb-run'); b.disabled = true; b.textContent = 'Running…';
+  try{
+    const body = {chain: cbDefinition(), input: $('#cb-input').value, simulated: $('#cb-model').value === 'sim',
+                  inject: Number($('#cb-inject').value) / 100, seed: Math.floor(Math.random() * 1e6)};
+    if(!body.simulated && !confirm('This runs every step on the configured model and costs money. Continue?')) return;
+    const r = await apiMethod('POST', '/chains/run', body); CB.lastResult = r; cbShowResult(r); loadHistory(); llmStatus();
+  }catch(e){ $('#cb-run-err').textContent = e.message; }
+  finally{ b.disabled = false; b.textContent = 'Run chain'; }
+}
+$('#cb-add').addEventListener('click', () => { CB.steps.push(cbBlankStep(CB.steps.length)); cbRender(); });
+$('#cb-new').addEventListener('click', () => cbLoad({name: '', steps: [cbBlankStep(0)]}));
+$('#cb-tpl').addEventListener('change', () => { const t = CB.templates[Number($('#cb-tpl').value)]; if(t) cbLoad(JSON.parse(JSON.stringify(t))); $('#cb-tpl').value = ''; });
+$('#cb-load').addEventListener('click', async () => {
+  const id = $('#cb-saved').value; if(!id) return;
+  try{ const c = await api('/chains/' + id); cbLoad(c.definition, c.id); }catch(e){ $('#cb-err').textContent = e.message; }
+});
+$('#cb-save').addEventListener('click', cbSave);
+$('#cb-delete').addEventListener('click', cbDelete);
+$('#cb-run').addEventListener('click', cbRun);
+$('#cb-inject').addEventListener('input', () => { $('#cb-inject-v').textContent = $('#cb-inject').value + '%'; });
+$('#cb-export').addEventListener('click', () => {
+  const def = cbDefinition(); download((def.name || 'chain').replace(/[^A-Za-z0-9_-]+/g, '-') + '.json', JSON.stringify(def, null, 2), 'application/json');
+});
+$('#cb-import').addEventListener('change', async (ev) => {
+  const f = ev.target.files[0]; if(!f) return;
+  try{ cbLoad(JSON.parse(await f.text())); $('#cb-saved-note').textContent = 'Imported from ' + f.name + ' (not saved yet)'; }
+  catch(e){ $('#cb-err').textContent = 'That file is not a chain definition (JSON): ' + e.message; }
+  ev.target.value = '';
+});
+cbInit();
 health(); snippet(); whoami().then(loadHistory); runDemo(); llmStatus();
 loadSample(7);
 </script>

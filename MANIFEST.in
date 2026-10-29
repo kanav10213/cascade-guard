@@ -2,5 +2,6 @@ include LICENSE README.md CHANGELOG.md SECURITY.md CONTRIBUTING.md RELEASE_NOTES
 include requirements*.txt .env.example Dockerfile docker-compose.yml start.bat start.sh Procfile
 recursive-include tests *.py
 recursive-include cascade_guard/static *
+recursive-include cascade_guard/templates *.json
 include cascade_guard/env.example cascade_guard/py.typed
 global-exclude __pycache__ *.py[cod] .env

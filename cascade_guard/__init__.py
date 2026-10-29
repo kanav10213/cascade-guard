@@ -3,7 +3,7 @@
 Check every hand-off between agents against its own input, retry with the
 reason when a check fails, and stop safely instead of passing a wrong answer on.
 """
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = ["GuardHalted", "__version__", "guard_step", "guarded_node", "llm_check", "rule_check"]
 

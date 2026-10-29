@@ -115,6 +115,10 @@ from cascade_guard.eval_api import router as eval_router  # noqa: E402
 
 app.include_router(eval_router)
 
+from cascade_guard.chains_api import router as chains_router  # noqa: E402
+
+app.include_router(chains_router)
+
 from cascade_guard.storage_api import router as storage_router  # noqa: E402
 
 app.include_router(storage_router)
