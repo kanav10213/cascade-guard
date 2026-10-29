@@ -1,10 +1,26 @@
+# docker compose up -d   ->  http://localhost:8000
 services:
   cascade-guard:
-    build: .
+    build:
+      context: .
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-python:3.12-slim}
+    image: cascade-guard:1.0.0
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"   # only this computer; remove 127.0.0.1: to share (set API_KEY first)
+    env_file:
+      - path: .env               # your model key and settings (cascade-guard init, or copy .env.example)
+        required: false
     environment:
-      PORT: "8000"
-      MAX_TRIALS: "2000"
-      # API_KEY: "change-me"   # uncomment to require an X-API-Key header
+      CASCADE_HOME: /data
+      # Without access keys the server only answers its own computer. Inside Docker every request
+      # arrives from the container network, so that check is done by the 127.0.0.1 port binding
+      # above plus the Host-header check (only "localhost" is accepted while no keys are set).
+      # To share the server: set API_KEY in .env, then remove "127.0.0.1:" and the next line.
+      ALLOW_OPEN_NETWORK: "1"
+    volumes:
+      - cascade-data:/data       # database and cache survive restarts and upgrades
     restart: unless-stopped
+
+volumes:
+  cascade-data:

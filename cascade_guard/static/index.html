@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cascade Guard</title>
+<style>
+:root{--bg:#f6f6f3;--card:#fff;--text:#1b1b1a;--muted:#66665f;--line:#e2e2dc;--good:#0f7b4a;--goodbg:#e2f4ea;--bad:#b3261e;--badbg:#fbe8e5;--warn:#85560a;--warnbg:#fff1d2;--accent:#2f5bea;--accentbg:#e8edff}
+@media (prefers-color-scheme:dark){:root{--bg:#141413;--card:#1e1e1d;--text:#ecece7;--muted:#9a9a92;--line:#363633;--good:#5dd39e;--goodbg:#15332a;--bad:#ff8a80;--badbg:#3a1d1a;--warn:#f5c15c;--warnbg:#3a2e12;--accent:#8aa5ff;--accentbg:#222a4a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:6px}
+h1{font-size:24px;margin:0}
+.sub{color:var(--muted);margin:2px 0 20px;max-width:760px}
+h2{font-size:17px;margin:0 0 4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:18px}
+.hint{color:var(--muted);font-size:13px;margin:0 0 14px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:12px}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input,select,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input[type=range]{padding:0}
+textarea{width:100%;min-height:70px;resize:vertical}
+button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 16px;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{background:var(--accentbg);color:var(--accent)}
+button:disabled{opacity:.55;cursor:wait}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid2{grid-template-columns:1fr}}
+.pane{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--bg)}
+.pane h3{margin:0 0 8px;font-size:14px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.b-good{background:var(--goodbg);color:var(--good)}.b-bad{background:var(--badbg);color:var(--bad)}.b-warn{background:var(--warnbg);color:var(--warn)}
+.kv{font-size:13px;margin:8px 0;word-break:break-word}.kv b{display:block;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+.stage{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-top:1px dashed var(--line);font-size:13px}
+.stage .name{width:64px;flex:none;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:2px 8px;border-radius:6px;font-size:12px;background:var(--goodbg);color:var(--good)}
+.chip.fault{background:var(--warnbg);color:var(--warn)}.chip.miss{background:var(--badbg);color:var(--bad)}
+.cards4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.stat{border:1px solid var(--line);border-radius:10px;padding:12px;background:var(--bg)}
+.stat .v{font-size:24px;font-weight:700}.stat .l{font-size:12px;color:var(--muted)}
+.bars{margin:10px 0 14px}.bar{display:grid;grid-template-columns:230px 1fr 56px;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+@media(max-width:640px){.bar{grid-template-columns:110px 1fr 50px}}
+.track{background:var(--bg);border:1px solid var(--line);border-radius:6px;height:16px;overflow:hidden}.fill{height:100%;background:var(--accent)}
+.fill.g{background:var(--good)}.fill.r{background:var(--bad)}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;font-size:12.5px;margin:8px 0}
+.err{color:var(--bad);font-size:13px;margin-top:6px}
+.pill{font-size:12px;padding:3px 10px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--muted)}
+.pill.ok{color:var(--good)}.pill.no{color:var(--bad)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+#keybox{display:none}
+.out{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--muted);word-break:break-all;margin-top:2px}
+.why{font-size:12px;color:var(--muted);margin-top:2px}
+.llmbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.sim{background:var(--warnbg);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px;margin:0 0 12px;display:none}
+.setup{background:var(--accentbg);border-radius:10px;padding:12px 14px;font-size:13.5px;margin:0 0 12px;display:none}
+.setup ol{margin:6px 0 0;padding-left:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:760px){.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Cascade Guard</h1>
+  <span><span class="pill" id="role" style="display:none"></span> <span class="pill" id="health">checking server…</span></span>
+</header>
+<p class="sub">In a chain of AI agents, one agent's mistake gets accepted by the next and builds up until it reaches the final answer. Cascade Guard checks every step, re-runs a failing step, and stops the order if it can't be fixed, so a wrong answer is never delivered silently.</p>
+
+<div class="card" id="keybox">
+  <h2>API key needed</h2>
+  <p class="hint">This server is protected. Enter your key: an admin key (<span class="mono">API_KEY</span>), a reviewer key or a viewer key. It is kept only in this browser tab.</p>
+  <div class="row"><label>API key<input id="key" type="password" autocomplete="off"></label><button id="savekey">Save</button></div>
+</div>
+
+<div class="card">
+  <h2>1. Live demo: the same order, with and without the guard</h2>
+  <p class="hint">Faults are injected into the agents' outputs on purpose. Both sides get exactly the same faults.</p>
+  <div class="row">
+    <label>Numbers (the order)<input id="d-nums" value="3, 7, 2, 9" size="22"></label>
+    <label>Fault chance per step: <span id="d-p-v">50%</span><input id="d-p" type="range" min="0" max="100" value="50"></label>
+    <label>Seed<input id="d-seed" type="number" value="4" style="width:90px"></label>
+    <label>Guard mode<select id="d-mode"><option value="full">full (with source check)</option><option value="invariants">consistency checks only</option></select></label>
+    <label>Engine<select id="d-engine"><option value="custom">built-in orchestrator</option><option value="langgraph">LangGraph</option></select></label>
+    <button id="d-run">Run demo</button><button class="ghost" id="d-new">Try another seed</button>
+  </div>
+  <div class="err" id="d-err"></div>
+  <div class="grid2">
+    <div class="pane"><h3>Without guard</h3><div id="d-off"><span class="hint">Press “Run demo”.</span></div></div>
+    <div class="pane"><h3>With guard</h3><div id="d-on"><span class="hint">Press “Run demo”.</span></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>2. Run it on a real LLM</h2>
+  <p class="hint">Now the analyze and reason agents are a language model, and the guard is a second model call that checks each answer before the next agent uses it.</p>
+  <div class="llmbar"><span class="pill" id="llm-status">checking model…</span><span class="pill" id="llm-usage" style="display:none"></span>
+    <button class="ghost" id="l-check" title="One tiny model call (a fraction of a cent) to test the key, model name and reply format">Check connection</button></div>
+  <div class="hint" id="l-check-out"></div>
+  <div class="setup" id="llm-setup"><b>No model connected yet.</b> <span id="llm-why"></span>
+    <ol><li>Run <span class="mono">cascade-guard init</span> in the working folder (or copy <span class="mono">.env.example</span> to <span class="mono">.env</span>).</li>
+    <li>Paste your API key into it (Anthropic, OpenAI, Groq, Gemini, OpenRouter or a local Ollama all work).</li>
+    <li>Stop the server (Ctrl+C) and start it again, then reload this page.</li></ol></div>
+  <div class="sim" id="llm-sim">Simulated model (LLM_PROVIDER=fake): the answers are made up offline and cost nothing. Use it to try the page, not to judge a model.</div>
+  <div class="row">
+    <label>Numbers (up to 60)<input id="l-nums" value="12, 45, 7, 88, 23, 61, 9, 34, 56, 71, 18, 93" size="34"></label>
+    <label>Guard<select id="l-guard"><option value="recompute">LLM validator: recompute first</option><option value="naive">LLM validator: naive "looks right?"</option><option value="rules">Rule-based guard</option></select></label>
+    <label>Engine<select id="l-engine"><option value="langgraph">LangGraph</option><option value="custom">built-in orchestrator</option></select></label>
+    <label>On a retry<select id="l-repair"><option value="guided">guided repair</option><option value="blind">blind retry</option></select></label>
+    <label>Extra injected faults: <span id="l-p-v">0%</span><input id="l-p" type="range" min="0" max="100" value="0"></label>
+    <label>Seed<input id="l-seed" type="number" value="0" style="width:80px"></label>
+    <button id="l-run">Run on LLM</button>
+  </div>
+  <div class="err" id="l-err"></div>
+  <div class="grid2">
+    <div class="pane"><h3>Without guard</h3><div id="l-off"><span class="hint">Press “Run on LLM”. Each run makes a few model calls.</span></div></div>
+    <div class="pane"><h3>With guard</h3><div id="l-on"><span class="hint">Both sides start from the same first answer of the model.</span></div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>3. Pilot: invoice checking</h2>
+  <p class="hint">A real-world workflow on LangGraph: read the invoice, price it, approve it, write the summary. Every step is checked before the next one uses it. Paste your own invoice in the same layout, or use a sample.</p>
+  <div class="grid3">
+    <label>Invoice<textarea id="p-text" style="min-height:190px" class="mono"></textarea></label>
+    <div>
+      <div class="row">
+        <label>Guard<select id="p-guard"><option value="rules">rule checks (free)</option><option value="llm">LLM checker</option><option value="none">no guard</option></select></label>
+        <label>Agents<select id="p-agents"><option value="rules">rules (free)</option><option value="llm">LLM for read + price</option></select></label>
+      </div>
+      <div class="row">
+        <label>Injected errors: <span id="p-p-v">40%</span><input id="p-p" type="range" min="0" max="100" value="40"></label>
+        <label>Errors that repeat on retry: <span id="p-s-v">50%</span><input id="p-s" type="range" min="0" max="100" value="50"></label>
+      </div>
+      <div class="row">
+        <label>On a retry<select id="p-repair"><option value="guided">guided repair: tell the agent why</option><option value="blind">blind retry: just ask again</option></select></label>
+        <label>Seed<input id="p-seed" type="number" value="1" style="width:80px"></label>
+      </div>
+      <div class="row"><button id="p-run">Check this invoice</button><button class="ghost" id="p-new">New sample invoice</button></div>
+      <div class="row">
+        <label>Or upload a PDF invoice<input id="p-pdf" type="file" accept="application/pdf,.pdf"></label>
+        <button class="ghost" id="p-pdf-sample">Download a sample PDF</button>
+      </div>
+      <div class="why" id="p-pdf-msg"></div>
+      <p class="note">Injected errors imitate real ones: a price with the decimal point moved, a wrong quantity, a dropped or duplicated line, a wrong tax rate, a flipped approval. Some mistakes are systematic and come back on a blind retry; with guided repair the agent is told exactly what was wrong (simulated for the rule agents, real for LLM agents).</p>
+    </div>
+  </div>
+  <div class="err" id="p-err"></div>
+  <div class="grid2" style="margin-top:12px">
+    <div class="pane"><h3>Without guard</h3><div id="p-off"><span class="hint">Press “Check this invoice”.</span></div></div>
+    <div class="pane"><h3 id="p-on-title">With guard</h3><div id="p-on"><span class="hint">Same invoice, same injected errors.</span></div></div>
+  </div>
+  <div class="row" style="margin-top:14px"><button class="ghost" id="p-exp">Run 500 sample invoices (no guard vs guard, blind vs guided)</button></div>
+  <div id="p-exp-out"></div>
+</div>
+
+<div class="card">
+  <h2>4. Measured results over many orders</h2>
+  <p class="hint">Runs hundreds of random orders through the chain three ways and compares them.</p>
+  <div class="row">
+    <label>Orders<input id="e-trials" type="number" value="1000" min="1" style="width:100px"></label>
+    <label>Fault chance per step: <span id="e-p-v">10%</span><input id="e-p" type="range" min="0" max="50" value="10"></label>
+    <label>Retries<input id="e-retries" type="number" value="2" min="0" max="5" style="width:70px"></label>
+    <label>Faults that repeat on retry: <span id="e-s-v">0%</span><input id="e-s" type="range" min="0" max="100" value="0"></label>
+    <label>Seed<input id="e-seed" type="number" value="42" style="width:90px"></label>
+    <button id="e-run">Run experiment</button>
+  </div>
+  <div class="err" id="e-err"></div>
+  <div id="e-out"></div>
+</div>
+
+<div class="card">
+  <h2>5. Check any AI output</h2>
+  <p class="hint">Paste text from any agent. It flags empty output and known failure markers (CORRUPTED_OUTPUT, MISSING_DATA, INVALID_REASONING, TRUNCATED_OUTPUT).</p>
+  <textarea id="v-text" placeholder="Paste an agent's output here"></textarea>
+  <div class="row" style="margin-top:10px"><button id="v-run">Check</button><span id="v-out"></span></div>
+  <div class="err" id="v-err"></div>
+  <h3 style="font-size:14px;margin:18px 0 4px">With the LLM validator: check an output against its source</h3>
+  <p class="hint">Works for any agent, not just this demo: describe the task, paste what the agent was given and what it produced. JSON or plain text.</p>
+  <label style="margin-bottom:10px">Task the agent was given<input id="x-task" value="Add up the invoice line items and report the total in dollars."></label>
+  <div class="grid3">
+    <label>Agent's input (source)<textarea id="x-src">Line items: $19.99, $5.00, $42.50, $3.25</textarea></label>
+    <label>Agent's output<textarea id="x-out">Total: $71.74</textarea></label>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <label>Prompt<select id="x-prompt"><option value="recompute">recompute first</option><option value="naive">naive</option></select></label>
+    <button id="x-run">Check with LLM</button><span id="x-res"></span>
+  </div>
+  <div class="why" id="x-why"></div>
+  <div class="err" id="x-err"></div>
+</div>
+
+<div class="card">
+  <h2>6. Review queue and history</h2>
+  <p class="hint">Every LLM run and LLM check is saved in a local database. Jobs the guard stopped, and checks that did not pass, wait here for a person to decide.</p>
+  <div class="llmbar"><span class="pill" id="h-usage">loading…</span><button class="ghost" id="h-refresh">Refresh</button></div>
+  <div class="err" id="h-err"></div>
+  <h3 style="font-size:14px;margin:10px 0 6px">Waiting for review</h3>
+  <div id="h-queue"><span class="hint">Nothing yet.</span></div>
+  <h3 style="font-size:14px;margin:18px 0 6px">Recent runs</h3>
+  <div id="h-runs" style="overflow-x:auto"><span class="hint">Nothing yet.</span></div>
+</div>
+
+<div class="card">
+  <h2>7. Use it from your own system</h2>
+  <p class="hint">Any program can call the same API the dashboard uses. Interactive docs are at <a href="/docs">/docs</a>.</p>
+  <pre id="snippet" class="mono"></pre>
+</div>
+<div class="card">
+  <h2>8. Evaluate a model: measured error rates</h2>
+  <p class="hint">The full evaluation, the same as <span class="mono">cascade-guard eval</span>: how often each agent is right, how many errors the checker catches and how often it wrongly rejects, and what the guard does end to end. Every rate comes with a 95% interval. Each seed is one independent repeat; results are pooled. Results are also saved in <span class="mono">results/</span>.</p>
+  <div class="row">
+    <label>Part<select id="ev-cmd"><option value="all">all three</option><option value="agents">agents</option><option value="detect">checker detection</option><option value="chain">end to end</option></select></label>
+    <label>Seeds (repeats)<input id="ev-seeds" value="1, 2, 3" size="10"></label>
+    <label>Items per seed<input id="ev-n" type="number" value="50" min="1" max="500" style="width:80px"></label>
+    <label>Cost cap $<input id="ev-cap" type="number" value="5" min="0.01" step="0.5" style="width:80px"></label>
+    <label><input id="ev-sim" type="checkbox" checked> simulated (free, made-up answers)</label>
+    <button class="ghost" id="ev-plan">Show plan and cost</button>
+    <button id="ev-run">Run evaluation</button>
+  </div>
+  <div class="err" id="ev-err"></div>
+  <div id="ev-planout" class="hint"></div>
+  <div id="ev-status" class="hint"></div>
+  <div class="row" id="ev-dl" style="display:none"><button class="ghost" id="ev-json">Download JSON</button><button class="ghost" id="ev-md">Download summary (Markdown)</button></div>
+  <pre id="ev-out" class="mono" style="white-space:pre-wrap;max-height:420px;overflow:auto;display:none"></pre>
+</div>
+<p class="note">Sections 1 and 3 use rule-based agents, so they show how the chain's design lets errors through. Sections 2, 5 and 8 use your configured model (or the simulator); section 8 gives the measured error rates.</p>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+let apiKey = sessionStorage.getItem('cg_key') || '';
+const STAGES = ['extract','analyze','reason','report'];
+
+function el(tag, cls, text){ const e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+
+async function api(path, body){
+  const headers = {'Content-Type':'application/json'};
+  if(apiKey) headers['X-API-Key'] = apiKey;
+  const r = await fetch(path, body === undefined ? {headers} : {method:'POST', headers, body: JSON.stringify(body)});
+  if(r.status === 401){ $('#keybox').style.display = 'block'; throw new Error('API key required or wrong. Enter it in the box at the top.'); }
+  if(!r.ok){
+    const j = await r.json().catch(() => ({}));
+    let d = j.detail;
+    if(Array.isArray(d)) d = d.map(x => x.msg || JSON.stringify(x)).join('; ');
+    throw new Error(d || ('Request failed (' + r.status + ')'));
+  }
+  return r.json();
+}
+
+async function health(){
+  const p = $('#health');
+  try{ const r = await fetch('/health'); if(!r.ok) throw 0; const j = await r.json(); p.textContent = 'server online' + (j.version ? ' · v' + j.version : ''); p.className = 'pill ok'; }
+  catch(e){ p.textContent = 'server offline'; p.className = 'pill no'; }
+}
+
+function statusBadge(s){
+  const map = {correct:['Correct output','b-good'], wrong:['Wrong output delivered silently','b-bad'], crashed:['Crashed','b-bad'], halted:['Halted safely, nothing wrong delivered','b-warn']};
+  const [t,c] = map[s] || [s,'b-warn'];
+  return el('span', 'badge ' + c, t);
+}
+
+function renderRun(box, r, guardOn){
+  box.replaceChildren();
+  box.append(statusBadge(r.status));
+  const k1 = el('div','kv'); k1.append(el('b',null,'Delivered'), el('span','mono', r.final_output === null || r.final_output === undefined ? (r.status === 'halted' ? '(nothing delivered, order held)' : '(empty output delivered)') : r.final_output)); box.append(k1);
+  const k2 = el('div','kv'); k2.append(el('b',null,'Correct answer'), el('span','mono', r.expected_output)); box.append(k2);
+  for(const st of STAGES){
+    const items = r.trace.filter(t => t.stage === st);
+    if(!items.length) continue;
+    const row = el('div','stage'); row.append(el('div','name',st));
+    const chips = el('div','chips');
+    items.forEach((t, i) => {
+      let text, cls = 'chip';
+      if(t.guard_issue === 'AGENT_CRASH'){ text = 'agent crashed'; cls += ' miss'; }
+      else if(t.injected && guardOn && t.guard_issue){ text = 'fault ' + t.injected + ' caught' + (i < items.length - 1 ? ', re-run' : ', stopped'); cls += ' fault'; }
+      else if(t.injected && guardOn){ text = 'fault ' + t.injected + ' MISSED'; cls += ' miss'; }
+      else if(t.injected){ text = 'fault ' + t.injected + ' (not checked)'; cls += ' miss'; }
+      else { text = (guardOn ? 'checked, ok' : 'ok'); }
+      chips.append(el('span', cls, text));
+    });
+    row.append(chips); box.append(row);
+  }
+}
+
+async function runDemo(){
+  const btn = $('#d-run'); btn.disabled = true; $('#d-err').textContent = '';
+  const body = {numbers: $('#d-nums').value, inject_probability: $('#d-p').value / 100, seed: parseInt($('#d-seed').value || '0', 10), mode: $('#d-mode').value, engine: $('#d-engine').value, max_retries: 2};
+  try{
+    const [off, on] = await Promise.all([api('/pipeline', {...body, protected:false}), api('/pipeline', {...body, protected:true})]);
+    renderRun($('#d-off'), off, false); renderRun($('#d-on'), on, true);
+  }catch(e){ $('#d-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+const pct = v => (v * 100).toFixed(1) + '%';
+
+function bar(label, v, cls){
+  const row = el('div','bar'); row.append(el('div',null,label));
+  const track = el('div','track'); const fill = el('div','fill ' + (cls || '')); fill.style.width = (v * 100) + '%'; track.append(fill);
+  row.append(track, el('div',null,pct(v))); return row;
+}
+
+async function runExperiment(){
+  const btn = $('#e-run'); btn.disabled = true; $('#e-err').textContent = ''; const out = $('#e-out'); out.replaceChildren(el('span','hint','Running…'));
+  const base = {trials: parseInt($('#e-trials').value || '1', 10), seed: parseInt($('#e-seed').value || '0', 10), inject_probability: $('#e-p').value / 100, max_retries: parseInt($('#e-retries').value || '0', 10), sticky: $('#e-s').value / 100};
+  try{
+    const [full, inv] = await Promise.all([api('/experiment', {...base, mode:'full'}), api('/experiment', {...base, mode:'invariants'})]);
+    out.replaceChildren();
+    const stats = el('div','cards4');
+    [[pct(full.baseline_accuracy),'Accuracy without guard'],[pct(full.protected_accuracy),'Accuracy with full guard'],[pct(full.cri),'Cascade Reduction Index'],[pct(full.crs),'Cascade Recovery Score']].forEach(([v,l]) => {
+      const s = el('div','stat'); s.append(el('div','v',v), el('div','l',l)); stats.append(s);
+    });
+    out.append(stats);
+    const bars = el('div','bars');
+    bars.append(bar('No guard', full.baseline_accuracy, 'r'), bar('Guard: consistency checks only', inv.protected_accuracy), bar('Guard: with source check', full.protected_accuracy, 'g'));
+    if(full.guided) bars.append(bar('Source check + guided repair', full.guided.protected_accuracy, 'g'));
+    out.append(bars);
+    const t = el('table'); const head = el('tr'); ['Outcome','No guard','Consistency only','Full guard'].forEach((h,i) => head.append(el('th', i ? 'n' : '', h))); t.append(head);
+    [['Correct','correct'],['Wrong, delivered silently','wrong'],['Crashed','crashed'],['Halted safely','halted']].forEach(([lab,k]) => {
+      const tr = el('tr'); tr.append(el('td',null,lab)); [full.baseline[k], inv.protected[k], full.protected[k]].forEach(v => tr.append(el('td','n',String(v)))); t.append(tr);
+    });
+    out.append(t);
+    const missed = Object.entries(inv.protected.missed_by_type || {}).map(([k,v]) => k + ': ' + v).join(', ');
+    out.append(el('p','note', 'Out of ' + base.trials + ' orders, ' + full.baseline.injected_trials + ' had at least one fault injected. ' +
+      'The full guard detected ' + full.detected_errors + ' failing steps and repaired ' + full.recovered_errors + ' by re-running them; the rest were halted instead of delivered. ' +
+      (missed ? 'The consistency-only guard missed faults that entered at the first step (' + missed + '), because every later agent built correctly on the wrong data.' : '')));
+  }catch(e){ out.replaceChildren(); $('#e-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+async function runValidate(){
+  $('#v-err').textContent = ''; $('#v-out').replaceChildren();
+  try{
+    const r = await api('/validate', {text: $('#v-text').value});
+    $('#v-out').append(r.passed ? el('span','badge b-good','Passed, risk LOW') : el('span','badge b-bad','Failed: ' + r.issues.join(', ')));
+  }catch(e){ $('#v-err').textContent = e.message; }
+}
+
+// ---------------------------------------------------------------- LLM
+const money = v => '$' + (v < 0.01 ? v.toFixed(4) : v.toFixed(2));
+
+function showUsage(m, u){
+  const p = $('#llm-usage');
+  if(!u){ p.textContent = ''; p.style.display = 'none'; return; }
+  p.style.display = '';
+  const cost = m && m.price_per_million_tokens === null ? 'cost unknown (no price set)' : money(u.cost_usd) + (m && m.simulated ? ' (simulated)' : '');
+  p.textContent = u.calls + ' model calls this server run, ' + cost;
+}
+
+async function llmStatus(){
+  const p = $('#llm-status');
+  try{
+    const s = await api('/llm/status');
+    $('#llm-setup').style.display = s.configured ? 'none' : 'block';
+    $('#llm-sim').style.display = s.configured && s.simulated ? 'block' : 'none';
+    if(s.configured){ p.textContent = 'model: ' + s.provider + ' / ' + s.model; p.className = 'pill ok'; showUsage(s, s.usage); }
+    else { p.textContent = 'no model connected'; p.className = 'pill no'; $('#llm-why').textContent = s.error || ''; showUsage(null, null); }
+    return s;
+  }catch(e){ p.textContent = 'model status unknown'; p.className = 'pill no'; }
+}
+
+function compact(v){ try{ const t = JSON.stringify(v); return t.length > 160 ? t.slice(0,157) + '…' : t; }catch(e){ return String(v); } }
+
+function renderLLMRun(box, r, guardOn){
+  box.replaceChildren();
+  box.append(statusBadge(r.status));
+  const k1 = el('div','kv'); k1.append(el('b',null,'Delivered'), el('span','mono', r.final_output == null ? (r.status === 'halted' ? '(nothing delivered, order held)' : '(nothing delivered)') : r.final_output)); box.append(k1);
+  const k2 = el('div','kv'); k2.append(el('b',null,'Correct answer'), el('span','mono', r.expected_output)); box.append(k2);
+  const log = (r.validator_log || []).slice();
+  const llmStages = ['analyze','reason'];
+  for(const st of STAGES){
+    const items = r.trace.filter(t => t.stage === st);
+    if(!items.length) continue;
+    const row = el('div','stage'); row.append(el('div','name',st));
+    const col = el('div'); col.style.flex = '1';
+    items.forEach((t, i) => {
+      const chips = el('div','chips');
+      const isLLM = llmStages.includes(st);
+      if(t.guard_issue === 'AGENT_CRASH'){ chips.append(el('span','chip miss','agent crashed')); }
+      else {
+        if(isLLM && !t.upstream_ok) chips.append(el('span','chip miss','fed wrong input'));
+        else if(isLLM) chips.append(el('span', 'chip' + (t.agent_ok ? '' : ' miss'), t.agent_ok ? 'model answer right' : 'model answer WRONG'));
+        if(t.injected) chips.append(el('span','chip fault','fault injected: ' + t.injected));
+        if(guardOn){
+          if(t.guard_issue){ chips.append(el('span','chip fault', 'rejected' + (i < items.length - 1 ? ', re-run' : ', stopped'))); }
+          else { chips.append(el('span', 'chip' + (t.output_ok ? '' : ' miss'), t.output_ok ? 'accepted' : 'accepted, but WRONG')); }
+        }
+      }
+      if(i) chips.prepend(el('span','chip','retry ' + i));
+      col.append(chips);
+      if(t.output !== undefined && isLLM) col.append(el('div','out', compact(t.output)));
+      const usesLLMCheck = guardOn && isLLM && r.guard !== 'rules' && !['MISSING_DATA','TRUNCATED_OUTPUT','CORRUPTED_OUTPUT'].includes(t.guard_issue) && t.guard_issue !== 'AGENT_CRASH';
+      if(usesLLMCheck && log.length){ const j = log.shift(); col.append(el('div','why','validator: ' + j.verdict + (j.reason ? ' – ' + j.reason : ''))); }
+    });
+    row.append(col); box.append(row);
+  }
+}
+
+async function runLLM(){
+  const btn = $('#l-run'); btn.disabled = true; $('#l-err').textContent = '';
+  const body = {numbers: $('#l-nums').value, guard: $('#l-guard').value, inject_probability: $('#l-p').value / 100, seed: parseInt($('#l-seed').value || '0', 10), max_retries: 2, engine: $('#l-engine').value, repair: $('#l-repair').value};
+  $('#l-off').replaceChildren(el('span','hint','Asking the model…')); $('#l-on').replaceChildren(el('span','hint','Waiting…'));
+  try{
+    const off = await api('/llm/pipeline', {...body, guard:'none'});   // first: fills the cache
+    renderLLMRun($('#l-off'), off, false);
+    $('#l-on').replaceChildren(el('span','hint','Checking every step…'));
+    const on = await api('/llm/pipeline', body);                         // same first answers, plus checks
+    renderLLMRun($('#l-on'), on, true);
+    showUsage(on.model, on.usage);
+    loadHistory();
+  }catch(e){ $('#l-err').textContent = e.message; $('#l-off').replaceChildren(); $('#l-on').replaceChildren(); llmStatus(); }
+  btn.disabled = false;
+}
+
+function parseMaybeJSON(t){ const s = t.trim(); if(/^[\[{]/.test(s)){ try{ return JSON.parse(s); }catch(e){} } return t; }
+
+async function runVerify(){
+  const btn = $('#x-run'); btn.disabled = true; $('#x-err').textContent = ''; $('#x-res').replaceChildren(el('span','hint','Checking…')); $('#x-why').textContent = '';
+  try{
+    const r = await api('/llm/verify', {task: $('#x-task').value, source: parseMaybeJSON($('#x-src').value), output: parseMaybeJSON($('#x-out').value), prompt: $('#x-prompt').value});
+    $('#x-res').replaceChildren(r.passed ? el('span','badge b-good','Accepted') : el('span','badge b-bad', r.verdict === 'reject' ? 'Rejected' : 'No clear verdict, treat as rejected'));
+    $('#x-why').textContent = (r.reason ? 'Why: ' + r.reason : '') + (r.model && r.model.simulated ? '  (simulated model)' : '');
+    llmStatus(); loadHistory();
+  }catch(e){ $('#x-res').replaceChildren(); $('#x-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+// ---------------------------------------------------------------- pilot
+const PILOT_STEPS = {extract:'read invoice', price:'price', approve:'approve', report:'summary'};
+
+function renderPilotRun(box, r, guardOn){
+  box.replaceChildren();
+  box.append(statusBadge(r.status));
+  const k1 = el('div','kv'); k1.append(el('b',null,'Delivered'), el('span','mono', r.final_output == null ? (r.status === 'halted' ? '(nothing delivered, invoice held for review)' : '(nothing delivered)') : r.final_output)); box.append(k1);
+  const k2 = el('div','kv'); k2.append(el('b',null,'Correct answer'), el('span','mono', r.expected_output)); box.append(k2);
+  for(const st of Object.keys(PILOT_STEPS)){
+    const items = r.trace.filter(t => t.stage === st);
+    if(!items.length) continue;
+    const row = el('div','stage'); row.append(el('div','name',PILOT_STEPS[st]));
+    const col = el('div'); col.style.flex = '1';
+    items.forEach((t, i) => {
+      const chips = el('div','chips');
+      if(i) chips.append(el('span','chip', (r.repair === 'guided' ? 'guided retry ' : 'retry ') + i));
+      if(t.injected) chips.append(el('span','chip fault','error injected: ' + t.injected.toLowerCase().replaceAll('_',' ')));
+      else if(t.agent_ok === false) chips.append(el('span','chip miss','agent made a mistake'));
+      if(guardOn){
+        if(t.guard_issue) chips.append(el('span','chip fault', 'rejected' + (i < items.length - 1 ? ', re-run' : ', stopped')));
+        else chips.append(el('span', 'chip' + (t.output_ok ? '' : ' miss'), t.output_ok ? 'checked, accepted' : 'accepted, but WRONG'));
+      } else if(!t.output_ok){ chips.append(el('span','chip miss','passed on unchecked')); }
+      col.append(chips);
+      if(t.guard_issue) col.append(el('div','why','why: ' + t.guard_issue));
+      if(t.output && Object.keys(t.output).length) col.append(el('div','out', compact(t.output)));
+    });
+    row.append(col); box.append(row);
+  }
+}
+
+async function uploadPdf(){
+  const f = $('#p-pdf').files[0]; if(!f) return;
+  $('#p-err').textContent = ''; $('#p-pdf-msg').textContent = 'Reading ' + f.name + '…';
+  try{
+    const b64 = await new Promise((ok, bad) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = bad; r.readAsDataURL(f); });
+    const r = await api('/pilot/invoice-pdf', {pdf_base64: b64, guard: 'none', agents: 'rules'});
+    $('#p-text').value = r.extracted_text;
+    $('#p-pdf-msg').textContent = 'Text read from ' + f.name + '. Checking it now. (A PDF in another layout needs “LLM for read + price”.)';
+    runPilot();
+  }catch(e){ $('#p-pdf-msg').textContent = ''; $('#p-err').textContent = e.message; }
+}
+
+async function downloadSamplePdf(){
+  try{
+    const headers = apiKey ? {'X-API-Key': apiKey} : {};
+    const r = await fetch('/pilot/sample.pdf?seed=' + Math.floor(Math.random() * 100000), {headers});
+    if(!r.ok) throw new Error('Could not make the sample PDF (' + r.status + ')');
+    const url = URL.createObjectURL(await r.blob());
+    const a = document.createElement('a'); a.href = url; a.download = 'sample-invoice.pdf'; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }catch(e){ $('#p-err').textContent = e.message; }
+}
+
+function loadSample(seed){ api('/pilot/sample?seed=' + seed).then(s => { $('#p-text').value = s.text; }).catch(() => {}); }
+
+async function newSample(){
+  try{ const s = await api('/pilot/sample?seed=' + Math.floor(Math.random() * 100000)); $('#p-text').value = s.text; }
+  catch(e){ $('#p-err').textContent = e.message; }
+}
+
+async function runPilot(){
+  const btn = $('#p-run'); btn.disabled = true; $('#p-err').textContent = '';
+  const guard = $('#p-guard').value;
+  const body = {text: $('#p-text').value, agents: $('#p-agents').value, inject_probability: $('#p-p').value / 100, seed: parseInt($('#p-seed').value || '0', 10), repair: $('#p-repair').value, sticky: $('#p-s').value / 100};
+  $('#p-on-title').textContent = guard === 'none' ? 'No guard (again)' : (guard === 'llm' ? 'With LLM checker' : 'With rule checks');
+  try{
+    const off = await api('/pilot/invoice', {...body, guard: 'none'});
+    renderPilotRun($('#p-off'), off, false);
+    const on = await api('/pilot/invoice', {...body, guard});
+    renderPilotRun($('#p-on'), on, guard !== 'none');
+    loadHistory(); llmStatus();
+  }catch(e){ $('#p-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+async function runPilotExperiment(){
+  const btn = $('#p-exp'); btn.disabled = true; const out = $('#p-exp-out'); out.replaceChildren(el('span','hint','Running 500 invoices twice…'));
+  try{
+    const sticky = $('#p-s').value / 100;
+    const r = await api('/pilot/experiment', {trials: 500, inject_probability: 0.1, seed: 42, sticky});
+    out.replaceChildren();
+    const stats = el('div','cards4');
+    const g = r.guided;
+    [[pct(r.baseline.accuracy),'Correct without guard'],
+     [pct(r.protected.accuracy) + (g ? ' → ' + pct(g.accuracy) : ''), g ? 'Correct with guard: blind → guided repair' : 'Correct with rule guard'],
+     [String(r.baseline.wrong) + ' → ' + String(r.protected.wrong),'Wrong invoices delivered silently'],
+     [String(r.protected.halted) + (g ? ' → ' + String(g.halted) : ''), g ? 'Held for review: blind → guided' : 'Held for review']].forEach(([v,l]) => {
+      const s = el('div','stat'); s.append(el('div','v',v), el('div','l',l)); stats.append(s);
+    });
+    out.append(stats, el('p','note','500 sample invoices, 10% chance of an injected error at each step, ' + Math.round(sticky * 100) + '% of them repeating on a blind retry, same errors in every run. Guided repair assumes a told agent fixes 90% of repeated mistakes (a simulation; the LLM evaluation measures it for real). CRI ' + pct(r.cri) + ', CRS ' + pct(r.crs) + (g ? ' blind / ' + pct(g.crs) + ' guided' : '') + '.'));
+  }catch(e){ out.replaceChildren(); $('#p-err').textContent = e.message; }
+  btn.disabled = false;
+}
+
+// ---------------------------------------------------------------- role
+let myRole = 'admin';
+async function whoami(){
+  try{
+    const r = await api('/whoami'); myRole = r.role;
+    const p = $('#role');
+    if(r.auth_enabled){ p.style.display = ''; p.textContent = 'signed in as ' + r.role; p.className = 'pill ok'; }
+  }catch(e){ /* 401: the key box is shown by api() */ }
+}
+
+// ---------------------------------------------------------------- history + review queue
+function shortInput(r){
+  if(r.kind !== 'verify') return r.input;
+  try{ const j = JSON.parse(r.input); return (j.task || '') + ' → ' + compact(j.output); }catch(e){ return r.input; }
+}
+const when = t => (t || '').replace('T',' ').replace('+00:00',' UTC');
+
+async function resolveItem(id, resolution){
+  try{ await api('/review-queue/' + id + '/resolve', {resolution, by: 'dashboard'}); loadHistory(); }
+  catch(e){ $('#h-err').textContent = e.message; }
+}
+
+async function loadHistory(){
+  $('#h-err').textContent = '';
+  try{
+    const [u, queue, runs] = await Promise.all([api('/usage'), api('/review-queue'), api('/runs?limit=15')]);
+    const a = u.all_time;
+    $('#h-usage').textContent = a.calls + ' model calls saved in total, $' + Number(a.cost_usd).toFixed(4) + ' · ' + u.open_reviews + ' waiting for review';
+    const qbox = $('#h-queue'); qbox.replaceChildren();
+    if(!queue.length) qbox.append(el('span','hint','Nothing waiting.'));
+    queue.forEach(q => {
+      const row = el('div','stage'); row.style.alignItems = 'center';
+      const info = el('div'); info.style.flex = '1';
+      info.append(el('div',null,'#' + q.run_id + ' · ' + q.kind + ' · ' + q.reason));
+      info.append(el('div','out', shortInput(q)));
+      row.append(info);
+      if(myRole === 'viewer'){ row.append(el('span','hint','reviewer key needed to decide')); }
+      else [['approved','Approve'],['rejected','Reject'],['fixed','Mark fixed']].forEach(([v,label]) => {
+        const b = el('button','ghost',label); b.style.padding = '5px 10px'; b.addEventListener('click', () => resolveItem(q.id, v)); row.append(b);
+      });
+      qbox.append(row);
+    });
+    const rbox = $('#h-runs'); rbox.replaceChildren();
+    if(!runs.length){ rbox.append(el('span','hint','No runs saved yet. Use section 2 or the LLM check in section 4.')); return; }
+    const t = el('table'); const head = el('tr');
+    ['#','Time','Kind','Engine','Guard / prompt','Status','Input','Cost'].forEach(h => head.append(el('th', h === 'Cost' ? 'n' : '', h))); t.append(head);
+    runs.forEach(r => {
+      const tr = el('tr');
+      [String(r.id), when(r.created_at), r.kind, r.engine || '–', r.guard || '–', r.status, shortInput(r)].forEach(v => tr.append(el('td', null, v)));
+      tr.append(el('td','n','$' + Number(r.cost_usd || 0).toFixed(4)));
+      t.append(tr);
+    });
+    rbox.append(t);
+  }catch(e){ $('#h-usage').textContent = 'history unavailable'; $('#h-err').textContent = e.message; }
+}
+
+function snippet(){
+  const o = location.origin;
+  const h = apiKey ? ' -H "X-API-Key: YOUR_KEY"' : '';
+  $('#snippet').textContent =
+    'curl -X POST ' + o + '/validate -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"text": "agent output to check"}\'\n\n' +
+    'curl -X POST ' + o + '/pipeline -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"numbers": "3, 7, 2, 9", "protected": true, "inject_probability": 0.5}\'\n\n' +
+    'curl -X POST ' + o + '/experiment -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"trials": 500}\'\n\n' +
+    '# Invoice pilot (rule checks are free)\n' +
+    'curl -X POST ' + o + '/pilot/invoice -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"text": "INVOICE INV-1\\n  2 x Claw hammer @ $14.99\\nTax: 8%", "guard": "rules"}\'\n\n' +
+    '# Stored runs and the review queue\n' +
+    'curl ' + o + '/review-queue' + h + '\n\n' +
+    '# LLM routes (need a model in .env)\n' +
+    'curl -X POST ' + o + '/llm/pipeline -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"numbers": "12, 45, 7, 88", "guard": "recompute"}\'\n\n' +
+    'curl -X POST ' + o + '/llm/verify -H "Content-Type: application/json"' + h + ' \\\n  -d \'{"task": "Sum the line items", "source": "19.99, 5.00", "output": "Total: 24.99"}\'';
+}
+
+$('#d-p').addEventListener('input', e => $('#d-p-v').textContent = e.target.value + '%');
+$('#e-p').addEventListener('input', e => $('#e-p-v').textContent = e.target.value + '%');
+$('#e-s').addEventListener('input', e => $('#e-s-v').textContent = e.target.value + '%');
+$('#p-s').addEventListener('input', e => $('#p-s-v').textContent = e.target.value + '%');
+$('#d-run').addEventListener('click', runDemo);
+$('#d-new').addEventListener('click', () => { $('#d-seed').value = Math.floor(Math.random() * 1000); runDemo(); });
+$('#e-run').addEventListener('click', runExperiment);
+$('#v-run').addEventListener('click', runValidate);
+$('#l-p').addEventListener('input', e => $('#l-p-v').textContent = e.target.value + '%');
+$('#l-run').addEventListener('click', runLLM);
+$('#x-run').addEventListener('click', runVerify);
+$('#h-refresh').addEventListener('click', loadHistory);
+$('#p-p').addEventListener('input', e => $('#p-p-v').textContent = e.target.value + '%');
+$('#p-run').addEventListener('click', runPilot);
+$('#p-pdf').addEventListener('change', uploadPdf);
+$('#p-pdf-sample').addEventListener('click', downloadSamplePdf);
+$('#p-new').addEventListener('click', newSample);
+$('#p-exp').addEventListener('click', runPilotExperiment);
+$('#savekey').addEventListener('click', () => { apiKey = $('#key').value.trim(); sessionStorage.setItem('cg_key', apiKey); $('#keybox').style.display = 'none'; snippet(); whoami().then(loadHistory); llmStatus(); if(!$('#p-text').value) loadSample(7); });
+// ---------------------------------------------------------------- connection check + evaluation
+async function checkConnection(){
+  const b = $('#l-check'), out = $('#l-check-out'); b.disabled = true; out.textContent = 'Sending one small request…';
+  try{
+    const r = await api('/llm/check', {});
+    out.textContent = (r.ok ? '\u2713 ' : '\u2717 ') + r.hint + (r.error ? ' (' + r.error + ')' : '')
+      + (r.seconds !== undefined ? ' \u00b7 ' + r.seconds + ' s, $' + (r.cost_usd || 0).toFixed(5) : '')
+      + (r.simulated ? ' \u00b7 simulated' : '');
+    out.style.color = r.ok ? 'var(--good)' : 'var(--bad)';
+    llmStatus();
+  }catch(e){ out.textContent = e.message; out.style.color = 'var(--bad)'; }
+  b.disabled = false;
+}
+
+function evalReq(confirm){
+  const seeds = $('#ev-seeds').value.split(/[\s,]+/).filter(Boolean).map(Number);
+  if(!seeds.length || seeds.some(x => !Number.isInteger(x))) throw new Error('Seeds must be whole numbers, e.g. 1, 2, 3');
+  return {command: $('#ev-cmd').value, seeds, n: Number($('#ev-n').value), max_cost: Number($('#ev-cap').value),
+          simulated: $('#ev-sim').checked, confirm: !!confirm};
+}
+function planText(r){
+  const p = r.plan;
+  return (r.simulated ? 'Simulated: ' : 'Model ' + r.model + ': ') + p.unique_new_calls + ' new calls'
+    + (p.possible_retry_calls ? ' plus up to ' + p.possible_retry_calls + ' retries' : '')
+    + (p.cached_or_duplicate ? ' (' + p.cached_or_duplicate + ' already cached)' : '')
+    + '. Estimated $' + p.est_cost_usd.toFixed(2) + ', worst case $' + p.worst_case_cost_usd.toFixed(2)
+    + (r.simulated ? ' (nothing is billed)' : '; the run stops at the $' + Number(r.max_cost_usd ?? $('#ev-cap').value).toFixed(2) + ' cap') + '.';
+}
+async function planEval(){
+  $('#ev-err').textContent = '';
+  try{ const r = await api('/llm/eval/plan', evalReq()); $('#ev-planout').textContent = planText(r); return r; }
+  catch(e){ $('#ev-err').textContent = e.message; }
+}
+let evalJob = null;
+async function runEval(){
+  $('#ev-err').textContent = ''; $('#ev-dl').style.display = 'none'; $('#ev-out').style.display = 'none';
+  try{
+    let req = evalReq(false);
+    if(!req.simulated){
+      const p = await planEval(); if(!p) return;
+      if(!confirm(planText(p) + '\n\nThis calls the real model and costs money. Start it?')) return;
+      req = evalReq(true);
+    }
+    const r = await api('/llm/eval/run', req);
+    $('#ev-run').disabled = true; $('#ev-planout').textContent = planText(r);
+    pollEval(r.job_id);
+  }catch(e){ $('#ev-err').textContent = e.message; $('#ev-run').disabled = false; }
+}
+async function pollEval(id){
+  try{
+    const j = await api('/llm/eval/jobs/' + id);
+    const u = j.usage ? ' \u00b7 ' + j.usage.calls + ' calls, $' + j.usage.cost_usd.toFixed(4) : '';
+    if(j.status === 'running'){
+      $('#ev-status').textContent = 'Running' + (j.part ? ': ' + j.part : '') + u + ' \u2026';
+      setTimeout(() => pollEval(id), 2000); return;
+    }
+    $('#ev-run').disabled = false;
+    $('#ev-status').textContent = (j.status === 'done' ? 'Finished' : 'Stopped') + (j.error ? ': ' + j.error : '') + u;
+    if(j.report){
+      evalJob = j; $('#ev-out').textContent = j.markdown; $('#ev-out').style.display = 'block'; $('#ev-dl').style.display = 'flex';
+    }
+    llmStatus();
+  }catch(e){ $('#ev-err').textContent = e.message; $('#ev-run').disabled = false; }
+}
+function download(name, text, type){
+  const url = URL.createObjectURL(new Blob([text], {type}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+function evalName(ext){ return 'cascade-guard-eval-' + (evalJob.simulated ? 'simulated' : evalJob.model) + '-' + evalJob.id + '.' + ext; }
+$('#l-check').addEventListener('click', checkConnection);
+$('#ev-plan').addEventListener('click', planEval);
+$('#ev-run').addEventListener('click', runEval);
+$('#ev-json').addEventListener('click', () => download(evalName('json'), JSON.stringify(evalJob.report, null, 2), 'application/json'));
+$('#ev-md').addEventListener('click', () => download(evalName('md'), evalJob.markdown, 'text/markdown'));
+health(); snippet(); whoami().then(loadHistory); runDemo(); llmStatus();
+loadSample(7);
+</script>
+</body>
+</html>

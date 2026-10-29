@@ -1,7 +1,7 @@
-from app.agents.pipeline import AGENTS, STAGES, expected_output
-from app.evaluation.error_injector import ErrorInjector
-from app.evaluation.runner import make_inputs, run_chain, run_experiment
-from app.guard.cascade_guard import CascadeGuard
+from cascade_guard.agents.pipeline import AGENTS, STAGES, expected_output
+from cascade_guard.evaluation.error_injector import ErrorInjector
+from cascade_guard.evaluation.runner import make_inputs, run_chain, run_experiment
+from cascade_guard.guard.cascade_guard import CascadeGuard
 
 RAW = "3, 7, 2, 9"
 

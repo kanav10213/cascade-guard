@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cascade-guard-ai"  # PyPI name; the command is cascade-guard, the import is cascade_guard
+dynamic = ["version"]
+description = "Stop errors from cascading through chains of AI agents: check every hand-off, repair with the reason, stop safely."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kanav Mishra" }]
+requires-python = ">=3.12"
+keywords = ["llm", "agents", "multi-agent", "guardrails", "validation", "langgraph", "mcp", "reliability"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Framework :: FastAPI",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.30,<1",
+    "pydantic>=2.7,<3",
+    "anthropic>=0.40,<3",
+    "httpx>=0.27,<1",
+    "langgraph>=1.0,<2",
+    "mcp>=1.2,<3",
+    "pypdf>=4,<7",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.1,<4"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6", "mypy>=1.10", "build>=1.2"]
+
+[project.urls]
+Homepage = "https://github.com/kanav10213/cascade-guard"
+Documentation = "https://github.com/kanav10213/cascade-guard#readme"
+Changelog = "https://github.com/kanav10213/cascade-guard/blob/main/CHANGELOG.md"
+Issues = "https://github.com/kanav10213/cascade-guard/issues"
+
+[project.scripts]
+cascade-guard = "cascade_guard.cli:main"
+
+[tool.setuptools.dynamic]
+version = { attr = "cascade_guard.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["cascade_guard*"]
+
+[tool.setuptools.package-data]
+cascade_guard = ["static/*", "env.example", "py.typed"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:langgraph.*", "ignore::DeprecationWarning:langchain_core.*", "ignore::DeprecationWarning:langsmith.*"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "UP", "S", "SIM"]
+ignore = [
+    "S101",   # assert is how pytest tests are written
+    "S311",   # random is used for seeded, reproducible simulations, never for secrets
+    "SIM108", # ternaries are not always clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "E501", "SIM117"]
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = false

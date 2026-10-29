@@ -1,7 +1,7 @@
-import pytest
 from fastapi.testclient import TestClient
 
-from app.api import app
+from cascade_guard import __version__
+from cascade_guard.api import app
 
 client = TestClient(app)
 
@@ -12,7 +12,7 @@ def test_dashboard_served():
 
 
 def test_health():
-    assert client.get("/health").json() == {"status": "ok"}
+    assert client.get("/health").json() == {"status": "ok", "version": __version__}
 
 
 def test_validate_pass_and_fail():

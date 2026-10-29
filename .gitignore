@@ -1,6 +1,17 @@
-   __pycache__/
-   *.pyc
-   .pytest_cache/
-   .venv/
-   .env
-   llm_report.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.env
+.llm_cache/
+results/
+data/
+dist/
+build/
+*.egg-info/
+.coverage
+.mypy_cache/
+.ruff_cache/
+report.json
+*.zip
+llm_report.json

@@ -1,7 +1,13 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -9,12 +15,85 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-dev.txt
-      - run: pytest -q
-      - run: python -m experiments.compare --trials 500
-      - run: python -m experiments.llm_eval --check --simulated
+      - run: ruff check .
+      - run: mypy cascade_guard
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python: ["3.12", "3.13", "3.14"]
+        include:
+          - { os: windows-latest, python: "3.12" }
+          - { os: macos-latest, python: "3.13" }
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q --cov=cascade_guard --cov-report=term
+      - run: cascade-guard compare --trials 300
+
+  postgres:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cascade_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      CASCADE_TEST_PG: postgresql://postgres:postgres@localhost:5432/cascade_test
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -q tests/test_pilot_auth_pg.py
+
+  lowest-versions:
+    # the oldest dependency versions pyproject.toml allows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v6
+      - run: uv venv -p 3.12 && uv pip install --resolution lowest-direct . && uv pip install "pytest>=8,<9"
+      - run: .venv/bin/python -m pytest -q
+
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install build twine && python -m build && twine check dist/*
+      - name: install the wheel in a clean venv and test it there
+        run: |
+          python -m venv /tmp/v && /tmp/v/bin/pip install dist/*.whl pytest
+          mkdir /tmp/t && cp -r tests /tmp/t/ && cd /tmp/t && /tmp/v/bin/python -m pytest -q --rootdir=/tmp/t tests
+          /tmp/v/bin/cascade-guard --version
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
   docker:
     runs-on: ubuntu-latest
-    needs: test
     steps:
       - uses: actions/checkout@v6
       - run: docker build -t cascade-guard .
+      - name: start the container and call it
+        run: |
+          docker run -d --name cg -p 8000:8000 -e LLM_PROVIDER=fake -e API_KEY=ci-key cascade-guard
+          for i in $(seq 1 30); do curl -fs http://localhost:8000/health && break; sleep 1; done
+          curl -fs -H "X-API-Key: ci-key" -X POST http://localhost:8000/pipeline -H 'content-type: application/json' -d '{}'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8000/pipeline -d '{}')" = 401
+          docker logs cg

@@ -1,0 +1,3 @@
+# With PostgreSQL support:  pip install -r requirements-postgres.txt
+-c constraints.txt
+-e .[postgres]
