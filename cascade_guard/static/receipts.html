@@ -59,7 +59,8 @@ h2{font-size:28px;line-height:1.15;font-weight:650;letter-spacing:-.02em;margin:
 table{border-collapse:collapse;width:100%;font-size:14px;min-width:720px}
 th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule2);vertical-align:top}
 th{font-size:12.5px;color:var(--muted);font-weight:600;background:var(--paper)}
-td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+td.nowrap{white-space:nowrap}
+td.num{white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono)}
 tr:last-child td{border-bottom:0}
 .status{display:inline-block;border-radius:99px;padding:1px 10px;font-size:12.5px;font-weight:600;white-space:nowrap}
 .status.posted{background:var(--ok-soft);color:var(--ok)}
@@ -76,6 +77,19 @@ tr:last-child td{border-bottom:0}
 .out{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;font:12.5px/1.5 var(--mono);white-space:pre-wrap;max-height:220px;overflow:auto;margin-top:6px}
 .keycard{background:var(--sheet);border:1px solid var(--rule);border-left:3px solid var(--amber);border-radius:8px;padding:12px 14px;margin:14px 0;max-width:560px}
 .keycard input{flex:1;min-width:200px;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;background:var(--paper)}
+@media(max-width:640px){
+  .brand p{display:none}
+  .tablewrap{overflow:visible;background:none;border:0}
+  table{min-width:0}
+  thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tbody>tr:not(.detail){background:var(--sheet);border:1px solid var(--rule);border-radius:12px;margin-bottom:10px;padding:6px 0}
+  tr.detail{margin:-10px 0 10px}
+  tr.detail td{border:1px solid var(--rule);border-top:0;border-radius:0 0 12px 12px}
+  td{border:0;padding:3px 14px}
+  td[data-l]::before{content:attr(data-l);display:inline-block;width:6.5em;color:var(--muted);font-size:12.5px}
+  td.num{text-align:left}
+}
 .foot{margin:26px 0 40px;font-size:13px;color:var(--muted)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
@@ -91,8 +105,8 @@ tr:last-child td{border-bottom:0}
   <p class="lead">Three agents read each receipt, apply the expense policy and write the ledger entry. Cascade Guard checks every hand-off against the receipt itself: the total, the date, the vendor, the policy. A mistake goes back to the agent with the reason; if it is still wrong, the receipt is stopped for a person instead of being posted.</p>
   <div class="proof" aria-label="Tested on real receipts">
     <span>Tested on <b>326</b> real scanned receipts</span>
-    <span>Wrong entries posted: <b>30%</b> without the guard, <b>4%</b> with it</span>
-    <span><b>0</b> correct receipts stopped</span>
+    <span>Wrong entries posted: <b>30%</b> without the guard, <b>8%</b> with it</span>
+    <span>Correct receipts stopped by mistake: <b>4%</b></span>
   </div>
 
   <div id="keyslot"></div>
@@ -104,7 +118,7 @@ tr:last-child td{border-bottom:0}
       <input type="file" id="file" multiple class="sr" tabindex="-1" accept=".pdf,.txt,.jpg,.jpeg,.png,application/pdf,text/plain,image/jpeg,image/png">
       <button class="btn" id="go" type="button">Check receipts</button>
       <button class="btn ghost" id="pick" type="button">Add files</button>
-      <button class="btn ghost" id="samples" type="button">Try 3 sample receipts</button>
+      <button class="btn ghost" id="samples" type="button">Try 4 sample receipts</button>
       <label class="small" id="modelwrap" hidden><input type="checkbox" id="usemodel"> Use the AI model as the agents</label>
     </div>
     <div class="small" id="mode">Connecting…</div>
@@ -136,6 +150,7 @@ let apiKey = store.get('cg_key'), info = null, files = [], last = null, busy = f
 const SAMPLES = [
   {name: 'kopi-house.txt', text: 'KOPI HOUSE RESTAURANT\nJALAN AMPANG, KUALA LUMPUR\nTAX INVOICE  DATE: 03/01/2018\nNASI LEMAK 2 X 6.50 13.00\nTEH TARIK 2 X 2.50 5.00\nSUB-TOTAL (EXCL GST) 18.00\nGST 6% 1.08\nTOTAL (INCL GST) 19.08\nROUNDING ADJ -0.03\nROUNDED TOTAL 19.05\nCASH 20.00\nCHANGE 0.95'},
   {name: 'teo-heng-stationery.txt', text: 'TEO HENG STATIONERY & BOOKS\nNO. 53, JALAN BESAR, 83000 BATU PAHAT\nGST NO. : 000689913856\nSIMPLIFIED TAX INVOICE\nDATE: 23/01/2018\nA4 PAPER 70GSM\n2 X 6.60\n13.20\nFILE FOLDER\n1 X 3.78\n3.78\nSUB-TOTAL (EX)\nTOTAL TAX\nROUNDING\nTOTAL\nCASH\nCHANGE\n16.98\n1.02\n0.00\n18.00\n20.00\n2.00\nGST SUMMARY\nTAX CODE  AMOUNT  TAX\nSR 6%\nTOTAL :\n16.98\n1.02'},
+  {name: 'cafe-smudged.txt', text: 'SEDAP CAFE SDN BHD\nNO 8, JALAN SS2/24, PETALING JAYA\nDATE: 3I/O1/2O18\nMEE GORENG 1 X 8.50 8.50\nICED LEMON TEA 1 X 3.50 3.50\nTOTAL 12.00\nCASH 20.00\nCHANGE 8.00'},
   {name: 'hardware-big.txt', text: 'HON HWA HARDWARE TRADING\nNO 37, JALAN MANIS 7, TAMAN SEGAR, 56100 CHERAS\nTAX INVOICE\nDATE : 21/09/2017\nDRILL BIT SET 1 X 129.00 129.00\nANGLE GRINDER 1 X 189.00 189.00\nTOTAL INCL GST 318.00\nCASH 320.00\nCHANGE 2.00'},
 ];
 
@@ -239,11 +254,11 @@ function render(res){
     const more = h('button', {class: 'morebtn', type: 'button', 'aria-expanded': 'false', onclick: () => { detail.hidden = !detail.hidden; more.setAttribute('aria-expanded', String(!detail.hidden)); more.textContent = detail.hidden ? 'Show the working' : 'Hide the working'; }}, 'Show the working');
     tb.append(h('tr', {},
       h('td', {}, h('div', {text: r.name}), more),
-      h('td', {text: e.vendor || f.vendor || ''}),
-      h('td', {text: e.date || f.date || ''}),
-      h('td', {class: 'num', text: money(e.amount || f.total)}),
-      h('td', {text: e.category || ''}),
-      h('td', {text: (d.decision || '').replace('_', ' ')}),
+      h('td', {'data-l': 'Vendor', text: e.vendor || f.vendor || ''}),
+      h('td', {class: 'nowrap', 'data-l': 'Date', text: e.date || f.date || ''}),
+      h('td', {class: 'num', 'data-l': 'Amount', text: money(e.amount || f.total)}),
+      h('td', {'data-l': 'Category', text: e.category || ''}),
+      h('td', {'data-l': 'Policy', text: (d.decision || '').replace('_', ' ')}),
       h('td', {}, h('span', {class: 'status ' + cls, text: label}), r.issue || r.problem ? h('div', {class: 'why' + (r.status !== 'posted' ? ' bad' : ''), text: r.problem || r.issue}) : null)), detail);
   });
   $('#results').scrollIntoView({behavior: 'smooth', block: 'start'});

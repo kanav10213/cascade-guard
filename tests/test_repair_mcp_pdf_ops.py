@@ -231,7 +231,7 @@ def test_mcp_server_over_stdio(tmp_path):
 
     names, v, inv, bad, bill, math, day = asyncio.run(go())
     assert day["status"] == "computed" and day["answer"].startswith("₹800.00")
-    assert names == {"check_bill", "check_math", "check_everyday", "show_cascade_demo", "verify_output", "check_invoice", "guard_status",
+    assert names == {"check_bill", "check_math", "check_everyday", "process_receipt", "show_cascade_demo", "verify_output", "check_invoice", "guard_status",
                      "list_review_queue", "list_agent_chains", "run_agent_chain"}  # no tool decides review items
     assert bill["status"] == "wrong" and bill["total"] == 15.0 and bill["stated"]["total"] == 16.0
     assert math["status"] == "wrong" and math["value"] == "391"

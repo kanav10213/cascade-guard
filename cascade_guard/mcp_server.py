@@ -8,6 +8,7 @@ MCP-capable AI tool.
 Tools
     check_bill        recompute any bill or invoice exactly and say what is wrong (no model needed)
     check_math        check a sum or a claim about a list of numbers exactly (no model needed)
+    process_receipt   an expense receipt through extract -> policy -> ledger, every hand-off checked (no model)
     check_everyday    everyday sums in words: discounts, GST, splits, EMIs, interest, dates, ages, time
                       zones, units, travel, fuel, SGPA, recipes (no model needed)
     verify_output     check any agent's output against its source with the LLM validator
@@ -118,6 +119,23 @@ def check_everyday(request: str) -> dict:
     r = _everyday(_as_text(request)[:2000])
     return {k: r.get(k) for k in ("status", "summary", "title", "answer", "claimed", "lines", "notes", "calculator",
                                   "understood_as")}
+
+
+@server.tool()
+def process_receipt(receipt_text: str) -> dict:
+    """Process one expense receipt (its text, e.g. from OCR) the way a finance team's agents would: read the
+    vendor, date and total, apply the expense policy (above 200 needs a manager; duplicates and receipts with
+    no total are refused) and write the ledger entry. Cascade Guard checks every hand-off against the receipt
+    itself (the total next to a total label and equal to cash paid minus change, a date on the receipt, the
+    vendor among the first lines, the policy, the ledger fields); a wrong step is retried with the reason, and a
+    receipt that is still wrong is stopped for a person instead of posted. Needs no model. Returns status
+    (posted | halted), the fields, the decision, the ledger entry and every check with its reason."""
+    from cascade_guard.receipts import process_receipt as _process
+    r = _process(_as_text(receipt_text)[:20_000])
+    return {"status": r["status"], "halted_at": r["halted_at"], "fields": r["fields"], "decision": r["decision"],
+            "ledger_entry": r["entry"], "mistakes_caught": r["caught"],
+            "checks": [{"step": t["step"], "attempt": t["attempt"] + 1, "passed": t["passed"], "reason": t["reason"]}
+                       for t in r["trace"]]}
 
 
 @server.tool()
@@ -311,7 +329,8 @@ def build_remote_server(role: str = "viewer"):
     reviewer: also the review queue (read-only); admin: also verify_output and runs on the model."""
     remote = MCPServer("cascade-guard", instructions=server.instructions if hasattr(server, "instructions")
                        else None)
-    for fn in (check_bill, check_math, check_everyday, show_cascade_demo, list_agent_chains, guard_status):
+    for fn in (check_bill, check_math, check_everyday, process_receipt, show_cascade_demo, list_agent_chains,
+               guard_status):
         remote.add_tool(fn)
     if role == "admin":
         remote.add_tool(check_invoice)

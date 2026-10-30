@@ -147,3 +147,43 @@ def test_benchmark_report():
     assert s["without"]["outcomes"]["posted_wrong"] >= 1 and s["with"]["outcomes"]["posted_wrong"] == 0
     md = to_markdown(s)
     assert "Silent error rate" in md and "Without the guard" in md
+
+
+def test_receipts_api(monkeypatch, tmp_path):
+    import base64
+
+    from fastapi.testclient import TestClient
+
+    from cascade_guard.api import app
+    from cascade_guard.pilot.pdf import text_to_pdf
+    from cascade_guard.storage.db import Store, reset_store
+    monkeypatch.setenv("API_KEY", "adm")
+    monkeypatch.setenv("VIEWER_KEY", "view")
+    store = Store(str(tmp_path / "r.db"))
+    reset_store(store)
+    try:
+        c = TestClient(app, headers={"X-API-Key": "view"})
+        assert c.get("/receipts").status_code == 200 and "Expense desk" in c.get("/receipts").text
+        info = c.get("/receipts/info").json()
+        assert info["approval_limit"] == "200.00" and info["model_available"] is False
+        smudged = "SEDAP CAFE SDN BHD\nDATE: 3I/O1/2O18\nTOTAL 12.00\nCASH 20.00\nCHANGE 8.00"
+        pdf = base64.b64encode(text_to_pdf(SAME_LINE)).decode()
+        r = c.post("/receipts/process", json={"receipts": [
+            {"name": "a.txt", "text": SAME_LINE}, {"name": "b.pdf", "pdf_base64": pdf},
+            {"name": "c.txt", "text": smudged}, {"name": "d.jpg", "image_base64": base64.b64encode(b"nope").decode()},
+            {"name": "e.txt", "text": ""}]}).json()
+        status = {x["name"]: x["status"] for x in r["results"]}
+        assert status == {"a.txt": "posted", "b.pdf": "posted", "c.txt": "halted", "d.jpg": "unreadable",
+                          "e.txt": "unreadable"}
+        b = next(x for x in r["results"] if x["name"] == "b.pdf")
+        assert b["decision"]["decision"] == "duplicate"                  # the same receipt twice in one batch
+        assert r["summary"]["posted"] == 2 and r["summary"]["halted"] == 1
+        assert r["csv"].splitlines()[0].startswith("file,status,vendor,date,amount")
+        assert "a.txt,posted,KOPI HOUSE RESTAURANT,2018-01-03,19.05" in r["csv"]
+        halted = next(x for x in r["results"] if x["name"] == "c.txt")
+        assert store.reviews("open", 10)[0]["run_id"] == halted["run_id"]   # waiting for a person
+        assert c.post("/receipts/process", json={"receipts": [{"name": "x", "text": "y"}], "use_model": True}
+                      ).status_code == 409
+        assert c.post("/receipts/process", json={"receipts": []}).status_code == 422
+    finally:
+        reset_store(None)
