@@ -57,6 +57,14 @@ def test_a_correct_extraction_passes():
     assert ok, why
 
 
+def test_an_unlabelled_change_is_not_a_larger_total():
+    # The change's label was printed apart from it; 50.00 - 44.10 = 5.90 shows it is the change, not a bigger total.
+    text = "\n".join(["MINI MART SDN BHD", "DATE: 12/04/2018", "WET TISSUE", "TOTAL", "5.90", "CASH", "50.00",
+                      "ITEM COUNT 1", "CHANGE AMT", "INVOICE NO: 5521", "44.10", "THANK YOU"])
+    ok, why = check_extract({"vendor": "MINI MART SDN BHD", "date": "12/04/2018", "total": "5.90"}, text, TODAY)
+    assert ok, why
+
+
 def test_the_guard_names_the_usual_mistakes():
     def why(total, text=SAME_LINE, date="03/01/2018", vendor="KOPI HOUSE RESTAURANT"):
         return check_extract({"vendor": vendor, "date": date, "total": total}, text, TODAY)[1] or ""

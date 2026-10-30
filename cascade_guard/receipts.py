@@ -408,7 +408,7 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
             problems.append(f"the total {total} does not appear on the receipt")
         elif "total" not in kinds and total != paid and all(x["sure"] for x in at):
             named = sorted(k for k in kinds if k and k != "total")
-            if named:
+            if named and totals:   # (with no total label read, a subtotal or a card payment may be the total)
                 problems.append(f"{total} is the {named[0]} on the receipt, not the total")
             elif totals:
                 problems.append(f"{total} is not next to a total label on the receipt")
@@ -418,6 +418,13 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
             problems.append(f"the cash paid ({cash}) minus the change ({change}) is {paid}, not {total}")
         payments = {x["amount"] for x in labelled if _k(x) in ("cash paid", "change")}
         rounding = any(re.search(r"\bROUND", ln, re.I) for ln in lines)
+        printed = {x["amount"] for x in labelled}
+        changes = {x["amount"] for x in labelled if _k(x) == "change"}
+        tol = Decimal("0.05")
+        # A larger amount that is the change (a bigger amount, the cash given, minus it is the total), or the cash
+        # given (it minus a printed change is the total), is a payment even when its label was not read.
+        payments |= {b for b in printed if b > total and (any(a > b and abs(a - b - total) <= tol for a in printed)
+                                                          or any(abs(b - c - total) <= tol for c in changes))}
         bigger = sorted({x["amount"] for x in labelled if x["amount"] > total and x["amount"] not in payments
                          and not UNIT_PRICE.search(lines[x["line"]])
                          and not x["summary"] and _k(x) in ("total", None)

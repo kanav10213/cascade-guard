@@ -34,8 +34,21 @@ downloaded at run time and not stored in this repository.
 - **dev** (receipts 0–299) was used while writing the checks.
 - **test** (receipts 300–625, 326 receipts) was not used for writing the checks. Its numbers are the headline.
 
-It was run a few times while finding two bugs: one in the scoring and one in the rule agent's retry. No check was
-changed because of a test receipt.
+It was run a few times while finding two bugs: one in the scoring and one in the rule agent's retry.
+
+One change came after seeing test results, and we say so plainly. The first runs with AI models showed the guard
+stopping receipts the model had read right. So we measured how often the guard rejects the **true** answer itself,
+which is the false-alarm floor for a perfect agent. On dev it was 25 of 300 receipts. Two checks were fixed using
+dev receipts only:
+
+- An amount larger than the total that is really the change or the cash given is now recognised by arithmetic: cash
+  minus change equals the total. This works even when the OCR put its label elsewhere.
+- "This is the subtotal or the card payment, not the total" is now only said when the receipt also has a total
+  label.
+
+After the fix, dev went to 10 of 300 rejections, and test went from 41 of 326 to 27. All the test numbers here come
+from runs after this fix. Because the change was prompted by test results, the test set is no longer strictly
+untouched.
 
 ## How results are counted
 
