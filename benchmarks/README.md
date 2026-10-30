@@ -40,7 +40,8 @@ changed because of a test receipt.
 ## How results are counted
 
 The same agents run twice on every receipt, without and with the guard. What would be posted is compared with the
-dataset's true date and total:
+dataset's true date and total, and the policy decision with the one the true amount calls for (above 200: a manager
+approves; the same vendor, date and total as an earlier receipt: a duplicate):
 
 | Outcome | Meaning |
 |---|---|

@@ -25,7 +25,7 @@ from collections import Counter
 from pathlib import Path
 
 from cascade_guard.evaluation.stats import fmt, rate
-from cascade_guard.receipts import Batch, load_sroie, money, process_receipt, score
+from cascade_guard.receipts import Batch, expected_decision, load_sroie, money, process_receipt, score
 
 SPLITS = {"dev": range(0, 300), "test": range(300, 626), "all": range(0, 626)}
 SROIE_REPO = "https://github.com/zzzDavid/ICDAR-2019-SROIE"
@@ -65,7 +65,7 @@ def run_benchmark(receipts: list[dict], client=None, max_retries: int = 2, progr
     """Both arms on every receipt with a true total; returns the raw rows (merge them with summarize).
     photos=True reads each receipt from its scanned image with OCR instead of the dataset's OCR text."""
     rows = []
-    plain_batch, guard_batch = Batch(), Batch()
+    plain_batch, guard_batch, truth_batch = Batch(), Batch(), Batch()
     for n, r in enumerate(receipts, 1):
         if money(r["truth"].get("total")) is None:
             rows.append({"id": r["id"], "skipped": "no true total in the dataset"})
@@ -86,12 +86,15 @@ def run_benchmark(receipts: list[dict], client=None, max_retries: int = 2, progr
             rows.append({"id": r["id"], "skipped": f"model error: {type(e).__name__}: {str(e)[:200]}"})
             continue
         t2 = time.monotonic()
+        want = expected_decision(r["truth"], truth_batch)
         rows.append({
             "id": r["id"], "truth": {"total": r["truth"].get("total"), "date": r["truth"].get("date"),
                                      "company": r["truth"].get("company")},
-            "without": {**score(base, r["truth"]), "fields": base["fields"], "entry": base["entry"],
+            "expected_decision": want,
+            "without": {**score(base, r["truth"], want), "fields": base["fields"], "entry": base["entry"],
+                        "errors": [t["reason"] for t in base["trace"] if not t["passed"]],
                         "calls": base["agent_calls"], "seconds": round(t1 - t0, 3)},
-            "with": {**score(guarded, r["truth"]), "fields": guarded["fields"], "entry": guarded["entry"],
+            "with": {**score(guarded, r["truth"], want), "fields": guarded["fields"], "entry": guarded["entry"],
                      "calls": guarded["agent_calls"], "seconds": round(t2 - t1, 3), "halted_at": guarded["halted_at"],
                      "rejections": [{"step": t["step"], "attempt": t["attempt"], "reason": t["reason"]}
                                     for t in guarded["trace"] if not t["passed"]]},
@@ -125,6 +128,11 @@ def summarize(result: dict) -> dict:
     out["fixed_by_retry"] = rate(sum(1 for r in base_wrong if r["with"]["outcome"] == "posted_ok"), len(base_wrong))
     out["false_alarms"] = rate(sum(1 for r in base_ok if r["with"]["outcome"] == "stopped_ok"), len(base_ok))
     out["made_worse"] = sum(1 for r in base_ok if r["with"]["outcome"] == "posted_wrong")
+    for arm in ("without", "with"):
+        posted = [r for r in rows if r[arm]["outcome"].startswith("posted")]
+        out[arm]["posted_wrong_amount"] = sum(1 for r in posted if not r[arm]["total_ok"])
+        out[arm]["posted_wrong_date"] = sum(1 for r in posted if not r[arm]["date_ok"])
+        out[arm]["posted_wrong_decision"] = sum(1 for r in posted if not r[arm].get("decision_ok", True))
     w, wo = out["with"]["silent_errors"], out["without"]["silent_errors"]
     out["silent_error_reduction"] = round(1 - w["k"] / wo["k"], 4) if wo["k"] else None
     kinds = Counter(_reason_kind(x["reason"]) for r in rows for x in r["with"]["rejections"])
@@ -163,6 +171,9 @@ def to_markdown(s: dict, title: str = "Expense receipts: real receipts, without 
              f"| **Posted, wrong (silent error)** | **{o1['posted_wrong']}** | **{o2['posted_wrong']}** |",
              f"| Stopped for a person, really wrong | {o1['stopped_wrong']} | {o2['stopped_wrong']} |",
              f"| Stopped for a person, actually right (false alarm) | {o1['stopped_ok']} | {o2['stopped_ok']} |",
+             f"| … with the wrong amount | {wo['posted_wrong_amount']} | {w['posted_wrong_amount']} |",
+             f"| … with the wrong or badly written date | {wo['posted_wrong_date']} | {w['posted_wrong_date']} |",
+             f"| … with a decision that breaks the policy | {wo['posted_wrong_decision']} | {w['posted_wrong_decision']} |",
              f"| Silent error rate (95% CI) | {fmt(wo['silent_errors'])} | {fmt(w['silent_errors'])} |",
              f"| Agent calls per receipt | {wo['agent_calls_per_receipt']} | {w['agent_calls_per_receipt']} |",
              f"| Seconds per receipt | {wo['seconds_per_receipt']} | {w['seconds_per_receipt']} |", "",
@@ -181,8 +192,9 @@ def to_markdown(s: dict, title: str = "Expense receipts: real receipts, without 
         for e in s["examples"]:
             lines.append(f"| {e['id']} | {e['true_total']} / {e['true_date']} | {e['agent_said']['total']} / "
                          f"{e['agent_said']['date']} | {str(e['guard']).replace('|', '/')[:140]} | {e['result']} |")
-    lines += ["", "A result is right when the posted amount and date equal the dataset's answer. The guard never sees "
-                  "the answers: it checks the agents' work against the receipt text only."]
+    lines += ["", "A result is right when the posted amount and date equal the dataset's answer and the policy decision "
+                  "is the one the true amount calls for. The guard never sees the answers: it checks the agents' work "
+                  "against the receipt text and the policy only."]
     return "\n".join(lines) + "\n"
 
 

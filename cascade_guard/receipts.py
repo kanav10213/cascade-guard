@@ -363,7 +363,7 @@ def _ask(client, system: str, user: str, attempt: int, feedback: str | None) -> 
     resp = client.complete(system, user, max_tokens=400, temperature=0.0, sample=attempt, purpose="receipt-agent")
     data = parse_last_json(resp.text)
     if not isinstance(data, dict):
-        raise AgentError("the reply was not a JSON object")
+        raise AgentError("the reply was not a JSON object: " + repr((resp.text or "")[:160]))
     return data
 
 
@@ -577,28 +577,42 @@ def process_receipt(text: str, *, client=None, guard: bool = True, max_retries: 
 
 # ===================================================================== scoring against an answer key (benchmarks)
 
-def score(result: dict, truth: dict) -> dict:
-    """Compare what would be posted with the receipt's true vendor, date and total."""
+def expected_decision(truth: dict, batch: Batch) -> str:
+    """The policy decision for the receipt's true values (and the true values of the receipts before it)."""
+    fields = {"vendor": truth.get("company", ""), "date": truth.get("date", ""), "total": truth.get("total")}
+    want = decide(fields, batch.seen)["decision"]
+    batch.remember(fields)
+    return want
+
+
+def score(result: dict, truth: dict, expected: str | None = None) -> dict:
+    """Compare what would be posted with the receipt's true date and total, and (when `expected` is given) the
+    policy decision the true values call for."""
     entry = result.get("entry") or {}
     fields = result.get("fields") or {}
     t_total, t_date = money(truth.get("total")), parse_date(truth.get("date"))
     total_ok = entry.get("amount") is not None and money(entry.get("amount")) == t_total
     date_ok = t_date is not None and entry.get("date") == t_date.isoformat()
+    decision = (result.get("decision") or {}).get("decision")
+    decision_ok = expected is None or decision == expected
     vendor_ok = similar(entry.get("vendor") or fields.get("vendor") or "", truth.get("company", "")) >= 0.8
-    correct = total_ok and date_ok
     if result["status"] == "halted":
         # Was the stopped receipt really wrong? Judge the agents' first answers, which are what would have been
-        # posted without the guard (the first extraction, and the first ledger entry if the run got that far).
+        # posted without the guard: the first extraction, the first decision and the first ledger entry, as far as
+        # the run got.
         first = {t["step"]: t["output"] for t in reversed(result["trace"]) if t["attempt"] == 0}
-        ext, led = first.get("extract") or {}, first.get("ledger")
+        ext, pol, led = first.get("extract") or {}, first.get("policy"), first.get("ledger")
         if led is not None:
             right = money(led.get("amount")) == t_total and t_date is not None and led.get("date") == t_date.isoformat()
         else:
             right = money(ext.get("total")) == t_total and parse_date(ext.get("date")) == t_date
+        if "policy" in first and expected is not None:
+            right = right and (pol or {}).get("decision") == expected
         outcome = "stopped_ok" if right else "stopped_wrong"
     else:
-        outcome = "posted_ok" if correct else "posted_wrong"
-    return {"outcome": outcome, "total_ok": total_ok, "date_ok": date_ok, "vendor_ok": vendor_ok}
+        outcome = "posted_ok" if total_ok and date_ok and decision_ok else "posted_wrong"
+    return {"outcome": outcome, "total_ok": total_ok, "date_ok": date_ok, "decision_ok": decision_ok,
+            "decision": decision, "vendor_ok": vendor_ok}
 
 
 # ===================================================================== the public SROIE receipts

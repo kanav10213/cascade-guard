@@ -8,6 +8,9 @@ Agents: **rules** · receipts: **326** real scanned receipts (ICDAR 2019 SROIE (
 | **Posted, wrong (silent error)** | **99** | **26** |
 | Stopped for a person, really wrong | 0 | 23 |
 | Stopped for a person, actually right (false alarm) | 0 | 10 |
+| … with the wrong amount | 97 | 25 |
+| … with the wrong or badly written date | 6 | 1 |
+| … with a decision that breaks the policy | 19 | 0 |
 | Silent error rate (95% CI) |  30.4%  [25.6, 35.6]  (99/326) |   8.0%  [5.5, 11.4]  (26/326) |
 | Agent calls per receipt | 3.0 | 3.22 |
 | Seconds per receipt | 0.0 | 0.002 |
@@ -39,4 +42,4 @@ Examples:
 | 320 | RM20.40 / 04-05-2018 | None / 04-05-2018 | there is no total amount | stopped_wrong |
 | 324 | 28.90 / 29/10/2017 | 1.64 / 29/10/2017 | 1.64 is the tax on the receipt, not the total; the cash paid (28.90) minus the change (0.00) is 28.90, not 1.64 | posted_ok |
 
-A result is right when the posted amount and date equal the dataset's answer. The guard never sees the answers: it checks the agents' work against the receipt text only.
+A result is right when the posted amount and date equal the dataset's answer and the policy decision is the one the true amount calls for. The guard never sees the answers: it checks the agents' work against the receipt text and the policy only.

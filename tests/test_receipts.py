@@ -136,6 +136,8 @@ def test_llm_agents_are_caught_and_fixed():
     assert guarded["entry"]["date"] == "2018-01-03" and guarded["caught"] == 2
     truth = {"total": "19.05", "date": "03/01/2018", "company": "KOPI HOUSE RESTAURANT"}
     assert score(plain, truth)["outcome"] == "posted_wrong" and score(guarded, truth)["outcome"] == "posted_ok"
+    assert score(guarded, truth, "approve")["outcome"] == "posted_ok"
+    assert score(guarded, truth, "needs_approval")["outcome"] == "posted_wrong"     # the policy decision counts too
 
 
 def test_benchmark_report():
