@@ -60,14 +60,22 @@ def _reason_kind(reason: str) -> str:
     return "other"
 
 
-def run_benchmark(receipts: list[dict], client=None, max_retries: int = 2, progress=None) -> dict:
-    """Both arms on every receipt with a true total; returns the raw rows (merge them with summarize)."""
+def run_benchmark(receipts: list[dict], client=None, max_retries: int = 2, progress=None,
+                  photos: bool = False) -> dict:
+    """Both arms on every receipt with a true total; returns the raw rows (merge them with summarize).
+    photos=True reads each receipt from its scanned image with OCR instead of the dataset's OCR text."""
     rows = []
     plain_batch, guard_batch = Batch(), Batch()
     for n, r in enumerate(receipts, 1):
         if money(r["truth"].get("total")) is None:
             rows.append({"id": r["id"], "skipped": "no true total in the dataset"})
             continue
+        if photos:
+            from cascade_guard.receipts import text_from_image
+            if not r.get("image"):
+                rows.append({"id": r["id"], "skipped": "no image"})
+                continue
+            r = {**r, "text": text_from_image(Path(r["image"]).read_bytes())}
         t0 = time.monotonic()
         try:
             base = process_receipt(r["text"], client=client, guard=False, batch=plain_batch, today=TODAY)
@@ -90,7 +98,8 @@ def run_benchmark(receipts: list[dict], client=None, max_retries: int = 2, progr
         })
         if progress:
             progress(n, len(receipts))
-    return {"agents": "rules" if client is None else f"{client.provider}:{client.model}",
+    return {"agents": ("rules" if client is None else f"{client.provider}:{client.model}") +
+            (", from the photos (OCR)" if photos else ""),
             "dataset": {"name": "ICDAR 2019 SROIE (train set, corrected annotations)", "repo": SROIE_REPO,
                         "commit": SROIE_COMMIT},
             "max_retries": max_retries, "rows": rows,
@@ -188,6 +197,7 @@ def main(argv=None) -> int:
     b.add_argument("--shard", help="i/n: this run's share of the split, e.g. 2/4")
     b.add_argument("--model", action="store_true", help="LLM agents from the configured model (LLM_PROVIDER, ...)")
     b.add_argument("--max-retries", type=int, default=2)
+    b.add_argument("--photos", action="store_true", help="read each receipt from its photo with OCR (needs [ocr])")
     b.add_argument("--out", help="write the raw results (JSON) here")
     b.add_argument("--md", help="write the report (Markdown) here")
     m = sub.add_parser("merge", help="merge shard results into one report")
@@ -216,7 +226,8 @@ def main(argv=None) -> int:
             client = make_client(strict_prices=False, cache_path=cache)
         print(f"{len(receipts)} receipts, agents: {'model' if client else 'rules'}", flush=True)
         result = run_benchmark(receipts, client, args.max_retries,
-                               progress=lambda k, n: print(f"  {k}/{n}", flush=True) if k % 10 == 0 else None)
+                               progress=lambda k, n: print(f"  {k}/{n}", flush=True) if k % 10 == 0 else None,
+                               photos=args.photos)
     summary = summarize(result)
     if args.out:
         Path(args.out).write_text(json.dumps(result, indent=1, default=str), encoding="utf-8")

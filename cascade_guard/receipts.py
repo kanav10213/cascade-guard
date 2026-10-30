@@ -621,7 +621,9 @@ def load_sroie(folder: str, ids: range | list | None = None) -> list[dict]:
             parts = raw.split(",", 8)
             if len(parts) == 9 and parts[8].strip():
                 lines.append(parts[8].strip())
-        out.append({"id": rid, "text": "\n".join(lines), "truth": json.loads(kf.read_text(encoding="utf-8"))})
+        img = (box.parent / "img" / f"{rid}.jpg")
+        out.append({"id": rid, "text": "\n".join(lines), "truth": json.loads(kf.read_text(encoding="utf-8")),
+                    "image": str(img) if img.exists() else None})
     return out
 
 
@@ -653,6 +655,30 @@ def text_from_image(data: bytes) -> str:
     if _ocr_engine is None:
         from rapidocr_onnxruntime import RapidOCR
         _ocr_engine = RapidOCR()
-    result, _ = _ocr_engine(data)
-    boxes = sorted(result or [], key=lambda r: (round(min(p[1] for p in r[0]) / 12), min(p[0] for p in r[0])))
-    return "\n".join(str(r[1]) for r in boxes)
+    import io
+
+    import numpy as np
+    from PIL import Image
+    img = Image.open(io.BytesIO(data)).convert("RGB")
+    if max(img.size) > 1600:  # big phone photos: OCR memory grows with the image, and 1600 px reads receipts fine
+        img.thumbnail((1600, 1600))
+    result, _ = _ocr_engine(np.asarray(img)[:, :, ::-1])  # RGB -> BGR, as the engine expects
+    return _rows_to_text(result or [])
+
+
+def _rows_to_text(boxes) -> str:
+    """Text boxes -> receipt lines: boxes whose vertical middles are within half a line of each other are one
+    printed row ("TOTAL" ... "19.05"), joined left to right."""
+    items = []
+    for pts, text, *_ in boxes:
+        ys, xs = [p[1] for p in pts], [p[0] for p in pts]
+        items.append({"top": min(ys), "mid": (min(ys) + max(ys)) / 2, "h": max(1.0, max(ys) - min(ys)), "x": min(xs),
+                      "text": str(text)})
+    items.sort(key=lambda b: b["mid"])
+    rows: list[list[dict]] = []
+    for b in items:
+        if rows and abs(b["mid"] - rows[-1][-1]["mid"]) <= 0.5 * min(b["h"], rows[-1][-1]["h"]):
+            rows[-1].append(b)
+        else:
+            rows.append([b])
+    return "\n".join("  ".join(b["text"] for b in sorted(r, key=lambda b: b["x"])) for r in rows)
