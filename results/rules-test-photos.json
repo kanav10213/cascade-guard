@@ -38,7 +38,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.001
+    "seconds": 0.002
    },
    "with": {
     "outcome": "posted_ok",
@@ -62,7 +62,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -104,7 +104,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.001
+    "seconds": 0.002
    },
    "with": {
     "outcome": "posted_ok",
@@ -128,7 +128,7 @@
      "memo": "AEONC0.\uff08M) BHD\uff08126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -170,7 +170,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.001
+    "seconds": 0.002
    },
    "with": {
     "outcome": "posted_ok",
@@ -194,7 +194,7 @@
      "memo": "AEON CO.(M) BHD\uff08126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": null,
     "rejections": [
      {
@@ -248,7 +248,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.012,
+    "seconds": 0.014,
     "halted_at": "extract",
     "rejections": [
      {
@@ -300,7 +300,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.002
+    "seconds": 0.003
    },
    "with": {
     "outcome": "posted_ok",
@@ -324,7 +324,7 @@
      "memo": "Y2Z14 S.ONINOO receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.012,
     "halted_at": null,
     "rejections": [
      {
@@ -390,7 +390,7 @@
      "memo": "YHM Aeon Tebrau City receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -450,7 +450,7 @@
      "memo": "THE: TOAST F&B SDN BHD (965752-T) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -510,7 +510,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -552,7 +552,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -576,7 +576,7 @@
      "memo": "AEONC0.\uff08M)BHD\uff08126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -618,7 +618,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.001
+    "seconds": 0.002
    },
    "with": {
     "outcome": "posted_ok",
@@ -642,7 +642,7 @@
      "memo": "PASARAYAJALALSDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -690,7 +690,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -766,7 +766,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.013,
+    "seconds": 0.016,
     "halted_at": null,
     "rejections": [
      {
@@ -832,7 +832,7 @@
      "memo": "Guardian Health And Beauty Sdn Bhd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -892,7 +892,7 @@
      "memo": "ToilafRellCo receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -952,7 +952,7 @@
      "memo": "CHECKERS HYPERMARKET SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -1006,7 +1006,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.01,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1070,7 +1070,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1122,7 +1122,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -1134,23 +1134,23 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": "extract",
     "rejections": [
      {
       "step": "extract",
       "attempt": 0,
-      "reason": "5.00 is the cash paid on the receipt, not the total; '' is not a date"
+      "reason": "'' is not a date"
      },
      {
       "step": "extract",
       "attempt": 1,
-      "reason": "there is no total amount; '' is not a date"
+      "reason": "'' is not a date"
      },
      {
       "step": "extract",
       "attempt": 2,
-      "reason": "there is no total amount; '' is not a date"
+      "reason": "'' is not a date"
      }
     ]
    }
@@ -1210,7 +1210,7 @@
      "memo": "GHEE HIANG receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -1270,7 +1270,7 @@
      "memo": "MENIAI INITIAL SDN BHD (1206674-T) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -1318,7 +1318,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1382,7 +1382,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1458,7 +1458,7 @@
      "memo": "WeicometotheFamily receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -1506,7 +1506,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1558,7 +1558,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -1582,7 +1582,7 @@
      "memo": "SUBANG HEALTHCARE SIN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -1648,7 +1648,7 @@
      "memo": "DIGI TELECOMMUNICATIONS SDN BHD receipt, needs_approval"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -1684,7 +1684,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -1696,7 +1696,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1772,7 +1772,7 @@
      "memo": "AA PHARMACY receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -1832,7 +1832,7 @@
      "memo": "GARDENIABAKERIES(KI)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -1892,7 +1892,7 @@
      "memo": "GARDENIABAKERIES(EL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -1952,7 +1952,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(I39386X) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": null,
     "rejections": [
      {
@@ -2018,7 +2018,7 @@
      "memo": "GARDEIA BAKERIES(KL)SDN BHD(I39386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2078,7 +2078,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2138,7 +2138,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(I39386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -2198,7 +2198,7 @@
      "memo": "GARDENIA BAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -2258,7 +2258,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2318,7 +2318,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2378,7 +2378,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(I39386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2438,7 +2438,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2498,7 +2498,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.01,
+    "seconds": 0.012,
     "halted_at": null,
     "rejections": [
      {
@@ -2564,7 +2564,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2600,7 +2600,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -2624,7 +2624,7 @@
      "memo": "MAKASSAR FRESH MARKET S/B. receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -2684,7 +2684,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2720,7 +2720,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.001
+    "seconds": 0.002
    },
    "with": {
     "outcome": "posted_ok",
@@ -2744,7 +2744,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -2804,7 +2804,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2864,7 +2864,7 @@
      "memo": "GARDENIABAKERIES(KL.)SDNBHD(1B9386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2924,7 +2924,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -2972,7 +2972,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.018,
+    "seconds": 0.022,
     "halted_at": "extract",
     "rejections": [
      {
@@ -3048,7 +3048,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -3108,7 +3108,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(1393S6X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -3168,7 +3168,7 @@
      "memo": "PINGHWAITRADINGSDNBHD receipt, needs_approval"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -3288,7 +3288,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD receipt, approve"
     },
     "calls": 5,
-    "seconds": 0.01,
+    "seconds": 0.019,
     "halted_at": null,
     "rejections": [
      {
@@ -3359,7 +3359,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 5,
-    "seconds": 0.012,
+    "seconds": 0.019,
     "halted_at": null,
     "rejections": [
      {
@@ -3430,7 +3430,7 @@
      "memo": "GARDENLABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -3478,7 +3478,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.014,
+    "seconds": 0.017,
     "halted_at": "extract",
     "rejections": [
      {
@@ -3554,7 +3554,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -3614,7 +3614,7 @@
      "memo": "GARDENIABAKERIES(KI)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -3674,7 +3674,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNEHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -3794,7 +3794,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -3854,7 +3854,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -3914,7 +3914,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -3974,7 +3974,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4034,7 +4034,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4094,7 +4094,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4154,7 +4154,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4214,7 +4214,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4274,7 +4274,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.012,
     "halted_at": null,
     "rejections": [
      {
@@ -4340,7 +4340,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4400,7 +4400,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -4460,7 +4460,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 5,
-    "seconds": 0.018,
+    "seconds": 0.022,
     "halted_at": null,
     "rejections": [
      {
@@ -4531,7 +4531,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -4591,7 +4591,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -4657,7 +4657,7 @@
      "memo": "GARDENIABAKERIES(KI)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -4717,7 +4717,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.01,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -4783,7 +4783,7 @@
      "memo": "GARDENIABAKERIES(KL)SDNBHD(139386X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -4843,7 +4843,7 @@
      "memo": "MR.D.I.Y.(M) SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -4909,7 +4909,7 @@
      "memo": "MR.D.I.Y.(KUCHAI\uff09SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -4969,7 +4969,7 @@
      "memo": "MR.D.I.Y.(KUCHAI) SDN BHD receipt, approve"
     },
     "calls": 5,
-    "seconds": 0.011,
+    "seconds": 0.013,
     "halted_at": null,
     "rejections": [
      {
@@ -5016,7 +5016,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -5040,7 +5040,7 @@
      "memo": "99 SPEED NART S/B (519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -5088,7 +5088,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.017,
+    "seconds": 0.027,
     "halted_at": "extract",
     "rejections": [
      {
@@ -5164,7 +5164,7 @@
      "memo": "HAI-0 RAYA BHD (169199-V) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -5212,7 +5212,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.018,
+    "seconds": 0.022,
     "halted_at": "extract",
     "rejections": [
      {
@@ -5288,7 +5288,7 @@
      "memo": "99SPEED MART S/B(519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.001,
+    "seconds": 0.002,
     "halted_at": null,
     "rejections": []
    }
@@ -5408,7 +5408,7 @@
      "memo": "Guardian Health And Beauty Sdn Ehd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -5504,7 +5504,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -5528,7 +5528,7 @@
      "memo": "OLD ASIA receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -5594,7 +5594,7 @@
      "memo": "MR.D.I.Y.(M)SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": [
      {
@@ -5660,7 +5660,7 @@
      "memo": "MR.D.I.Y.(KUCHAI) SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.008,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -5786,7 +5786,7 @@
      "memo": "MR.D.I.Y.(M) SDN BHD receipt, approve"
     },
     "calls": 5,
-    "seconds": 0.008,
+    "seconds": 0.016,
     "halted_at": null,
     "rejections": [
      {
@@ -5833,7 +5833,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -5845,7 +5845,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -5897,7 +5897,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_wrong",
@@ -5921,7 +5921,7 @@
      "memo": "99SPEED MART S/B \uff08519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -6017,7 +6017,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -6041,7 +6041,7 @@
      "memo": "FOUR QUARTERS SDN BHD (1U79369-P) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -6095,7 +6095,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.013,
+    "seconds": 0.02,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6159,7 +6159,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6223,7 +6223,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6299,7 +6299,7 @@
      "memo": "SIMPLIFIEDTAXINVOICE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -6365,7 +6365,7 @@
      "memo": "MR.D.I.Y.(KUCHAI) SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": [
      {
@@ -6419,7 +6419,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6495,7 +6495,7 @@
      "memo": "MR.D.I.Y.(M)SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.009,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -6537,7 +6537,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -6549,7 +6549,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6625,7 +6625,7 @@
      "memo": "99SPEED MART S/B(519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -6685,7 +6685,7 @@
      "memo": "MR.D.I.Y.(M) SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -6739,7 +6739,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6815,7 +6815,7 @@
      "memo": "Sushi Q receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -6863,7 +6863,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -6939,7 +6939,7 @@
      "memo": "FACETO FACENOODLEHOUSE receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -6987,7 +6987,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7063,7 +7063,7 @@
      "memo": "SKCA HARDWARE & TIMBER SDN. BHD. LLT receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -7105,7 +7105,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -7129,7 +7129,7 @@
      "memo": "ANN GIAP TRADING SDN BHD  SE receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -7177,7 +7177,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7253,7 +7253,7 @@
      "memo": "99 SPEED MART S/D (519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -7313,7 +7313,7 @@
      "memo": "Goardian Health And Beauty Sdn Bhd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -7349,7 +7349,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -7361,7 +7361,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7425,7 +7425,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7501,7 +7501,7 @@
      "memo": "Becon Enterprise Sdn Bhd\uff0882256-V) receipt, needs_approval"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -7537,7 +7537,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -7549,7 +7549,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7613,7 +7613,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7677,7 +7677,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.009,
+    "seconds": 0.014,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7753,7 +7753,7 @@
      "memo": "De Maximum Thai Express Sdn Bhd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -7813,7 +7813,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -7861,7 +7861,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -7937,7 +7937,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -8003,7 +8003,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, needs_approval"
     },
     "calls": 4,
-    "seconds": 0.011,
+    "seconds": 0.014,
     "halted_at": null,
     "rejections": [
      {
@@ -8045,7 +8045,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -8069,7 +8069,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -8129,7 +8129,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -8189,7 +8189,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -8309,7 +8309,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -8369,7 +8369,7 @@
      "memo": "THE: TOAST F&B SDN BHD (965752-T) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -8429,7 +8429,7 @@
      "memo": "DE LUXE CIRCLE FRESH MART SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -8549,7 +8549,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -8585,7 +8585,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_wrong",
@@ -8609,7 +8609,7 @@
      "memo": "Gerbang Alaf Restaurants Sdn Bhd receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": [
      {
@@ -8675,7 +8675,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -8783,7 +8783,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -8847,7 +8847,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.01,
+    "seconds": 0.016,
     "halted_at": "extract",
     "rejections": [
      {
@@ -8911,7 +8911,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -8975,7 +8975,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.011,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9051,7 +9051,7 @@
      "memo": "MR.D.I.Y.\uff08M)SDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -9111,7 +9111,7 @@
      "memo": "MR.D.I.Y.\uff08M)SDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -9159,7 +9159,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9223,7 +9223,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9299,7 +9299,7 @@
      "memo": "MR.D.I.Y.\uff08M)SDN BHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.003,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": [
      {
@@ -9365,7 +9365,7 @@
      "memo": "AEON CO.(M) BHD \uff08126926-H) receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -9419,7 +9419,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9483,7 +9483,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.01,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9535,7 +9535,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -9559,7 +9559,7 @@
      "memo": "S&Y STATIONERY receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -9595,7 +9595,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_wrong",
@@ -9619,7 +9619,7 @@
      "memo": "99 SPEED NART S/B (519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -9667,7 +9667,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9743,7 +9743,7 @@
      "memo": "ENW Hardware Centre(M)Sdn.Bhd. receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -9791,7 +9791,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9855,7 +9855,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -9919,7 +9919,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": "extract",
     "rejections": [
      {
@@ -10055,7 +10055,7 @@
      "memo": "Dimiliki oleh T PLUS F&B SDN. BHD. receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -10121,7 +10121,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -10181,7 +10181,7 @@
      "memo": "Dimiliki Oleh:Dove Holdings Sdn Bhd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -10241,7 +10241,7 @@
      "memo": "Old TownKopitiam Sdn Bhd receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -10283,7 +10283,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -10295,7 +10295,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": "extract",
     "rejections": [
      {
@@ -10347,7 +10347,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -10371,7 +10371,7 @@
      "memo": "WARAKUYAPERMASCITYSDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -10419,7 +10419,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -10495,7 +10495,7 @@
      "memo": "FARMASILIGAMAS receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -10549,7 +10549,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -10625,7 +10625,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -10685,7 +10685,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -10805,7 +10805,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -10865,7 +10865,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11045,7 +11045,7 @@
      "memo": "SANYUSTATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11081,7 +11081,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11105,7 +11105,7 @@
      "memo": "SANYU STATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11165,7 +11165,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11261,7 +11261,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11285,7 +11285,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11321,7 +11321,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11345,7 +11345,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11405,7 +11405,7 @@
      "memo": "SANYU STATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11501,7 +11501,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11525,7 +11525,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11585,7 +11585,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -11645,7 +11645,7 @@
      "memo": "SANYU STATONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11705,7 +11705,7 @@
      "memo": "SANYU SUPPLY SDN BHD (1135772-K) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -11741,7 +11741,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11765,7 +11765,7 @@
      "memo": "SANYU STATONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11801,7 +11801,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11825,7 +11825,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11861,7 +11861,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -11885,7 +11885,7 @@
      "memo": "SANYU STATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -11945,7 +11945,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -12005,7 +12005,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12065,7 +12065,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -12101,7 +12101,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -12125,7 +12125,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12221,7 +12221,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -12245,7 +12245,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12305,7 +12305,7 @@
      "memo": "SANYU STATONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12365,7 +12365,7 @@
      "memo": "SANYU STATONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12461,7 +12461,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -12485,7 +12485,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12545,7 +12545,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12605,7 +12605,7 @@
      "memo": "SANYU STATIONERY SHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12725,7 +12725,7 @@
      "memo": "SANYUSTATIONERYSHOP receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12773,7 +12773,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -12849,7 +12849,7 @@
      "memo": "AIK HUATHARDUARE receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -12909,7 +12909,7 @@
      "memo": "AIKHUATHARDWARE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -12975,7 +12975,7 @@
      "memo": "AZKHUATHARDHARE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -13041,7 +13041,7 @@
      "memo": "XOAter receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -13101,7 +13101,7 @@
      "memo": "AIKHUATHARDWARE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -13155,7 +13155,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.009,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13231,7 +13231,7 @@
      "memo": "ENTERPRISE ISETIA receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -13297,7 +13297,7 @@
      "memo": "AIKHUATHARDWARE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -13351,7 +13351,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13427,7 +13427,7 @@
      "memo": "TCA#K6P#A receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -13493,7 +13493,7 @@
      "memo": "FY EAGLE ENTERPRISE receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -13547,7 +13547,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13611,7 +13611,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13687,7 +13687,7 @@
      "memo": "BHPetrol Permas Jaya 2 receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -13741,7 +13741,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13817,7 +13817,7 @@
      "memo": "MOONLIGHT CAKE HOUSE SDN BHD 862725-U receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.009,
+    "seconds": 0.015,
     "halted_at": null,
     "rejections": [
      {
@@ -13871,7 +13871,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -13935,7 +13935,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.009,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14011,7 +14011,7 @@
      "memo": "MOONLIGHT CAKE HOUSE SDN DHD BOZTZ5-U receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -14077,7 +14077,7 @@
      "memo": "AEON CO.(M) BHD (126926-H) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.006,
     "halted_at": null,
     "rejections": []
    }
@@ -14125,7 +14125,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14189,7 +14189,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14265,7 +14265,7 @@
      "memo": "DE LUXE CIRCLE FRESH MART SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -14301,7 +14301,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -14313,7 +14313,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14389,7 +14389,7 @@
      "memo": "PASARAYA CINWASDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -14485,7 +14485,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -14497,7 +14497,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14573,7 +14573,7 @@
      "memo": "AEON C0.(M)BHD \uff08126926-H) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -14633,7 +14633,7 @@
      "memo": "GRANDMAHOMESRESTAURANT receipt, needs_approval"
     },
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": []
    }
@@ -14681,7 +14681,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -14757,7 +14757,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -14817,7 +14817,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -14877,7 +14877,7 @@
      "memo": "MOONLIGHT CAKE HOUSE SDN BHD 862725-U receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.007,
+    "seconds": 0.01,
     "halted_at": null,
     "rejections": [
      {
@@ -15009,7 +15009,7 @@
      "memo": "UNIHAKKA INTERNATIONAL SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -15069,7 +15069,7 @@
      "memo": "IDEAL MENU GROUP SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -15129,7 +15129,7 @@
      "memo": "LAVENDER CONFECTEONERY & BAKERY S/B receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -15177,7 +15177,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15229,7 +15229,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -15241,7 +15241,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15293,7 +15293,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -15317,7 +15317,7 @@
      "memo": "RESTORAN WAN SHENG receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -15353,7 +15353,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -15365,7 +15365,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15429,7 +15429,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15481,7 +15481,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -15505,7 +15505,7 @@
      "memo": "RESTORAN WAN SHENG receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -15541,7 +15541,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -15553,7 +15553,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15605,7 +15605,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_wrong",
@@ -15629,7 +15629,7 @@
      "memo": "Gerbang Alaf Restaurants Sdn Bhd receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -15671,7 +15671,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -15683,7 +15683,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15735,7 +15735,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -15747,7 +15747,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15811,7 +15811,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15887,7 +15887,7 @@
      "memo": "MR.D.I.Y.\uff08M)SDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -15935,7 +15935,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.01,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -15999,7 +15999,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16051,7 +16051,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -16075,7 +16075,7 @@
      "memo": "RESTORAN WAN SHENG receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -16111,7 +16111,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16123,7 +16123,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16187,7 +16187,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16251,7 +16251,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16315,7 +16315,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.012,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16391,7 +16391,7 @@
      "memo": "10 GRAM Gourmet Sbn Bhd receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -16427,7 +16427,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16439,7 +16439,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16503,7 +16503,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16555,7 +16555,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16567,7 +16567,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16619,7 +16619,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16631,7 +16631,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16695,7 +16695,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16747,7 +16747,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -16771,7 +16771,7 @@
      "memo": "RESTORAN WAN SHENG receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -16807,7 +16807,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16819,7 +16819,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16871,7 +16871,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -16883,7 +16883,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -16959,7 +16959,7 @@
      "memo": "MIZU MENTAI SDN.BHD.\uff081248446-V) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.005,
     "halted_at": null,
     "rejections": []
    }
@@ -17019,7 +17019,7 @@
      "memo": "MR.D.I.Y.\uff08KUCHAI)SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -17079,7 +17079,7 @@
      "memo": "MR.D.I.Y.\uff08KUCHAI)SDNBHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -17139,7 +17139,7 @@
      "memo": "99SPEED MART S/B (519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.001,
+    "seconds": 0.002,
     "halted_at": null,
     "rejections": []
    }
@@ -17178,34 +17178,30 @@
     "seconds": 0.001
    },
    "with": {
-    "outcome": "stopped_ok",
-    "total_ok": false,
-    "date_ok": false,
-    "decision_ok": false,
-    "decision": null,
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
     "vendor_ok": false,
-    "fields": null,
-    "entry": null,
+    "fields": {
+     "vendor": "99SFEED MART5/B(519537-X)",
+     "date": "05-05-18",
+     "total": "137.15",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "99SFEED MART5/B(519537-X)",
+     "date": "2018-05-05",
+     "amount": "137.15",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "99SFEED MART5/B(519537-X) receipt, approve"
+    },
     "calls": 3,
-    "seconds": 0.007,
-    "halted_at": "extract",
-    "rejections": [
-     {
-      "step": "extract",
-      "attempt": 0,
-      "reason": "the receipt has a larger amount, 150.15, that is not cash paid or change; the total is normally the largest"
-     },
-     {
-      "step": "extract",
-      "attempt": 1,
-      "reason": "there is no total amount"
-     },
-     {
-      "step": "extract",
-      "attempt": 2,
-      "reason": "there is no total amount"
-     }
-    ]
+    "seconds": 0.003,
+    "halted_at": null,
+    "rejections": []
    }
   },
   {
@@ -17239,7 +17235,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_wrong",
@@ -17263,7 +17259,7 @@
      "memo": "99SPEED HART S/B \uff08519537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -17299,7 +17295,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -17323,7 +17319,7 @@
      "memo": "99SPEED MART S/B \uff08S19537-X) receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -17503,7 +17499,7 @@
      "memo": "MR.D.I.Y.(KUCHAI) SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -17551,7 +17547,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -17603,7 +17599,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -17615,7 +17611,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.009,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -17739,7 +17735,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -17791,7 +17787,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -17803,7 +17799,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -17855,7 +17851,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -17879,7 +17875,7 @@
      "memo": "CW KHOO HARDWARE SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -17927,7 +17923,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -17991,7 +17987,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18055,7 +18051,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.008,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18119,7 +18115,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18183,7 +18179,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.011,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18235,7 +18231,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -18247,7 +18243,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.004,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18299,7 +18295,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -18311,7 +18307,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.008,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18447,7 +18443,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BH receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -18483,7 +18479,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "posted_ok",
@@ -18507,7 +18503,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -18567,7 +18563,7 @@
      "memo": "CNE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -18627,7 +18623,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -18687,7 +18683,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -18735,7 +18731,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {
@@ -18871,7 +18867,7 @@
      "memo": "KEDAIPAPANYEW CHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -18937,7 +18933,7 @@
      "memo": "KEDAIPAPANYEWCHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.008,
+    "seconds": 0.01,
     "halted_at": null,
     "rejections": [
      {
@@ -19003,7 +18999,7 @@
      "memo": "KEDAI PAPANYEW CHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -19069,7 +19065,7 @@
      "memo": "KEDAIPAPANYEW CHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": null,
     "rejections": [
      {
@@ -19135,7 +19131,7 @@
      "memo": "KEDAIPAPANYEW CHUAN receipt, needs_approval"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.01,
     "halted_at": null,
     "rejections": [
      {
@@ -19201,7 +19197,7 @@
      "memo": "KEDAIPAPANYEWCHUAN receipt, needs_approval"
     },
     "calls": 4,
-    "seconds": 0.009,
+    "seconds": 0.01,
     "halted_at": null,
     "rejections": [
      {
@@ -19267,7 +19263,7 @@
      "memo": "KEDAIPAPANYEWCHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.011,
     "halted_at": null,
     "rejections": [
      {
@@ -19333,7 +19329,7 @@
      "memo": "KEDAIPAPANYEW CHUAN receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.009,
     "halted_at": null,
     "rejections": [
      {
@@ -19399,7 +19395,7 @@
      "memo": "uaw receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -19447,7 +19443,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.006,
+    "seconds": 0.007,
     "halted_at": "extract",
     "rejections": [
      {
@@ -19523,7 +19519,7 @@
      "memo": "KTWONGTRADING\uff08001904043-H) receipt, needs_approval"
     },
     "calls": 4,
-    "seconds": 0.005,
+    "seconds": 0.008,
     "halted_at": null,
     "rejections": [
      {
@@ -19577,7 +19573,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.01,
     "halted_at": "extract",
     "rejections": [
      {
@@ -19629,7 +19625,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -19641,7 +19637,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.005,
     "halted_at": "extract",
     "rejections": [
      {
@@ -19717,7 +19713,7 @@
      "memo": "MR.D.I.Y.(M)SDNBHD receipt, approve"
     },
     "calls": 4,
-    "seconds": 0.006,
+    "seconds": 0.007,
     "halted_at": null,
     "rejections": [
      {
@@ -19771,7 +19767,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.009,
     "halted_at": "extract",
     "rejections": [
      {
@@ -19847,7 +19843,7 @@
      "memo": "ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -19907,7 +19903,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -19967,7 +19963,7 @@
      "memo": "ONEONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.003,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -20003,7 +19999,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 0.0
+    "seconds": 0.001
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -20015,7 +20011,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.013,
     "halted_at": "extract",
     "rejections": [
      {
@@ -20091,7 +20087,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -20151,7 +20147,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -20211,7 +20207,7 @@
      "memo": "ONE ONE THREE SEAFOOD RESTAURANT SDN BHD receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.005,
+    "seconds": 0.004,
     "halted_at": null,
     "rejections": []
    }
@@ -20271,7 +20267,7 @@
      "memo": "GLHANDICRAFT&TALORING receipt, approve"
     },
     "calls": 3,
-    "seconds": 0.002,
+    "seconds": 0.003,
     "halted_at": null,
     "rejections": []
    }
@@ -20319,7 +20315,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 0.007,
+    "seconds": 0.011,
     "halted_at": "extract",
     "rejections": [
      {

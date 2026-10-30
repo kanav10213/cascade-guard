@@ -4,33 +4,32 @@ Agents: **rules, from the photos (OCR)** · receipts: **326** real scanned recei
 
 | | Without the guard | With Cascade Guard |
 |---|---:|---:|
-| Posted, right | 166 | 194 |
+| Posted, right | 166 | 195 |
 | **Posted, wrong (silent error)** | **160** | **35** |
 | Stopped for a person, really wrong | 0 | 93 |
-| Stopped for a person, actually right (false alarm) | 0 | 4 |
+| Stopped for a person, actually right (false alarm) | 0 | 3 |
 | … with the wrong amount | 107 | 29 |
 | … with the wrong or badly written date | 92 | 6 |
 | … with a decision that breaks the policy | 22 | 0 |
 | Silent error rate (95% CI) |  49.1%  [43.7, 54.5]  (160/326) |  10.7%  [7.8, 14.6]  (35/326) |
 | Agent calls per receipt | 3.0 | 3.2 |
-| Seconds per receipt | 0.001 | 0.005 |
+| Seconds per receipt | 0.001 | 0.007 |
 
 - Of the receipts the agents got wrong, the guard kept **133 of 160** out of the ledger (83.1%  [76.6, 88.1]  (133/160)); **40** of them were fixed automatically when the agent was told what was wrong.
-- False alarms: 4 of 166 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 8.
+- False alarms: 3 of 166 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 8.
 - Silent errors reduced by **78%**.
 
 What the guard caught (rejections, all steps):
 
-- no date found: 139
-- no total found: 60
+- no date found: 142
 - other: 57
+- no total found: 56
 - total disagrees with cash paid minus change: 42
-- a smaller amount taken as the total: 41
+- a smaller amount taken as the total: 40
 - a date in the future: 5
 - the vendor: 4
 - a tax amount taken as the total: 3
 - the wrong date on the receipt: 3
-- the cash paid taken as the total: 1
 - a total that is not on the receipt: 1
 
 Examples:
