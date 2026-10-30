@@ -30,12 +30,44 @@ A wrong answer is never passed on silently.
 - **Any model:** Anthropic Claude by default; any OpenAI-format API (OpenAI, Gemini, Groq, OpenRouter, a local model
   through Ollama), or a free offline simulator.
 
-> **Status: v1.3.0.** The software is complete, tested (Python 3.12 to 3.14, SQLite and PostgreSQL, Docker) and
-> documented. The headline numbers below are from **simulations**; the evaluation on a real paid model is built and
-> waiting to be run. See [Limits](#limits).
+> **Status: v1.4.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
+> three-agent expense workflow with rule-based agents and with open AI models as the agents (see
+> [Real-world results](#real-world-results)). Software tested on Python 3.12 to 3.14, SQLite and PostgreSQL, Docker.
+
+## Real-world results
+An expense-receipt workflow of three agents: **read** the receipt (vendor, date, total), apply the **expense policy**,
+write the **ledger entry**. It was run on the public [ICDAR 2019 SROIE](https://rrc.cvc.uab.es/?ch=13) scanned
+receipts, which come with the true date and total. Every receipt went through twice, without and with Cascade Guard.
+The guard checks each hand-off against **the receipt itself** and never sees the answers. The checks were written on
+receipts 0–299; the numbers below are on the other **326**, which were held out.
+
+| Agents | Receipts | Wrong amount posted: without → with | Wrong day posted | Any wrong entry posted | Fixed automatically | Stopped for a person (of them read right) |
+|---|---:|---|---|---|---:|---|
+| Rule-based agents | 326 | 97 (30%) → **25 (8%)** | 6 → 1 | 99 (30%) → **26 (8%)** | 57 | 33 (10%) (10) |
+| Rule-based agents, read from the photos (OCR) | 326 | 107 (33%) → **29 (9%)** | 92 → 6 | 160 (49%) → **35 (11%)** | 40 | 97 (30%) (4) |
+| Llama 3.2 3B (open model) | 326 | 63 (19%) → **16 (5%)** | 15 → 0 | 312 (96%) → **16 (5%)** | 206 | 94 (29%) (63) |
+| Qwen 2.5 3B (open model) | 326 | 55 (17%) → **17 (5%)** | 48 → 1 | 262 (80%) → **18 (6%)** | 221 | 28 (9%) (25) |
+
+- *Wrong amount* is the money that would reach the books. *Any wrong entry* also counts dates in the wrong format
+  (`18/04/2018` in an ISO date field). The open models made many of those, and a format fix in code would also
+  remove them.
+- *Fixed automatically*: the guard told the agent what was wrong (for example "50.00 is the cash paid on the
+  receipt, not the total") and the agent corrected itself.
+- *Stopped for a person* is the cost. In brackets: how many of those the agents had read right, so a person
+  confirms them for nothing.
+- AI agents: free open models run with Ollama on GitHub's machines (the `receipts-benchmark` workflow). Photos: the
+  scans read with free offline OCR (`pip install "cascade-guard-ai[ocr]"`).
+
+Method, raw results and how to reproduce: [benchmarks/README.md](benchmarks/README.md); full reports for each run are on
+the [`benchmark-results`](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results) branch.
+
+**Try it:** open `/receipts` (the expense desk) on a running server. Drop receipts (text, PDF, or photos with the OCR
+add-on) and see what each agent read, every check, what was fixed and what was stopped. Stopped receipts go to the
+review queue, and the results download as CSV. API: `POST /receipts/process`. MCP and the Claude connector:
+`process_receipt`.
 
 ## Contents
-[Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
+[Real-world results](#real-world-results) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
 [Docker](#docker) · [Use it in your code](#use-it-in-your-code) ·
 [Use it from Claude (MCP)](#use-it-from-claude-and-other-ai-assistants-mcp) · [Models](#models-and-providers) ·
 [Configuration](#configuration) · [API](#api) · [Security](#security) · [Results](#results) ·
@@ -47,9 +79,10 @@ Python 3.12 or newer.
 
 ```bash
 pip install cascade-guard-ai                          # from PyPI, once published
-pip install cascade_guard_ai-1.2.0-py3-none-any.whl   # from a release file
+pip install cascade_guard_ai-1.4.0-py3-none-any.whl   # from a release file
 pip install .                                         # from this folder
 pip install "cascade-guard-ai[postgres]"              # with PostgreSQL support
+pip install "cascade-guard-ai[ocr]"                   # read receipt photos (offline OCR, ~400 MB)
 ```
 The package is called `cascade-guard-ai` on PyPI (the name `cascade-guard` is too close to an existing project);
 the command is `cascade-guard` and the import is `cascade_guard`. For the exact versions this release was tested with,
@@ -254,6 +287,7 @@ Claude Code: run the printed `claude mcp add ...` command.
 |---|---|
 | `check_bill` | recompute any bill or invoice exactly and say what is wrong (no model needed) |
 | `check_math` | check a sum or a claim about a list of numbers exactly (no model needed) |
+| `process_receipt` | an expense receipt through read → policy → ledger, every hand-off checked (no model needed) |
 | `check_everyday` | everyday sums in words: discounts, GST, splits, EMIs, interest, dates, time zones, units, travel, SGPA, recipes (no model needed) |
 | `show_cascade_demo` | a sample invoice through four agents with planted mistakes, without and with the guard |
 | `verify_output` | check any output against its source with the model checker |
@@ -497,8 +531,15 @@ Releases and the GitHub container registry. See
 `CONTRIBUTING.md`. Repository: https://github.com/kanav10213/cascade-guard
 
 ## Limits
-- **Simulated headline numbers.** The rule checker equals the ground truth, so the results above are an upper bound.
-  The real-model evaluation is built and cost-gated but has not been run yet.
+- **Two kinds of results.** The real-world results come from real receipts and real (small, open) models. The
+  simulation results further down (the arithmetic chain, the generated invoices) use a rule checker that equals the
+  ground truth, so they are an upper bound. The paid-model evaluation is built and cost-gated but has not been run.
+- **Receipts:** one public dataset (Malaysian shop receipts, 2017–2018) and one workflow. Its checks were written for
+  that kind of receipt: other countries, languages and document types need their own checks and their own measured
+  run. The guard stops some receipts the agents read right (see the table): with the AI agents, most of the
+  stopped receipts had been read right but could not be confirmed from the text, so a person checks them for
+  nothing. The open models tested are small (3B–7B) and run on CPU; larger models make fewer
+  mistakes for the guard to catch.
 - Fault types, the 10% fault rate and the 90% guided-repair success rate are assumptions, not measurements.
 - The pilot invoices are generated; real invoices may use layouts the rule parser cannot read (model agents can).
 - A model check adds one call and its delay per checked step; check only the high-risk steps if that matters.

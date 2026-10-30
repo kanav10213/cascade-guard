@@ -1,6 +1,28 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-10-31
+
+### Added
+- Expense receipts, a real three-agent workflow (`cascade_guard.receipts`): read the receipt (vendor, date, total),
+  apply the expense policy (manager approval above 200, duplicates, no total), write the ledger entry. Agents are
+  rule-based or an AI model. Every hand-off is checked against the receipt text: the total must be next to a total
+  label, agree with cash paid minus change and with a rounded total, and not be the cash, change, tax or subtotal or
+  smaller than another unexplained amount; the date must be on the receipt, next to its Date label and not in the
+  future; the vendor must be one of the first lines; the policy decision and the ledger fields are recomputed.
+  Failures go back to the agent with the reason; a receipt still wrong is stopped for a person.
+- The expense desk: `/receipts` page and `POST /receipts/process` (1–50 receipts as text, PDF or photo), with
+  per-check working, CSV export and stopped receipts in the review queue; `GET /receipts/info`. MCP and Claude
+  connector tool `process_receipt`.
+- Receipt photos with free offline OCR: `pip install "cascade-guard-ai[ocr]"`. Large scans are shrunk first and text
+  boxes are joined back into printed rows.
+- A real-data benchmark: `cascade-guard receipts benchmark` (and `merge`) on the public ICDAR 2019 SROIE receipts,
+  without and with the guard. Checks were written on receipts 0–299; the results are reported on the 326 held out.
+  The `receipts-benchmark` GitHub workflow runs it with open models (Ollama, free on GitHub's machines), from the
+  photos, or with Groq, and commits the reports to the `benchmark-results` branch. `benchmarks/README.md` has the
+  method; `benchmarks/table.py` builds one table from several runs.
+- `LLM_TIMEOUT` (seconds per model request, default 120).
+
 ## [1.3.0] - 2026-10-30
 
 ### Added
