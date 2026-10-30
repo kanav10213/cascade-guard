@@ -8,9 +8,12 @@ Agents: **rules, from the photos (OCR)** · receipts: **326** real scanned recei
 | **Posted, wrong (silent error)** | **160** | **35** |
 | Stopped for a person, really wrong | 0 | 93 |
 | Stopped for a person, actually right (false alarm) | 0 | 4 |
+| … with the wrong amount | 107 | 29 |
+| … with the wrong or badly written date | 92 | 6 |
+| … with a decision that breaks the policy | 22 | 0 |
 | Silent error rate (95% CI) |  49.1%  [43.7, 54.5]  (160/326) |  10.7%  [7.8, 14.6]  (35/326) |
 | Agent calls per receipt | 3.0 | 3.2 |
-| Seconds per receipt | 0.001 | 0.006 |
+| Seconds per receipt | 0.001 | 0.005 |
 
 - Of the receipts the agents got wrong, the guard kept **133 of 160** out of the ledger (83.1%  [76.6, 88.1]  (133/160)); **40** of them were fixed automatically when the agent was told what was wrong.
 - False alarms: 4 of 166 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 8.
@@ -43,4 +46,4 @@ Examples:
 | 314 | 20.00 / 20180428 | 0.00 / 20180428 | there is no total amount | posted_ok |
 | 315 | 11.25 / 18/04/2018 | 0.00 /  | there is no total amount; '' is not a date | stopped_wrong |
 
-A result is right when the posted amount and date equal the dataset's answer. The guard never sees the answers: it checks the agents' work against the receipt text only.
+A result is right when the posted amount and date equal the dataset's answer and the policy decision is the one the true amount calls for. The guard never sees the answers: it checks the agents' work against the receipt text and the policy only.
