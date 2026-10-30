@@ -4,35 +4,35 @@ Agents: **openai:llama3.2:3b** · receipts: **326** real scanned receipts (ICDAR
 
 | | Without the guard | With Cascade Guard |
 |---|---:|---:|
-| Posted, right | 6 | 200 |
-| **Posted, wrong (silent error)** | **320** | **17** |
-| Stopped for a person, really wrong | 0 | 92 |
-| Stopped for a person, actually right (false alarm) | 0 | 17 |
-| … with the wrong amount | 61 | 17 |
-| … with the wrong or badly written date | 309 | 0 |
-| … with a decision that breaks the policy | 132 | 0 |
-| Silent error rate (95% CI) |  98.2%  [96.0, 99.2]  (320/326) |   5.2%  [3.3, 8.2]  (17/326) |
-| Agent calls per receipt | 3.0 | 4.4 |
-| Seconds per receipt | 36.183 | 24.862 |
+| Posted, right | 6 | 215 |
+| **Posted, wrong (silent error)** | **320** | **18** |
+| Stopped for a person, really wrong | 0 | 87 |
+| Stopped for a person, actually right (false alarm) | 0 | 6 |
+| … with the wrong amount | 63 | 18 |
+| … with the wrong or badly written date | 308 | 0 |
+| … with a decision that breaks the policy | 130 | 0 |
+| Silent error rate (95% CI) |  98.2%  [96.0, 99.2]  (320/326) |   5.5%  [3.5, 8.6]  (18/326) |
+| Agent calls per receipt | 3.0 | 4.41 |
+| Seconds per receipt | 37.185 | 24.807 |
 
-- Of the receipts the agents got wrong, the guard kept **303 of 320** out of the ledger (94.7%  [91.7, 96.7]  (303/320)); **196** of them were fixed automatically when the agent was told what was wrong.
+- Of the receipts the agents got wrong, the guard kept **302 of 320** out of the ledger (94.4%  [91.3, 96.4]  (302/320)); **210** of them were fixed automatically when the agent was told what was wrong.
 - False alarms: 0 of 6 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 0.
-- Silent errors reduced by **95%**.
+- Silent errors reduced by **94%**.
 
 What the guard caught (rejections, all steps):
 
-- a policy decision that breaks the policy: 271
-- a ledger date in the wrong format or wrong: 243
-- a smaller amount taken as the total: 50
-- total disagrees with cash paid minus change: 42
-- the cash paid taken as the total: 32
-- other: 21
-- a tax amount taken as the total: 11
-- the vendor: 7
+- a ledger date in the wrong format or wrong: 257
+- a policy decision that breaks the policy: 251
+- total disagrees with cash paid minus change: 44
+- a smaller amount taken as the total: 32
+- the cash paid taken as the total: 24
+- other: 23
 - a total that is not on the receipt: 6
+- the vendor: 5
 - the change taken as the total: 4
 - an amount not labelled as a total: 1
 - no date found: 1
+- a tax amount taken as the total: 1
 
 Examples:
 
@@ -45,6 +45,6 @@ Examples:
 | 304 | 39.60 / 28/04/18 | 39.60 / 28/04/18 | the vendor 'DOMMAL FOOD SERVICES SDN BHD' is not among the receipt's first lines | posted_ok |
 | 305 | 81.80 / 17/04/2018 | 81.80 / 17/04/2018 | the date must be 2018-04-17 (YYYY-MM-DD; the receipt's date 17/04/2018 is day first), not 17/04/2018 | posted_ok |
 | 306 | 18.90 / 08/04/2018 | 50.00 / 08/04/2018 | 50.00 is the cash paid on the receipt, not the total | posted_ok |
-| 307 | 46.55 / 20/04/2018 | 46.55 / 20/04/2018 20:48 | the receipt has a larger amount, 53.45, that is not cash paid or change; the total is normally the largest | stopped_ok |
+| 307 | 46.55 / 20/04/2018 | 46.55 / 20/04/2018 20:48 | the date must be 2018-04-20 (YYYY-MM-DD; the receipt's date 20/04/2018 20:48 is day first), not 20/04/2018 | posted_ok |
 
 A result is right when the posted amount and date equal the dataset's answer and the policy decision is the one the true amount calls for. The guard never sees the answers: it checks the agents' work against the receipt text and the policy only.
