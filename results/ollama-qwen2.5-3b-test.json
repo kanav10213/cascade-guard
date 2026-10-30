@@ -1,0 +1,386 @@
+{
+ "agents": "openai:qwen2.5:3b",
+ "dataset": {
+  "name": "ICDAR 2019 SROIE (train set, corrected annotations)",
+  "repo": "https://github.com/zzzDavid/ICDAR-2019-SROIE",
+  "commit": "27be4271b251c256f695acbade9a801bffe85994"
+ },
+ "max_retries": 2,
+ "rows": [
+  {
+   "id": "300",
+   "truth": {
+    "total": "1.75",
+    "date": "18/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "18/04/2018",
+     "total": "1.75",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": null,
+     "date": null,
+     "amount": null,
+     "currency": null,
+     "category": null,
+     "memo": null
+    },
+    "calls": 3,
+    "seconds": 39.406
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "18/04/2018",
+     "total": "1.75",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-18",
+     "amount": "1.75",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 5,
+    "seconds": 19.937,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 1.75 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-18 (YYYY-MM-DD; the receipt's date 18/04/2018 is day first), not 18-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "301",
+   "truth": {
+    "total": "10.20",
+    "date": "22/04/2018",
+    "company": "AEON CO. (M) SDN BHD"
+   },
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "10.20",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22-04-2018",
+     "amount": "10.20",
+     "currency": "MYR",
+     "category": "groceries",
+     "memo": "Groceries purchase on 22-04-2018"
+    },
+    "calls": 3,
+    "seconds": 27.219
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "10.20",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-22",
+     "amount": "10.20",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 4,
+    "seconds": 5.03,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-22 (YYYY-MM-DD; the receipt's date 22/04/2018 is day first), not 22-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "302",
+   "truth": {
+    "total": "98.35",
+    "date": "22/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "98.35",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22-04-2018",
+     "amount": "98.35",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries purchase on 22nd April 2018"
+    },
+    "calls": 3,
+    "seconds": 32.296
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "98.35",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-22",
+     "amount": "98.35",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 4,
+    "seconds": 7.526,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-22 (YYYY-MM-DD; the receipt's date 22/04/2018 is day first), not 22-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "303",
+   "truth": {
+    "total": "30.90",
+    "date": "28/04/18",
+    "company": "DOMINO'S PIZZA"
+   },
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "30.90",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "30.90",
+     "currency": "MYR",
+     "category": "meals",
+     "memo": "Meal at Domino's Pizza"
+    },
+    "calls": 3,
+    "seconds": 22.308
+   },
+   "with": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "45.70",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "45.70",
+     "currency": "MYR",
+     "category": "meals",
+     "memo": "Pizz from Domino's"
+    },
+    "calls": 5,
+    "seconds": 13.585,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the receipt has a larger amount, 45.70, that is not cash paid or change; the total is normally the largest"
+     },
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 45.70 is 'approve' (within 200.00), not 'needs_approval'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "304",
+   "truth": {
+    "total": "39.60",
+    "date": "28/04/18",
+    "company": "DOMINO'S PIZZA"
+   },
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "39.60",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "39.60",
+     "currency": "MYR",
+     "category": "meals",
+     "memo": "Meal at Domino's Pizza"
+    },
+    "calls": 3,
+    "seconds": 37.322
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "39.60",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "39.60",
+     "currency": "MYR",
+     "category": "meals",
+     "memo": "Meal at Domino's Pizza"
+    },
+    "calls": 4,
+    "seconds": 9.503,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 39.60 is 'approve' (within 200.00), not 'needs_approval'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "305",
+   "truth": {
+    "total": "81.80",
+    "date": "17/04/2018",
+    "company": "YHM AEON TEBRAU CITY"
+   },
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17/04/2018",
+     "total": "81.80",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17-04-2018",
+     "amount": "81.80",
+     "currency": "MYR",
+     "category": "groceries",
+     "memo": "Groceries purchase at AEON TEBRAU CITY"
+    },
+    "calls": 3,
+    "seconds": 25.426
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17/04/2018",
+     "total": "81.80",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "2018-04-17",
+     "amount": "81.80",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Groceries and miscellaneous purchases"
+    },
+    "calls": 4,
+    "seconds": 11.214,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-17 (YYYY-MM-DD; the receipt's date 17/04/2018 is day first), not 17-04-2018"
+     }
+    ]
+   }
+  }
+ ],
+ "usage": {
+  "calls": 32,
+  "input_tokens": 9466,
+  "output_tokens": 1568
+ }
+}
