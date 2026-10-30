@@ -1,33 +1,37 @@
-# Expense receipts with llama3.2:3b as the agents: without and with Cascade Guard
+# Expense receipts with llama3.2:3b: without and with Cascade Guard
 
 Agents: **openai:llama3.2:3b** · receipts: **326** real scanned receipts (ICDAR 2019 SROIE (train set, corrected annotations), [https://github.com/zzzDavid/ICDAR-2019-SROIE](https://github.com/zzzDavid/ICDAR-2019-SROIE) at `27be427`)
 
 | | Without the guard | With Cascade Guard |
 |---|---:|---:|
-| Posted, right | 13 | 216 |
-| **Posted, wrong (silent error)** | **312** | **16** |
-| Stopped for a person, really wrong | 1 | 40 |
-| Stopped for a person, actually right (false alarm) | 0 | 54 |
-| Silent error rate (95% CI) |  95.7%  [92.9, 97.4]  (312/326) |   4.9%  [3.0, 7.8]  (16/326) |
-| Agent calls per receipt | 3.0 | 4.34 |
-| Seconds per receipt | 25.017 | 17.349 |
+| Posted, right | 6 | 200 |
+| **Posted, wrong (silent error)** | **320** | **17** |
+| Stopped for a person, really wrong | 0 | 92 |
+| Stopped for a person, actually right (false alarm) | 0 | 17 |
+| … with the wrong amount | 61 | 17 |
+| … with the wrong or badly written date | 309 | 0 |
+| … with a decision that breaks the policy | 132 | 0 |
+| Silent error rate (95% CI) |  98.2%  [96.0, 99.2]  (320/326) |   5.2%  [3.3, 8.2]  (17/326) |
+| Agent calls per receipt | 3.0 | 4.4 |
+| Seconds per receipt | 36.183 | 24.862 |
 
-- Of the receipts the agents got wrong, the guard kept **296 of 312** out of the ledger (94.9%  [91.8, 96.8]  (296/312)); **206** of them were fixed automatically when the agent was told what was wrong.
-- False alarms: 3 of 13 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 0.
+- Of the receipts the agents got wrong, the guard kept **303 of 320** out of the ledger (94.7%  [91.7, 96.7]  (303/320)); **196** of them were fixed automatically when the agent was told what was wrong.
+- False alarms: 0 of 6 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 0.
 - Silent errors reduced by **95%**.
 
 What the guard caught (rejections, all steps):
 
-- a ledger date in the wrong format or wrong: 251
-- a policy decision that breaks the policy: 218
-- a smaller amount taken as the total: 49
+- a policy decision that breaks the policy: 271
+- a ledger date in the wrong format or wrong: 243
+- a smaller amount taken as the total: 50
 - total disagrees with cash paid minus change: 42
-- the cash paid taken as the total: 33
+- the cash paid taken as the total: 32
 - other: 21
 - a tax amount taken as the total: 11
-- the vendor: 6
+- the vendor: 7
 - a total that is not on the receipt: 6
 - the change taken as the total: 4
+- an amount not labelled as a total: 1
 - no date found: 1
 
 Examples:
@@ -43,4 +47,4 @@ Examples:
 | 306 | 18.90 / 08/04/2018 | 50.00 / 08/04/2018 | 50.00 is the cash paid on the receipt, not the total | posted_ok |
 | 307 | 46.55 / 20/04/2018 | 46.55 / 20/04/2018 20:48 | the receipt has a larger amount, 53.45, that is not cash paid or change; the total is normally the largest | stopped_ok |
 
-A result is right when the posted amount and date equal the dataset's answer. The guard never sees the answers: it checks the agents' work against the receipt text only.
+A result is right when the posted amount and date equal the dataset's answer and the policy decision is the one the true amount calls for. The guard never sees the answers: it checks the agents' work against the receipt text and the policy only.
