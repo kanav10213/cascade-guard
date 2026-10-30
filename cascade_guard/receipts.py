@@ -178,7 +178,8 @@ def _has_words(ln: str) -> bool:
     return bool(re.search(r"[A-Za-z]{3,}", re.sub(r"\b(?:RM|MYR|SR|ZR)\b", "", ln, flags=re.I)))
 
 
-SUMMARY = re.compile(r"\b(?:GST|TAX|SST)\s*SUMMARY\b|\bSUMMARY\b|\bTAX\s*CODE\b", re.I)
+SUMMARY = re.compile(r"\b(?:GST|TAX|SST)\s*SUMMARY\b", re.I)
+UNIT_PRICE = re.compile(r"\d\s*(?:X|@)\s*(?:RM\s*)?\d", re.I)
 
 
 def _labelled_amounts(lines: list[str]) -> list[dict]:
@@ -263,7 +264,14 @@ def rule_extract(text: str, avoid: list | None = None) -> dict:
     looks like a company name. On a retry it avoids values the guard rejected and tries the next candidate."""
     avoid = avoid or []
     lines = lines_of(text)
-    bad_totals = {money(a.get("total")) for a in avoid if a.get("total")}
+
+    def blamed(a: dict, field: str) -> bool:  # avoid only what the guard objected to
+        why = str(a.get("_reason") or "")
+        value = str(a.get(field) or "")
+        return bool(not why or (field == "total" and ("total" in why or (value and value in why))) or
+                    (field == "date" and "date" in why) or
+                    (field == "vendor" and ("vendor" in why or (value and value in why))))
+    bad_totals = {money(a.get("total")) for a in avoid if a.get("total") and blamed(a, "total")}
     candidates: list[Decimal] = []
     for i in range(len(lines) - 1, -1, -1):
         if TOTAL_WORDS.search(lines[i]) and not NOT_TOTAL.search(lines[i]):
@@ -285,13 +293,13 @@ def rule_extract(text: str, avoid: list | None = None) -> dict:
         candidates = retry + candidates
     total = next((c for c in candidates if c not in bad_totals), None)
     found = dates_in(text)
-    bad_dates = {str(a.get("date")) for a in avoid if a.get("date")}
+    bad_dates = {str(a.get("date")) for a in avoid if a.get("date") and blamed(a, "date")}
     if avoid:  # the date next to a DATE label first
         near = [raw for k, ln in enumerate(lines) if re.search(r"\b(?:DATE|TARIKH|DT)\b", ln, re.I)
                 for nxt in lines[k:k + 3] for _, raw in dates_in(nxt)]
         found = [(d, raw) for raw in near for d in [parse_date(raw)] if d is not None] + found
     date = next((raw for _, raw in found if raw not in bad_dates), found[0][1] if found else "")
-    bad_vendors = {str(a.get("vendor")) for a in avoid if a.get("vendor")}
+    bad_vendors = {str(a.get("vendor")) for a in avoid if a.get("vendor") and blamed(a, "vendor")}
     vendor = ""
     for ln in lines[:8]:
         if VENDOR_HINTS.search(ln) and not NOT_VENDOR.search(ln) and ln not in bad_vendors and \
@@ -404,17 +412,20 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
                 problems.append(f"{total} is the {named[0]} on the receipt, not the total")
             elif totals:
                 problems.append(f"{total} is not next to a total label on the receipt")
-        if paid is not None and paid != total:
+        if paid is not None and abs(paid - total) > Decimal("0.05") and any(x["amount"] == paid for x in labelled):
+            # (5-sen rounding aside; and only when the amount paid is itself printed, so the cash and change
+            # were read right)
             problems.append(f"the cash paid ({cash}) minus the change ({change}) is {paid}, not {total}")
         payments = {x["amount"] for x in labelled if _k(x) in ("cash paid", "change")}
         rounding = any(re.search(r"\bROUND", ln, re.I) for ln in lines)
         bigger = sorted({x["amount"] for x in labelled if x["amount"] > total and x["amount"] not in payments
+                         and not UNIT_PRICE.search(lines[x["line"]])
                          and not x["summary"] and _k(x) in ("total", None)
                          and not (cash is not None and x["amount"] >= cash)
                          and not (rounding and x["amount"] - total <= Decimal("0.05"))
                          and not (_k(x) is None and x["amount"] % 1 == 0)},   # a round amount: likely cash given
                         reverse=True)
-        if bigger and paid is None:
+        if bigger and (paid is None or not any(x["amount"] == paid for x in labelled)):
             problems.append(f"the receipt has a larger amount, {bigger[0]}, that is not cash paid or change; the "
                             f"total is normally the largest")
         rounded = [x["amount"] for x in labelled
@@ -524,7 +535,7 @@ def process_receipt(text: str, *, client=None, guard: bool = True, max_retries: 
             trace.append({"step": step, "attempt": attempt, "output": out, "passed": ok, "reason": why})
             if ok:
                 return out
-            rejected.append(out or {})
+            rejected.append({**(out or {}), "_reason": why})
             feedback = why
         return None
 
@@ -576,9 +587,15 @@ def score(result: dict, truth: dict) -> dict:
     vendor_ok = similar(entry.get("vendor") or fields.get("vendor") or "", truth.get("company", "")) >= 0.8
     correct = total_ok and date_ok
     if result["status"] == "halted":
-        f_total = money(fields.get("total")) if fields else None
-        would_be_wrong = not (fields and f_total == t_total and parse_date(fields.get("date")) == t_date)
-        outcome = "stopped_wrong" if would_be_wrong else "stopped_ok"
+        # Was the stopped receipt really wrong? Judge the agents' first answers, which are what would have been
+        # posted without the guard (the first extraction, and the first ledger entry if the run got that far).
+        first = {t["step"]: t["output"] for t in reversed(result["trace"]) if t["attempt"] == 0}
+        ext, led = first.get("extract") or {}, first.get("ledger")
+        if led is not None:
+            right = money(led.get("amount")) == t_total and t_date is not None and led.get("date") == t_date.isoformat()
+        else:
+            right = money(ext.get("total")) == t_total and parse_date(ext.get("date")) == t_date
+        outcome = "stopped_ok" if right else "stopped_wrong"
     else:
         outcome = "posted_ok" if correct else "posted_wrong"
     return {"outcome": outcome, "total_ok": total_ok, "date_ok": date_ok, "vendor_ok": vendor_ok}
@@ -606,3 +623,36 @@ def load_sroie(folder: str, ids: range | list | None = None) -> list[dict]:
                 lines.append(parts[8].strip())
         out.append({"id": rid, "text": "\n".join(lines), "truth": json.loads(kf.read_text(encoding="utf-8"))})
     return out
+
+
+# ===================================================================== photos (optional OCR)
+
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+_ocr_engine = None
+
+
+class OCRUnavailable(RuntimeError):
+    pass
+
+
+def ocr_available() -> bool:
+    import importlib.util
+    return importlib.util.find_spec("rapidocr_onnxruntime") is not None
+
+
+def text_from_image(data: bytes) -> str:
+    """The text of a receipt photo (JPEG / PNG), one line per text box, top to bottom. Needs the optional OCR
+    engine: pip install "cascade-guard-ai[ocr]" (about 400 MB, runs offline, free; needs a few GB of memory)."""
+    global _ocr_engine
+    if len(data) > MAX_IMAGE_BYTES:
+        raise ValueError("the image is larger than 8 MB")
+    if not (data[:3] == b"\xff\xd8\xff" or data[:8] == b"\x89PNG\r\n\x1a\n"):
+        raise ValueError("not a JPEG or PNG image")
+    if not ocr_available():
+        raise OCRUnavailable('reading photos needs the OCR add-on: pip install "cascade-guard-ai[ocr]"')
+    if _ocr_engine is None:
+        from rapidocr_onnxruntime import RapidOCR
+        _ocr_engine = RapidOCR()
+    result, _ = _ocr_engine(data)
+    boxes = sorted(result or [], key=lambda r: (round(min(p[1] for p in r[0]) / 12), min(p[0] for p in r[0])))
+    return "\n".join(str(r[1]) for r in boxes)

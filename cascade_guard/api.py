@@ -141,6 +141,10 @@ from cascade_guard.assistant_api import router as assistant_router  # noqa: E402
 
 app.include_router(assistant_router)
 
+from cascade_guard.receipts_api import router as receipts_router  # noqa: E402
+
+app.include_router(receipts_router)
+
 
 from cascade_guard import ops  # noqa: E402
 
