@@ -23,6 +23,11 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   method; `benchmarks/table.py` builds one table from several runs.
 - `LLM_TIMEOUT` (seconds per model request, default 120).
 
+### Results
+- On the 326 held-out receipts, wrong amounts posted went from 30% to 8% (rule agents), 33% to 9% (from photos),
+  19% to 6% (Llama 3.2 3B), 18% to 5% (Qwen 2.5 3B) and 27% to 3% (Qwen 2.5 7B). Wrong policy decisions went to 0.
+  A posting counts as right only if the amount, the date and the policy decision are all right.
+
 ## [1.3.0] - 2026-10-30
 
 ### Added

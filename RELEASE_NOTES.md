@@ -1,25 +1,26 @@
-# Cascade Guard 1.3.0
+# Cascade Guard 1.4.0
 
-New: **one assistant for everyday life, that checks itself.**
+New: **a real workflow, tested on real data.** This is an expense-receipt pipeline of three agents: read the receipt,
+apply the expense policy, write the ledger entry. Cascade Guard checks every hand-off against the receipt itself.
 
-Open `/assistant` on your server (or run `cascade-guard ask`) and ask:
+**Results on 326 real scanned receipts** (public ICDAR 2019 SROIE set, held out from tuning):
 
-- "I bought a shirt for ₹1,500 at 20% off, they charged ₹1,250" → *Wrong: 20% off ₹1,500.00 is ₹1,200.00, not
-  ₹1,250.00.*, with the working shown like a receipt.
-- "Asha paid 600, Ravi paid 300 and I paid 0 for dinner" → *You pay Asha 300.00.*
-- "EMI for 10 lakh at 10% for 3 years", "FD of 1 lakh at 7% for 5 years", "3 pm IST in New York", "5 feet 8 inches in
-  cm", "SGPA with credits 4, 3, 3 and grades 9, 8, 10", "recipe for 4 needs 200 g flour, make it for 6", and more.
+| Agents | Wrong amount reaching the books: without → with the guard | Correct receipts stopped |
+|---|---|---|
+| Rule-based agents | 30% → **8%** | 8 |
+| Rule-based, read from the photos (free OCR) | 33% → **9%** | 3 |
+| Llama 3.2 3B (free open model) | 19% → **6%** | 6 |
+| Qwen 2.5 3B (free open model) | 18% → **5%** | 14 |
+| Qwen 2.5 7B (free open model) | 27% → **3%** | 20 |
 
-These are worked out exactly and need no AI model.
+Wrong expense-policy decisions (e.g. a fine receipt called a "duplicate") went to **zero** in every run. Retries
+cost 3.2 to 4.4 agent calls per receipt instead of 3. The method and every limit are in `benchmarks/README.md`.
 
-With an AI model connected (a **free** Groq key works), it also writes emails and messages, explains, translates and
-answers questions, and **Cascade Guard checks every answer before you see it**: numbers against the exact tools, sums
-recomputed, and an independent second pass for wrong or made-up facts. An answer that stays wrong is replaced or
-clearly marked "not confirmed".
-
-Free model setup: get a key at console.groq.com, then set `LLM_PROVIDER=auto`, `OPENAI_API_KEY=<your key>`,
-`OPENAI_BASE_URL=https://api.groq.com/openai/v1`, `LLM_REASONING_EFFORT=low`, `LLM_PRICE_IN=0` and `LLM_PRICE_OUT=0`.
-
-Also: `check_everyday` in the MCP server and the Claude connector, so Claude can use the calculators too.
+- **Expense desk:** open `/receipts` on your server. Drop receipts as text, PDF or photos and see what each agent read
+  and every check. Stopped receipts go to the review queue, and you can download a CSV. API:
+  `POST /receipts/process`. In MCP and the Claude connector: `process_receipt`.
+- **Photos:** `pip install "cascade-guard-ai[ocr]"` reads receipt photos with free offline OCR.
+- **Run the benchmark yourself:** `cascade-guard receipts benchmark --data <SROIE>/data --split test`, or the
+  `receipts-benchmark` GitHub workflow, which runs open models free on GitHub's machines.
 
 Get it: `pip install --upgrade cascade-guard-ai`. Full list: CHANGELOG.md

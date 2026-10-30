@@ -41,22 +41,31 @@ receipts, which come with the true date and total. Every receipt went through tw
 The guard checks each hand-off against **the receipt itself** and never sees the answers. The checks were written on
 receipts 0–299; the numbers below are on the other **326**, which were held out.
 
-| Agents | Receipts | Wrong amount posted: without → with | Wrong day posted | Any wrong entry posted | Fixed automatically | Stopped for a person (of them read right) |
-|---|---:|---|---|---|---:|---|
-| Rule-based agents | 326 | 97 (30%) → **25 (8%)** | 6 → 1 | 99 (30%) → **26 (8%)** | 57 | 33 (10%) (10) |
-| Rule-based agents, read from the photos (OCR) | 326 | 107 (33%) → **29 (9%)** | 92 → 6 | 160 (49%) → **35 (11%)** | 40 | 97 (30%) (4) |
-| Llama 3.2 3B (open model) | 326 | 63 (19%) → **16 (5%)** | 15 → 0 | 312 (96%) → **16 (5%)** | 206 | 94 (29%) (63) |
-| Qwen 2.5 3B (open model) | 326 | 55 (17%) → **17 (5%)** | 48 → 1 | 262 (80%) → **18 (6%)** | 221 | 28 (9%) (25) |
+| Agents | Wrong amount posted: without → with | Wrong day posted | Policy broken | Any wrong entry posted | Fixed automatically | Stopped for a person (of them right) |
+|---|---|---|---|---|---:|---|
+| Rule-based agents | 97 (30%) → **26 (8%)** | 6 → 1 | 19 → 0 | 99 (30%) → **27 (8%)** | 58 | 29 (9%) (8) |
+| Rule-based agents, read from the photos (OCR) | 107 (33%) → **29 (9%)** | 92 → 6 | 22 → 0 | 160 (49%) → **35 (11%)** | 40 | 96 (29%) (3) |
+| Llama 3.2 3B (open model) | 63 (19%) → **18 (6%)** | 17 → 0 | 130 → 0 | 320 (98%) → **18 (6%)** | 210 | 93 (29%) (6) |
+| Qwen 2.5 3B (open model) | 59 (18%) → **16 (5%)** | 54 → 1 | 229 → 0 | 286 (88%) → **17 (5%)** | 250 | 19 (6%) (14) |
+| Qwen 2.5 7B (open model) | 88 (27%) → **9 (3%)** | 35 → 1 | 100 → 0 | 111 (34%) → **10 (3%)** | 59 | 86 (26%) (20) |
 
-- *Wrong amount* is the money that would reach the books. *Any wrong entry* also counts dates in the wrong format
-  (`18/04/2018` in an ISO date field). The open models made many of those, and a format fix in code would also
-  remove them.
+Each row is the same 326 held-out receipts.
+
+- *Wrong amount* is the money that would reach the books; it is the headline.
+- *Policy broken*: the policy step's decision was wrong for the true amount. The small models often called a fine
+  receipt a "duplicate" or rejected it. The guard recomputes the decision, so none got through.
+- *Any wrong entry* also counts dates in the wrong format (`18-04-2018` in an ISO date field) and wrong decisions. The
+  small models made many of those, which is why their "without" numbers are so high. A format fix in code would
+  remove part of them; the wrong amounts would remain.
 - *Fixed automatically*: the guard told the agent what was wrong (for example "50.00 is the cash paid on the
   receipt, not the total") and the agent corrected itself.
 - *Stopped for a person* is the cost. In brackets: how many of those the agents had read right, so a person
-  confirms them for nothing.
+  confirms them for nothing. The rest were really wrong.
+- Cost: retries took 3.2 to 4.4 agent calls per receipt instead of 3.
 - AI agents: free open models run with Ollama on GitHub's machines (the `receipts-benchmark` workflow). Photos: the
   scans read with free offline OCR (`pip install "cascade-guard-ai[ocr]"`).
+- One check was improved after the first test results; it was tuned on receipts 0–299 only, and all numbers here
+  are from after the change. [benchmarks/README.md](benchmarks/README.md) says exactly what changed.
 
 Method, raw results and how to reproduce: [benchmarks/README.md](benchmarks/README.md); full reports for each run are on
 the [`benchmark-results`](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results) branch.
@@ -536,9 +545,9 @@ Releases and the GitHub container registry. See
   ground truth, so they are an upper bound. The paid-model evaluation is built and cost-gated but has not been run.
 - **Receipts:** one public dataset (Malaysian shop receipts, 2017–2018) and one workflow. Its checks were written for
   that kind of receipt: other countries, languages and document types need their own checks and their own measured
-  run. The guard stops some receipts the agents read right (see the table): with the AI agents, most of the
-  stopped receipts had been read right but could not be confirmed from the text, so a person checks them for
-  nothing. The open models tested are small (3B–7B) and run on CPU; larger models make fewer
+  run. The guard stops some receipts the agents read right (see the table): up to 20 of 326 with the AI agents.
+  It rejects the true answer itself on 27 of the 326 test receipts, mostly when OCR separates an amount from its
+  label. The open models tested are small (3B–7B) and run on CPU; larger models make fewer
   mistakes for the guard to catch.
 - Fault types, the 10% fault rate and the 90% guided-repair success rate are assumptions, not measurements.
 - The pilot invoices are generated; real invoices may use layouts the rule parser cannot read (model agents can).
