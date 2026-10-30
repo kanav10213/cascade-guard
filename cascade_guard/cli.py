@@ -353,6 +353,11 @@ def cmd_agent(args) -> int:
     return 0 if r["ok"] else 1
 
 
+def cmd_receipts(args) -> int:
+    from cascade_guard.receipts_bench import main
+    return main(args.rest)
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="cascade-guard", description="Stop errors from cascading through "
                                 "chains of AI agents.", epilog="Docs: README.md, and /docs on a running server.")
@@ -410,6 +415,9 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--token-var", help="for add: the server environment variable that holds the agent's token")
     s.add_argument("--timeout", type=float, help="for add: seconds to wait (default 90)")
     s.add_argument("--description", help="for add: one line about the agent")
+
+    s = add("receipts", cmd_receipts, "expense receipts: benchmark on real receipts (benchmark, merge)")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="benchmark --data DIR [--split test] [--model] | merge FILES")
 
     for name, module, help_ in (("compare", "compare", "rule-based paired comparison; writes report.json"),
                                 ("baseline", "baseline", "rule-based chain without the guard"),

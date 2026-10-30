@@ -298,7 +298,7 @@ class OpenAICompatClient(BaseClient):
                 import httpx
             except ImportError as e:
                 raise NotConfigured("the httpx package is missing: pip install httpx") from e
-            http_client = httpx.Client(timeout=120)
+            http_client = httpx.Client(timeout=float(os.getenv("LLM_TIMEOUT", "120")))
         self._http = http_client
         self._send_temperature = True
         self._tokens_field = "max_tokens"

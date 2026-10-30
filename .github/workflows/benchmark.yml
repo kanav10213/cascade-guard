@@ -1,0 +1,121 @@
+# Real-model benchmark: an open model (run free on the GitHub runner with Ollama) acts as the receipt agents on the
+# real SROIE receipts, without and with Cascade Guard. Results are committed to the benchmark-results branch.
+# Optional: set the GROQ_API_KEY repository secret and choose provider "groq" to use Groq's free API instead.
+name: receipts-benchmark
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Ollama model (or Groq model when provider is groq)"
+        default: "qwen2.5:3b"
+      provider:
+        description: "ollama (free, on the runner) or groq (needs the GROQ_API_KEY secret)"
+        default: "ollama"
+      split:
+        description: "test (held out, 326 receipts), dev or all"
+        default: "test"
+      shards:
+        description: "parallel runners"
+        default: "8"
+      limit:
+        description: "only the first N receipts of the split (empty: all)"
+        default: ""
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.s.outputs.shards }}
+    steps:
+      - id: s
+        run: |
+          n=${{ inputs.shards }}
+          echo "shards=$(python3 -c "import json;print(json.dumps(list(range(1,$n+1))))")" >> "$GITHUB_OUTPUT"
+
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt .
+      - name: Get the receipts (ICDAR 2019 SROIE, pinned)
+        run: |
+          git init -q sroie && cd sroie
+          git remote add origin https://github.com/zzzDavid/ICDAR-2019-SROIE
+          git fetch -q --depth 1 origin 27be4271b251c256f695acbade9a801bffe85994
+          git checkout -q FETCH_HEAD -- data/box data/key
+      - name: Start the model (Ollama)
+        if: inputs.provider == 'ollama'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          sudo systemctl stop ollama 2>/dev/null || true
+          OLLAMA_CONTEXT_LENGTH=8192 OLLAMA_NUM_PARALLEL=1 nohup ollama serve > ollama.log 2>&1 &
+          for i in $(seq 1 30); do curl -s localhost:11434/api/version && break; sleep 2; done
+          ollama pull "${{ inputs.model }}"
+      - name: Benchmark
+        env:
+          LLM_PROVIDER: openai
+          OPENAI_BASE_URL: ${{ inputs.provider == 'groq' && 'https://api.groq.com/openai/v1' || 'http://localhost:11434/v1' }}
+          OPENAI_API_KEY: ${{ inputs.provider == 'groq' && secrets.GROQ_API_KEY || '' }}
+          LLM_MODEL: ${{ inputs.model }}
+          LLM_PRICE_IN: "0"
+          LLM_PRICE_OUT: "0"
+          LLM_CACHE: .llm_cache/receipts.jsonl
+          LLM_TIMEOUT: "900"
+        run: |
+          limit=""
+          if [ -n "${{ inputs.limit }}" ]; then limit="--limit ${{ inputs.limit }}"; fi
+          python -m cascade_guard receipts benchmark --data sroie/data --split ${{ inputs.split }} $limit \
+            --model --shard ${{ matrix.shard }}/${{ inputs.shards }} --out part-${{ matrix.shard }}.json \
+            --md part-${{ matrix.shard }}.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.shard }}
+          path: part-${{ matrix.shard }}.json
+
+  report:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt .
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+      - name: Merge and commit to the benchmark-results branch
+        run: |
+          name=$(echo "${{ inputs.provider }}-${{ inputs.model }}-${{ inputs.split }}" | tr ':/' '--')
+          mkdir -p out
+          python -m cascade_guard receipts merge parts/*/part-*.json --out out/$name.json --md out/$name.md \
+            --title "Expense receipts with ${{ inputs.model }} as the agents: without and with Cascade Guard"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code origin benchmark-results >/dev/null; then
+            git fetch -q origin benchmark-results && git checkout -q -B benchmark-results origin/benchmark-results
+          else
+            git checkout -q --orphan benchmark-results && git rm -rq --cached . && git clean -fdq -e out
+          fi
+          mkdir -p results && cp out/$name.* results/
+          git add results
+          git commit -qm "Benchmark: $name (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push -q origin benchmark-results
+      - uses: actions/upload-artifact@v4
+        with:
+          name: report
+          path: out
