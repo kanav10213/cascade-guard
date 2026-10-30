@@ -45,7 +45,7 @@ approves; the same vendor, date and total as an earlier receipt: a duplicate):
 
 | Outcome | Meaning |
 |---|---|
-| posted, right | the amount and date are correct |
+| posted, right | the amount, the date and the policy decision are correct |
 | **posted, wrong** | a **silent error**: wrong data reached the ledger and nobody was told |
 | stopped, really wrong | the guard kept a wrong receipt out of the ledger |
 | stopped, actually right | a false alarm: a person checks a receipt that was fine |
