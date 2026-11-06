@@ -1,0 +1,14 @@
+## the same, with the AI run as a program: --ai 'cmd:ollama run qwen2.5:3b'
+Checking 6 receipts with command · ollama run qwen2.5:3b. Policy: above 5000.00 needs a manager.
+  STOPPED    cafe-smudged.txt      needs a person: '3I/O1/2O18' is not a date
+  FIXED      fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        approve
+                                     (the guard caught: under the policy the decision for a total of 2090.00 is 'approve' (within 5000.00), not 'needs_approval')
+  OK         kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 USD  groceries   approve
+  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 USD  meals       approve
+                                     (the guard caught: under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject')
+  OK         laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 2026-10-28   62499.00 INR  electronics needs_approval
+  OK         restaurant-pune.txt   SHREE KRISHNA BHOJANALAYA    2026-11-04     430.00 INR  other       approve
+
+5 posted (2 of them fixed by the guard first), 1 stopped for a person, 0 unreadable. Posted total: 65019.00 INR, 516.05 USD.
+Look at: cafe-smudged.txt
+Wrote out/ollama-cmd.csv.

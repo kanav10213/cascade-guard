@@ -1,0 +1,7 @@
+file,status,vendor,date,amount,currency,category,decision,issue,run_id
+examples/receipts/cafe-smudged.txt,posted,SEDAP CAFE SDN BHD,2018-01-31,12.00,USD,meals,approve,fixed after: '3I/O1/2O18' is not a date,
+examples/receipts/fuel-pune.txt,posted,SAI AUTO FUELS,2026-11-02,2090.00,INR,fuel,approve,"fixed after: the date must be 2026-11-02 (YYYY-MM-DD; the receipt's date 02 NOV 2026 is day first), not 02-11-2026",
+examples/receipts/kirana-kothrud.txt,posted,SHRI BALAJI KIRANA STORES,2026-11-05,497.00,USD,groceries,approve,"fixed after: the date must be 2026-11-05 (YYYY-MM-DD; the receipt's date 05/11/2026 is day first), not 2026-05-11",
+examples/receipts/kopi-house-kl.txt,posted,KOPI HOUSE RESTAURANT,2018-01-03,19.05,USD,meals,approve,"fixed after: the date must be 2018-01-03 (YYYY-MM-DD; the receipt's date 03/01/2018 is day first), not 2018-03-01",
+examples/receipts/laptop-bengaluru.txt,posted,DIGITAL WORLD ELECTRONICS PVT LTD,2026-10-28,62499.00,INR,electronics,needs_approval,"fixed after: the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026",
+examples/receipts/restaurant-pune.txt,posted,SHREE KRISHNA BHOJANALAYA,2026-11-04,430.00,INR,meals,approve,"fixed after: the date must be 2026-11-04 (YYYY-MM-DD; the receipt's date 04/11/2026 is day first), not 2026-04-11",

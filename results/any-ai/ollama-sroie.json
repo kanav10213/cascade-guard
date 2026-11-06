@@ -1,0 +1,2013 @@
+{
+ "agents": "openai:qwen2.5:3b",
+ "dataset": {
+  "name": "ICDAR 2019 SROIE (train set, corrected annotations)",
+  "repo": "https://github.com/zzzDavid/ICDAR-2019-SROIE",
+  "commit": "27be4271b251c256f695acbade9a801bffe85994"
+ },
+ "max_retries": 2,
+ "rows": [
+  {
+   "id": "300",
+   "truth": {
+    "total": "1.75",
+    "date": "18/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "18/04/2018",
+     "total": "1.75",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": null,
+     "date": null,
+     "amount": null,
+     "currency": null,
+     "category": null,
+     "memo": null
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 27.912
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "18/04/2018",
+     "total": "1.75",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-18",
+     "amount": "1.75",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 5,
+    "seconds": 22.235,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 1.75 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-18 (YYYY-MM-DD; the receipt's date 18/04/2018 is day first), not 18-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "301",
+   "truth": {
+    "total": "10.20",
+    "date": "22/04/2018",
+    "company": "AEON CO. (M) SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "10.20",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22-04-2018",
+     "amount": "10.20",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Groceries purchase at AEON CO. (M) BHD"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 25.999
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "10.20",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-22",
+     "amount": "10.20",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 4,
+    "seconds": 20.021,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-22 (YYYY-MM-DD; the receipt's date 22/04/2018 is day first), not 22-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "302",
+   "truth": {
+    "total": "98.35",
+    "date": "22/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "98.35",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22-04-2018",
+     "amount": "98.35",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Grocery shopping at AEON"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 30.809
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "22/04/2018",
+     "total": "98.35",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-22",
+     "amount": "98.35",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 4,
+    "seconds": 20.862,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-22 (YYYY-MM-DD; the receipt's date 22/04/2018 is day first), not 22-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "303",
+   "truth": {
+    "total": "30.90",
+    "date": "28/04/18",
+    "company": "DOMINO'S PIZZA"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": false,
+    "decision": "needs_approval",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "30.90",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "30.90",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Pizza purchase for April 28, 2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 36.517
+   },
+   "with": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "45.70",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "45.70",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Pizza purchase"
+    },
+    "calls": 5,
+    "seconds": 24.581,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the receipt has a larger amount, 45.70, that is not cash paid or change; the total is normally the largest"
+     },
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 45.70 is 'approve' (within 200.00), not 'needs_approval'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "304",
+   "truth": {
+    "total": "39.60",
+    "date": "28/04/18",
+    "company": "DOMINO'S PIZZA"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": false,
+    "decision": "needs_approval",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "39.60",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "39.60",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Meal at Domino's Pizza"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 30.868
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "28/04/18",
+     "total": "39.60",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "2018-04-28",
+     "amount": "39.60",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Pizza for dinner"
+    },
+    "calls": 5,
+    "seconds": 23.479,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 39.60 is 'approve' (within 200.00), not 'needs_approval'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-28 (YYYY-MM-DD; the receipt's date 28/04/18 is day first), not 28-04-18"
+     }
+    ]
+   }
+  },
+  {
+   "id": "305",
+   "truth": {
+    "total": "81.80",
+    "date": "17/04/2018",
+    "company": "YHM AEON TEBRAU CITY"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17/04/2018",
+     "total": "81.80",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17-04-2018",
+     "amount": "81.80",
+     "currency": "MYR",
+     "category": "groceries",
+     "memo": "Groceries purchase at AEON TEBRAU CITY"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 42.021
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "17/04/2018",
+     "total": "81.80",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "YHM AEON TEBRAU CITY",
+     "date": "2018-04-17",
+     "amount": "81.80",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Groceries and miscellaneous purchases"
+    },
+    "calls": 4,
+    "seconds": 22.854,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-17 (YYYY-MM-DD; the receipt's date 17/04/2018 is day first), not 17-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "306",
+   "truth": {
+    "total": "18.90",
+    "date": "08/04/2018",
+    "company": "THE TOAST F&B SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "THE TOAST F&B SDN BHD",
+     "date": "08/04/2018",
+     "total": "18.90",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "THE TOAST F&B SDN BHD",
+     "date": "2018-04-08",
+     "amount": "18.90",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Meal at The Toast F&B"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 37.634
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "THE TOAST F&B SDN BHD",
+     "date": "08/04/2018",
+     "total": "18.90",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "THE TOAST F&B SDN BHD",
+     "date": "2018-04-08",
+     "amount": "18.90",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Meal at The Toast F&B on 08/04/2018"
+    },
+    "calls": 3,
+    "seconds": 16.381,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "307",
+   "truth": {
+    "total": "46.55",
+    "date": "20/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "20/04/2018",
+     "total": "46.55",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-20",
+     "amount": "46.55",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Receipt from AEON CO. (M) BHD for miscellaneous expenses"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 29.552
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "20/04/2018",
+     "total": "46.55",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-20",
+     "amount": "46.55",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Groceries purchase on April 20, 2018"
+    },
+    "calls": 3,
+    "seconds": 17.381,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "308",
+   "truth": {
+    "total": "4.40",
+    "date": "12/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "12/04/2018",
+     "total": "4.40",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": null,
+     "date": null,
+     "amount": null,
+     "currency": null,
+     "category": null,
+     "memo": null
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 29.363
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "12/04/2018",
+     "total": "4.40",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-12",
+     "amount": "4.40",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Groceries purchase on April 12, 2018"
+    },
+    "calls": 4,
+    "seconds": 21.525,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 4.40 is 'approve' (within 200.00), not 'reject'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "309",
+   "truth": {
+    "total": "6.40",
+    "date": "20/04/2018",
+    "company": "PASARAYA JALAL SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "PASARAYA JALAL SDN BHD",
+     "date": "20/04/2018",
+     "total": "6.40",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "PASARAYA JALAL SDN BHD",
+     "date": "20-04-2018",
+     "amount": "6.40",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries at PASARAYA JALAL SDN BHD"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 38.344
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "PASARAYA JALAL SDN BHD",
+     "date": "20/04/2018",
+     "total": "6.40",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "PASARAYA JALAL SDN BHD",
+     "date": "2018-04-20",
+     "amount": "6.40",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries purchase on April 20, 2018"
+    },
+    "calls": 4,
+    "seconds": 20.108,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 6.40 is 'approve' (within 200.00), not 'reject'"
+     }
+    ]
+   }
+  },
+  {
+   "id": "310",
+   "truth": {
+    "total": "7.20",
+    "date": "27/04/18",
+    "company": "DOMINO'S PIZZA"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "27/04/18",
+     "total": "7.20",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DOMINO'S PIZZA",
+     "date": "27-04-18",
+     "amount": "7.20",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Pizza purchase"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 41.31
+   },
+   "with": {
+    "outcome": "stopped_ok",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": null,
+    "vendor_ok": false,
+    "fields": null,
+    "entry": null,
+    "calls": 3,
+    "seconds": 14.165,
+    "halted_at": "extract",
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest"
+     },
+     {
+      "step": "extract",
+      "attempt": 1,
+      "reason": "15.60 is the subtotal on the receipt, not the total"
+     },
+     {
+      "step": "extract",
+      "attempt": 2,
+      "reason": "2.80 is the change on the receipt, not the total; the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest"
+     }
+    ]
+   }
+  },
+  {
+   "id": "311",
+   "truth": {
+    "total": "122.80",
+    "date": "01/04/2018",
+    "company": "AEON CO. (M) BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "01/04/2018",
+     "total": "122.80",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-01",
+     "amount": "122.80",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Groceries purchased at AEON CO. (M) BHD on 01/04/2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 50.597
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "01/04/2018",
+     "total": "122.80",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AEON CO. (M) BHD",
+     "date": "2018-04-01",
+     "amount": "122.80",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Purchases from AEON CO. (M) BHD on 01/04/2018"
+    },
+    "calls": 3,
+    "seconds": 21.433,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "312",
+   "truth": {
+    "total": "38.37",
+    "date": "19/05/18",
+    "company": "GUARDIAN HEALTH AND BEAUTY SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GUARDIAN HEALTH AND BEAUTY SDN BHD",
+     "date": "19/05/18",
+     "total": "38.37",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "GUARDIAN HEALTH AND BEAUTY SDN BHD",
+     "date": "19-05-18",
+     "amount": "38.37",
+     "currency": "RM",
+     "category": "pharmacy",
+     "memo": "Purchase of skincare products"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 45.295
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GUARDIAN HEALTH AND BEAUTY SDN BHD",
+     "date": "19/05/18",
+     "total": "38.37",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "GUARDIAN HEALTH AND BEAUTY SDN BHD",
+     "date": "2018-05-19",
+     "amount": "38.37",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Beauty products purchase"
+    },
+    "calls": 4,
+    "seconds": 27.17,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-05-19 (YYYY-MM-DD; the receipt's date 19/05/18 is day first), not 19-05-18"
+     }
+    ]
+   }
+  },
+  {
+   "id": "313",
+   "truth": {
+    "total": "52.80",
+    "date": "19/05/18",
+    "company": "TF VALUE-MART SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "TF VALUE-MART SDN BHD",
+     "date": "19/05/18",
+     "total": "52.80",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "TF VALUE-MART SDN BHD",
+     "date": "19/05/18",
+     "amount": "52.80",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Groceries purchase at TF VALUE-MART SDN BHD on 19/05/18"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 47.988
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "TF VALUE-MART SDN BHD",
+     "date": "19/05/18",
+     "total": "52.80",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "TF VALUE-MART SDN BHD",
+     "date": "2018-05-19",
+     "amount": "52.80",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Groceries"
+    },
+    "calls": 4,
+    "seconds": 27.24,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-05-19 (YYYY-MM-DD; the receipt's date 19/05/18 is day first), not 19-05-18"
+     }
+    ]
+   }
+  },
+  {
+   "id": "314",
+   "truth": {
+    "total": "20.00",
+    "date": "20180428",
+    "company": "CHECKERS HYPERMARKET SDN BHD (JALAN KLANG LAMA)"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "CHECKERS HYPERMARKET SDN BHD",
+     "date": "20180428",
+     "total": "20.00",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "CHECKERS HYPERMARKET SDN BHD",
+     "date": "2018-04-28",
+     "amount": "20.00",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries purchase on April 28, 2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 47.115
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "CHECKERS HYPERMARKET SDN BHD",
+     "date": "20180428",
+     "total": "20.00",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "CHECKERS HYPERMARKET SDN BHD",
+     "date": "2018-04-28",
+     "amount": "20.00",
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries purchased on April 28, 2018"
+    },
+    "calls": 3,
+    "seconds": 23.626,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "315",
+   "truth": {
+    "total": "11.25",
+    "date": "18/04/2018",
+    "company": "BERRY'S CAKE HOUSE"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "BERRY'S CAKE HOUSE",
+     "date": "18/04/2018",
+     "total": "11.25",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "BERRY'S CAKE HOUSE",
+     "date": "18-04-2018",
+     "amount": "11.25",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Cake purchase"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 47.282
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "BERRY'S CAKE HOUSE",
+     "date": "18/04/2018",
+     "total": "11.25",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "BERRY'S CAKE HOUSE",
+     "date": "2018-04-18",
+     "amount": "11.25",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Cake purchase"
+    },
+    "calls": 5,
+    "seconds": 30.202,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 11.25 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-18 (YYYY-MM-DD; the receipt's date 18/04/2018 is day first), not 18-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "316",
+   "truth": {
+    "total": "1.38",
+    "date": "30-04-2018",
+    "company": "WESTERN EASTERN STATIONERY SDN. BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "WESTERN EASTERN STATIONERY SDN. BHD",
+     "date": "30-04-2018",
+     "total": "1.4",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "WESTERN EASTERN STATIONERY SDN. BHD",
+     "date": "30-04-2018",
+     "amount": "1.40",
+     "currency": "USD",
+     "category": "stationery",
+     "memo": "Purchase of stationery items"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 40.312
+   },
+   "with": {
+    "outcome": "stopped_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": null,
+    "vendor_ok": false,
+    "fields": null,
+    "entry": null,
+    "calls": 3,
+    "seconds": 12.823,
+    "halted_at": "extract",
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "1.40 is the cash paid on the receipt, not the total"
+     },
+     {
+      "step": "extract",
+      "attempt": 1,
+      "reason": "1.40 is the cash paid on the receipt, not the total"
+     },
+     {
+      "step": "extract",
+      "attempt": 2,
+      "reason": "1.40 is the cash paid on the receipt, not the total"
+     }
+    ]
+   }
+  },
+  {
+   "id": "317",
+   "truth": {
+    "total": "RM5.00",
+    "date": "16-04-2018",
+    "company": "WESTERN EASTERN ST TIONERY SDN. BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "WESTERN EASTERN ST TIONERY SDN. BHD",
+     "date": "16-04-2018",
+     "total": "5.00",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "WESTERN EASTERN ST TIONERY SDN. BHD",
+     "date": "16-04-2018",
+     "amount": "5.00",
+     "currency": "RM",
+     "category": "stationery",
+     "memo": "Stationery purchase"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 38.113
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "WESTERN EASTERN ST TIONERY SDN. BHD",
+     "date": "16-04-2018",
+     "total": "5.00",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "WESTERN EASTERN ST TIONERY SDN. BHD",
+     "date": "2018-04-16",
+     "amount": "5.00",
+     "currency": "RM",
+     "category": "stationery",
+     "memo": "Stationery purchase"
+    },
+    "calls": 5,
+    "seconds": 35.389,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 5.00 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-16 (YYYY-MM-DD; the receipt's date 16-04-2018 is day first), not 16-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "318",
+   "truth": {
+    "total": "25.00",
+    "date": "13/04/2018",
+    "company": "GHEE HIANG GH DISTRIBUTOR & MARKETING SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
+     "date": "13/04/2018",
+     "total": "50.00",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
+     "date": "2018-04-13",
+     "amount": "50.00",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Purchased from GH DISTRIBUTOR & MARKETING SDN BHD on 13/04/2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 47.766
+   },
+   "with": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
+     "date": "13/04/2018",
+     "total": "50.00",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
+     "date": "2018-04-13",
+     "amount": "50.00",
+     "currency": "MYR",
+     "category": "other",
+     "memo": "Purchased office supplies"
+    },
+    "calls": 4,
+    "seconds": 33.234,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-13 (YYYY-MM-DD; the receipt's date 13/04/2018 is day first), not 13-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "319",
+   "truth": {
+    "total": "41.50",
+    "date": "21-04-2018",
+    "company": "MENTAI INITIAL SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "MENTAI INITIAL SDN BHD",
+     "date": "21-04-2018",
+     "total": "41.50",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "MENTAI INITIAL SDN BHD",
+     "date": "21-04-2018",
+     "amount": "41.50",
+     "currency": "USD",
+     "category": "groceries",
+     "memo": "Groceries purchase on 21-04-2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 51.872
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "MENTAI INITIAL SDN BHD",
+     "date": "21-04-2018",
+     "total": "41.50",
+     "currency": "MYR"
+    },
+    "entry": {
+     "vendor": "MENTAI INITIAL SDN BHD",
+     "date": "2018-04-21",
+     "amount": "41.50",
+     "currency": "MYR",
+     "category": "groceries",
+     "memo": "Groceries purchase on 21-04-2018"
+    },
+    "calls": 3,
+    "seconds": 34.648,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "320",
+   "truth": {
+    "total": "RM20.40",
+    "date": "04-05-2018",
+    "company": "THE ROTI MAN BAKERY"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "ROTI MAN BAKERY",
+     "date": "04-05-2018",
+     "total": "20.40",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "ROTI MAN BAKERY",
+     "date": "2018-04-05",
+     "amount": "20.40",
+     "currency": "RM",
+     "category": "meals",
+     "memo": "Bakery meal"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 45.607
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "ROTI MAN BAKERY",
+     "date": "04-05-2018",
+     "total": "20.40",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "ROTI MAN BAKERY",
+     "date": "2018-05-04",
+     "amount": "20.40",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Bakery meal"
+    },
+    "calls": 4,
+    "seconds": 41.742,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-05-04 (YYYY-MM-DD; the receipt's date 04-05-2018 is day first), not 2018-04-05"
+     }
+    ]
+   }
+  },
+  {
+   "id": "321",
+   "truth": {
+    "total": "3.70",
+    "date": "20/04/2018",
+    "company": "HAXINCONE RESOURCES SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "FAMILYMART",
+     "date": "20/04/2018",
+     "total": "6.30",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "FAMILYMART",
+     "date": "20-04-2018",
+     "amount": "6.30",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Groceries purchased on April 20, 2018"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 42.458
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "FAMILYMART",
+     "date": "20/04/2018",
+     "total": "3.70",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "FAMILYMART",
+     "date": "2018-04-20",
+     "amount": "3.70",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Snacks"
+    },
+    "calls": 6,
+    "seconds": 47.578,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "6.30 is the change on the receipt, not the total; the cash paid (10.00) minus the change (6.30) is 3.70, not 6.30"
+     },
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 3.70 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-20 (YYYY-MM-DD; the receipt's date 20/04/2018 is day first), not 20-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "322",
+   "truth": {
+    "total": "18.80",
+    "date": "16/04/2018",
+    "company": "FAMILYMART"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "MAXINCOME RESOURCES SDN BHD",
+     "date": "16/04/2018",
+     "total": "18.80",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "MAXINCOME RESOURCES SDN BHD",
+     "date": "2018-04-16",
+     "amount": "18.80",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Purchases from MAXINCOME RESOURCES SDN BHD"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 49.906
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "MAXINCOME RESOURCES SDN BHD",
+     "date": "16/04/2018",
+     "total": "18.80",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "MAXINCOME RESOURCES SDN BHD",
+     "date": "2018-04-16",
+     "amount": "18.80",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Purchases from MAXINCOME RESOURCES SDN BHD"
+    },
+    "calls": 3,
+    "seconds": 36.853,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "323",
+   "truth": {
+    "total": "9.50",
+    "date": "19-04-2018",
+    "company": "R&C VENTURE SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "R&C VENTURE SDN BHD",
+     "date": "19-04-2018",
+     "total": "9.50",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "R&C VENTURE SDN BHD",
+     "date": "19-04-2018",
+     "amount": "9.50",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Receipt for goods/services not specified"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 45.505
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "R&C VENTURE SDN BHD",
+     "date": "19-04-2018",
+     "total": "9.50",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "R&C VENTURE SDN BHD",
+     "date": "2018-04-19",
+     "amount": "9.50",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Purchases from R&C VENTURE SDN BHD"
+    },
+    "calls": 5,
+    "seconds": 44.996,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 9.50 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2018-04-19 (YYYY-MM-DD; the receipt's date 19-04-2018 is day first), not 19-04-2018"
+     }
+    ]
+   }
+  },
+  {
+   "id": "324",
+   "truth": {
+    "total": "28.90",
+    "date": "29/10/2017",
+    "company": "SUBANG HEALTHCARE SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "needs_approval",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "AA PHARMACY SUBANG HEALTHCARE SDN",
+     "date": "29/10/2017",
+     "total": "28.90",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AA PHARMACY SUBANG HEALTHCARE SDN",
+     "date": "29-10-2017",
+     "amount": "28.90",
+     "currency": "USD",
+     "category": "pharmacy",
+     "memo": "Medication purchase"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 50.353
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "AA PHARMACY",
+     "date": "29/10/2017",
+     "total": "28.90",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AA PHARMACY",
+     "date": "2017-10-29",
+     "amount": "28.90",
+     "currency": "USD",
+     "category": "pharmacy",
+     "memo": "Prescription medications"
+    },
+    "calls": 4,
+    "seconds": 42.662,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-10-29 (YYYY-MM-DD; the receipt's date 29/10/2017 is day first), not 29-10-2017"
+     }
+    ]
+   }
+  },
+  {
+   "id": "325",
+   "truth": {
+    "total": "234.40",
+    "date": "13/10/2017",
+    "company": "DIGI TELECOMMUNICATIONS SDN BHD"
+   },
+   "expected_decision": "needs_approval",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": true,
+    "decision": "needs_approval",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
+     "date": "13/10/2017",
+     "total": "234.40",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
+     "date": "13-10-2017",
+     "amount": "234.40",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Mobile phone bill"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 48.636
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "needs_approval",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
+     "date": "13/10/2017",
+     "total": "234.40",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
+     "date": "2017-10-13",
+     "amount": "234.40",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Mobile phone bill"
+    },
+    "calls": 4,
+    "seconds": 40.949,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-10-13 (YYYY-MM-DD; the receipt's date 13/10/2017 is day first), not 13-10-2017"
+     }
+    ]
+   }
+  },
+  {
+   "id": "326",
+   "truth": {
+    "total": "28.40",
+    "date": "25/09/2017",
+    "company": "KHIAM AIK CHAN SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "needs_approval",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "KHIAM AIK CHAN SDN BHD",
+     "date": "25/09/2017",
+     "total": "28.40",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "KHIAM AIK CHAN SDN BHD",
+     "date": "25-09-2017",
+     "amount": "28.40",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Purchases from KHIAM AIK CHAN SDN BHD"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 45.618
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "KHIAM AIK CHAN SDN BHD",
+     "date": "25/09/2017",
+     "total": "28.40",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "KHIAM AIK CHAN SDN BHD",
+     "date": "2017-09-25",
+     "amount": "28.40",
+     "currency": "RM",
+     "category": "other",
+     "memo": "Purchase of office supplies"
+    },
+    "calls": 5,
+    "seconds": 45.28,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 28.40 is 'approve' (within 200.00), not 'needs_approval'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-09-25 (YYYY-MM-DD; the receipt's date 25/09/2017 is day first), not 25-09-2017"
+     }
+    ]
+   }
+  },
+  {
+   "id": "327",
+   "truth": {
+    "total": "78.10",
+    "date": "11/08/2017",
+    "company": "SUBANG HEALTHCARE SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "AA PHARMACY",
+     "date": "11/08/2017",
+     "total": "78.10",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "AA PHARMACY",
+     "date": "2017-08-11",
+     "amount": "78.10",
+     "currency": "USD",
+     "category": "pharmacy",
+     "memo": "Prescription medications"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 48.533
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": false,
+    "fields": {
+     "vendor": "AA PHARMACY",
+     "date": "11/08/2017",
+     "total": "78.10",
+     "currency": "BHD"
+    },
+    "entry": {
+     "vendor": "AA PHARMACY",
+     "date": "2017-08-11",
+     "amount": "78.10",
+     "currency": "BHD",
+     "category": "pharmacy",
+     "memo": "Medicine purchase"
+    },
+    "calls": 3,
+    "seconds": 34.169,
+    "halted_at": null,
+    "rejections": []
+   }
+  },
+  {
+   "id": "328",
+   "truth": {
+    "total": "33.05",
+    "date": "21/07/2017",
+    "company": "GARDENIA BAKERIES (KI ) SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": false,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GARDENIA BAKERIES (KI ) SDN BHD",
+     "date": "21/07/2017",
+     "total": "33.05",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": null,
+     "date": null,
+     "amount": null,
+     "currency": null,
+     "category": null,
+     "memo": null
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 52.068
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GARDENIA BAKERIES (KI ) SDN BHD",
+     "date": "21/07/2017",
+     "total": "33.05",
+     "currency": "RM"
+    },
+    "entry": {
+     "vendor": "GARDENIA BAKERIES (KI ) SDN BHD",
+     "date": "2017-07-21",
+     "amount": "33.05",
+     "currency": "RM",
+     "category": "meals",
+     "memo": "Bakery meal"
+    },
+    "calls": 5,
+    "seconds": 46.255,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 33.05 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-07-21 (YYYY-MM-DD; the receipt's date 21/07/2017 is day first), not 21-07-2017"
+     }
+    ]
+   }
+  },
+  {
+   "id": "329",
+   "truth": {
+    "total": "53.14",
+    "date": "30/08/2017",
+    "company": "GARDENIA BAKERIES (KL) SDN BHD"
+   },
+   "expected_decision": "approve",
+   "without": {
+    "outcome": "posted_wrong",
+    "total_ok": true,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": "reject",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
+     "date": "30/08/2017",
+     "total": "53.14",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
+     "date": "30-08-2017",
+     "amount": "53.14",
+     "currency": "USD",
+     "category": "other",
+     "memo": "Bakery purchase"
+    },
+    "errors": [],
+    "calls": 3,
+    "seconds": 53.283
+   },
+   "with": {
+    "outcome": "posted_ok",
+    "total_ok": true,
+    "date_ok": true,
+    "decision_ok": true,
+    "decision": "approve",
+    "vendor_ok": true,
+    "fields": {
+     "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
+     "date": "30/08/2017",
+     "total": "53.14",
+     "currency": "USD"
+    },
+    "entry": {
+     "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
+     "date": "2017-08-30",
+     "amount": "53.14",
+     "currency": "USD",
+     "category": "meals",
+     "memo": "Bakery meal"
+    },
+    "calls": 5,
+    "seconds": 45.794,
+    "halted_at": null,
+    "rejections": [
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 53.14 is 'approve' (within 200.00), not 'reject'"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-08-30 (YYYY-MM-DD; the receipt's date 30/08/2017 is day first), not 30-08-2017"
+     }
+    ]
+   }
+  }
+ ],
+ "usage": {
+  "calls": 212,
+  "cached_calls": 0,
+  "input_tokens": 87767,
+  "output_tokens": 10715,
+  "cost_usd": 0.0,
+  "by_purpose": {
+   "receipt-agent": {
+    "calls": 212,
+    "cost_usd": 0.0
+   }
+  }
+ }
+}

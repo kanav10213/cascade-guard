@@ -1,0 +1,44 @@
+## cascade-guard ai list
+Use any of these with --ai (or CASCADE_AI=... in .env):
+
+  --ai                        runs on        needs                             note
+  rules                       built in       nothing                           rule-based agents, free and offline
+  anthropic[:model] / claude  cloud          ANTHROPIC_API_KEY                 default model claude-haiku-5-5
+  ollama[:model]              this computer  nothing (free)                    ollama.com; `ollama pull qwen2.5:7b`
+  lmstudio[:model]            this computer  nothing (free)                    LM Studio: Developer tab, Start server
+  llamacpp[:model]            this computer  nothing (free)                    llama.cpp: `llama-server -m model.gguf`
+  vllm[:model]                this computer  nothing (free)                    vLLM: `vllm serve <model>`
+  jan[:model]                 this computer  nothing (free)                    Jan: Settings, Local API Server
+  localai[:model]             this computer  nothing (free)                    LocalAI
+  openai:<model>              cloud          OPENAI_API_KEY                    
+  gemini:<model>              cloud          GEMINI_API_KEY or GOOGLE_API_KEY  free tier at aistudio.google.com
+  groq[:model]                cloud          GROQ_API_KEY or OPENAI_API_KEY    free tier at console.groq.com
+  openrouter:<model>          cloud          OPENROUTER_API_KEY                has free models
+  mistral:<model>             cloud          MISTRAL_API_KEY                   
+  deepseek[:model]            cloud          DEEPSEEK_API_KEY                  
+  together:<model>            cloud          TOGETHER_API_KEY                  
+  http://host:port/v1#model   anywhere       CASCADE_AI_KEY if it asks         any OpenAI-format server
+  cmd:<program>               this computer  the program                       prompt on stdin, answer on stdout
+
+In Python, any function works: cascade_guard.llm.presets.function_client(fn).
+
+Local AI servers answering now:
+  llamacpp  http://localhost:8080/v1     local-gguf
+
+CASCADE_AI is not set: the rule-based agents are used unless you pass --ai.
+
+## cascade-guard ai test --ai 'llamacpp'
+Asking openai · local-gguf at http://localhost:8080/v1 ...
+Answer (1.7 s): {
+  "total": "500.00"
+}
+It answers. (It did not read this total right on its own; that is the kind of mistake the guard is for.)
+Use it:  cascade-guard receipts run <folder> --ai llamacpp
+
+## cascade-guard ai test --ai 'http://localhost:8080/v1#local-gguf'
+Asking openai · local-gguf at http://localhost:8080/v1 ...
+Answer (0.5 s): {
+  "total": "500.00"
+}
+It answers. (It did not read this total right on its own; that is the kind of mistake the guard is for.)
+Use it:  cascade-guard receipts run <folder> --ai http://localhost:8080/v1#local-gguf

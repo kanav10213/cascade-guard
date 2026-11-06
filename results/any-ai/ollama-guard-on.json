@@ -1,0 +1,501 @@
+{
+  "agents": "openai · qwen2.5:3b at http://localhost:11434/v1",
+  "summary": {
+    "posted": 6,
+    "halted": 0,
+    "unreadable": 0,
+    "fixed_by_guard": 6,
+    "receipts": 6,
+    "total_posted": {
+      "USD": "528.05",
+      "INR": "65019.00"
+    },
+    "agent_calls": 24
+  },
+  "results": [
+    {
+      "name": "examples/receipts/cafe-smudged.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SEDAP CAFE SDN BHD",
+        "date": "31/01/2018",
+        "total": "12.00",
+        "currency": "USD"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is $12.00 which is below the threshold of 5000.00 and there are no duplicates."
+      },
+      "entry": {
+        "vendor": "SEDAP CAFE SDN BHD",
+        "date": "2018-01-31",
+        "amount": "12.00",
+        "currency": "USD",
+        "category": "meals",
+        "memo": "Meal at SEDAP CAFE SDN BHD on 31/01/2018"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "3I/O1/2O18",
+            "total": "12.00",
+            "currency": "USD"
+          },
+          "passed": false,
+          "reason": "'3I/O1/2O18' is not a date"
+        },
+        {
+          "step": "extract",
+          "attempt": 1,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "31/01/2018",
+            "total": "12.00",
+            "currency": "USD"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is $12.00 which is below the threshold of 5000.00 and there are no duplicates."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "2018-01-31",
+            "amount": "12.00",
+            "currency": "USD",
+            "category": "meals",
+            "memo": "Meal at SEDAP CAFE SDN BHD on 31/01/2018"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 25.857,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: '3I/O1/2O18' is not a date"
+    },
+    {
+      "name": "examples/receipts/fuel-pune.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SAI AUTO FUELS",
+        "date": "02 NOV 2026",
+        "total": "2090.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is 2090.00 which is below the threshold of 5000.00 and there are no duplicates."
+      },
+      "entry": {
+        "vendor": "SAI AUTO FUELS",
+        "date": "2026-11-02",
+        "amount": "2090.00",
+        "currency": "INR",
+        "category": "fuel",
+        "memo": "Auto fuel purchase"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SAI AUTO FUELS",
+            "date": "02 NOV 2026",
+            "total": "2090.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is 2090.00 which is below the threshold of 5000.00 and there are no duplicates."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SAI AUTO FUELS",
+            "date": "02-11-2026",
+            "amount": "2090.00",
+            "currency": "INR",
+            "category": "fuel",
+            "memo": "Fuel purchase on 02-11-2026"
+          },
+          "passed": false,
+          "reason": "the date must be 2026-11-02 (YYYY-MM-DD; the receipt's date 02 NOV 2026 is day first), not 02-11-2026"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "SAI AUTO FUELS",
+            "date": "2026-11-02",
+            "amount": "2090.00",
+            "currency": "INR",
+            "category": "fuel",
+            "memo": "Auto fuel purchase"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 28.322,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: the date must be 2026-11-02 (YYYY-MM-DD; the receipt's date 02 NOV 2026 is day first), not 02-11-2026"
+    },
+    {
+      "name": "examples/receipts/kirana-kothrud.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SHRI BALAJI KIRANA STORES",
+        "date": "05/11/2026",
+        "total": "497.00",
+        "currency": "USD"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is below 5000.00 and not a duplicate or needs manager's approval."
+      },
+      "entry": {
+        "vendor": "SHRI BALAJI KIRANA STORES",
+        "date": "2026-11-05",
+        "amount": "497.00",
+        "currency": "USD",
+        "category": "groceries",
+        "memo": "Groceries purchase"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHRI BALAJI KIRANA STORES",
+            "date": "05/11/2026",
+            "total": "497.00",
+            "currency": "USD"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is below 5000.00 and not a duplicate or needs manager's approval."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHRI BALAJI KIRANA STORES",
+            "date": "2026-05-11",
+            "amount": "497.00",
+            "currency": "USD",
+            "category": "groceries",
+            "memo": "Groceries purchase on 11th May 2026"
+          },
+          "passed": false,
+          "reason": "the date must be 2026-11-05 (YYYY-MM-DD; the receipt's date 05/11/2026 is day first), not 2026-05-11"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "SHRI BALAJI KIRANA STORES",
+            "date": "2026-11-05",
+            "amount": "497.00",
+            "currency": "USD",
+            "category": "groceries",
+            "memo": "Groceries purchase"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 30.188,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: the date must be 2026-11-05 (YYYY-MM-DD; the receipt's date 05/11/2026 is day first), not 2026-05-11"
+    },
+    {
+      "name": "examples/receipts/kopi-house-kl.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "KOPI HOUSE RESTAURANT",
+        "date": "03/01/2018",
+        "total": "19.05",
+        "currency": "USD"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is $19.05 which is below the threshold of $5000.00 and it's not a duplicate or needs manager's approval."
+      },
+      "entry": {
+        "vendor": "KOPI HOUSE RESTAURANT",
+        "date": "2018-01-03",
+        "amount": "19.05",
+        "currency": "USD",
+        "category": "meals",
+        "memo": "Meal at KOPI HOUSE RESTAURANT"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "03/01/2018",
+            "total": "19.05",
+            "currency": "USD"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is $19.05 which is below the threshold of $5000.00 and it's not a duplicate or needs manager's approval."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "2018-03-01",
+            "amount": "19.05",
+            "currency": "USD",
+            "category": "meals",
+            "memo": "Meal at KOPI HOUSE RESTAURANT on 01-Mar-2018"
+          },
+          "passed": false,
+          "reason": "the date must be 2018-01-03 (YYYY-MM-DD; the receipt's date 03/01/2018 is day first), not 2018-03-01"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "2018-01-03",
+            "amount": "19.05",
+            "currency": "USD",
+            "category": "meals",
+            "memo": "Meal at KOPI HOUSE RESTAURANT"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 33.421,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: the date must be 2018-01-03 (YYYY-MM-DD; the receipt's date 03/01/2018 is day first), not 2018-03-01"
+    },
+    {
+      "name": "examples/receipts/laptop-bengaluru.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+        "date": "28-10-2026",
+        "total": "62499.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "needs_approval",
+        "reason": "Total above 5000.00"
+      },
+      "entry": {
+        "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+        "date": "2026-10-28",
+        "amount": "62499.00",
+        "currency": "INR",
+        "category": "electronics",
+        "memo": "Electronics purchase"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "28-10-2026",
+            "total": "62499.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "needs_approval",
+            "reason": "Total above 5000.00"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "28-10-2026",
+            "amount": "62499.00",
+            "currency": "INR",
+            "category": "electronics",
+            "memo": "Electronics purchase"
+          },
+          "passed": false,
+          "reason": "the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "2026-10-28",
+            "amount": "62499.00",
+            "currency": "INR",
+            "category": "electronics",
+            "memo": "Electronics purchase"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 30.989,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026"
+    },
+    {
+      "name": "examples/receipts/restaurant-pune.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SHREE KRISHNA BHOJANALAYA",
+        "date": "04/11/2026",
+        "total": "430.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is below 5000 INR and not a duplicate or requires manager's approval."
+      },
+      "entry": {
+        "vendor": "SHREE KRISHNA BHOJANALAYA",
+        "date": "2026-11-04",
+        "amount": "430.00",
+        "currency": "INR",
+        "category": "meals",
+        "memo": "Bhajji and Rice from Shree Krishna Bhojanalaya"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHREE KRISHNA BHOJANALAYA",
+            "date": "04/11/2026",
+            "total": "430.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is below 5000 INR and not a duplicate or requires manager's approval."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHREE KRISHNA BHOJANALAYA",
+            "date": "2026-04-11",
+            "amount": "430.00",
+            "currency": "INR",
+            "category": "meals",
+            "memo": "Bhajji and drinks from Shree Krishna Bhojanalaya"
+          },
+          "passed": false,
+          "reason": "the date must be 2026-11-04 (YYYY-MM-DD; the receipt's date 04/11/2026 is day first), not 2026-04-11"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "SHREE KRISHNA BHOJANALAYA",
+            "date": "2026-11-04",
+            "amount": "430.00",
+            "currency": "INR",
+            "category": "meals",
+            "memo": "Bhajji and Rice from Shree Krishna Bhojanalaya"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 36.981,
+      "caught": 1,
+      "agents": "openai:qwen2.5:3b",
+      "guarded": true,
+      "issue": "fixed after: the date must be 2026-11-04 (YYYY-MM-DD; the receipt's date 04/11/2026 is day first), not 2026-04-11"
+    }
+  ]
+}

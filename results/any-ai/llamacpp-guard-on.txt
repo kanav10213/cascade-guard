@@ -1,0 +1,31 @@
+## cascade-guard receipts run examples/receipts --ai 'llamacpp' --approval-limit 5000 --currency INR 
+Checking 6 receipts with openai · local-gguf at http://localhost:8080/v1. Policy: above 5000.00 needs a manager.
+  STOPPED    cafe-smudged.txt      needs a person: '31/0O/2018' is not a date
+  OK         fuel-pune.txt         SAI AUTO FUELS               2026-11-02   2,090.00 INR  fuel        approve
+  FIXED      kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 INR  groceries   approve
+                                     (the guard caught: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject')
+  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 MYR  meals       approve
+                                     (the guard caught: under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject')
+  FIXED      laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 2026-10-28  62,499.00 INR  electronics needs_approval
+                                     (the guard caught: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject')
+  FIXED      restaurant-pune.txt   Shree Krishna Bhajanalaya    2026-11-04     430.00 INR  groceries   approve
+                                     (the guard caught: under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject')
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/__main__.py", line 3, in <module>
+    raise SystemExit(main())
+                     ^^^^^^
+  File "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/cli.py", line 488, in main
+    return args.func(args)
+           ^^^^^^^^^^^^^^^
+  File "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/cli.py", line 368, in cmd_receipts
+    return run_main(args.rest[1:])
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/receipts_run.py", line 177, in main
+    Path(a.json).write_text(json.dumps({"agents": who, "summary": summary(rows), "results": rows}, indent=2,
+                                                                  ^^^^^^^^^^^^^
+  File "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/receipts_run.py", line 100, in summary
+    by_cur[e.get("currency") or ""] = by_cur.get(e.get("currency") or "", Decimal(0)) + Decimal(e["amount"])
+                                                                                        ^^^^^^^^^^^^^^^^^^^^
+decimal.InvalidOperation: [<class 'decimal.ConversionSyntax'>]

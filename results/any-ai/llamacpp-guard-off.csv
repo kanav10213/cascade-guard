@@ -1,0 +1,7 @@
+file,status,vendor,date,amount,currency,category,decision,issue,run_id
+examples/receipts/cafe-smudged.txt,posted,SEDAP CAFE SDN BHD,2018-03-31,12.00,MYR,meals,approve,,
+examples/receipts/fuel-pune.txt,posted,SAI AUTO FUELS,2026-11-02,"2,090.00",INR,fuel,reject,,
+examples/receipts/kirana-kothrud.txt,posted,SHRI BALAJI KIRANA STORES,2026-11-05,497.00,INR,other,reject,,
+examples/receipts/kopi-house-kl.txt,posted,KOPI HOUSE RESTAURANT,2018-03-01,19.05,MYR,meals,reject,,
+examples/receipts/laptop-bengaluru.txt,posted,DIGITAL WORLD ELECTRONICS PVT LTD,28-10-2026,"62,499.00",INR,electronics,reject,,
+examples/receipts/restaurant-pune.txt,posted,Shree Krishna Bhajanalaya,2026-11-04,430.00,INR,other,reject,,
