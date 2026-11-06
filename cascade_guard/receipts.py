@@ -547,11 +547,11 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
         problems.append(f"'{vendor}' looks like an address or a label, not the vendor")
     said = norm_currency(out.get("currency"))
     if said:
-        on_receipt = printed_currency(text)
-        want = on_receipt or DEFAULT_CURRENCY
+        cur_printed = printed_currency(text)
+        want = cur_printed or DEFAULT_CURRENCY
         if said != norm_currency(want):
             problems.append(f"the currency is {want}, not {out.get('currency')}" +
-                            ("" if on_receipt else f" (the receipt prints none; the company's default is {want})"))
+                            ("" if cur_printed else f" (the receipt prints none; the company's default is {want})"))
     return (not problems), ("; ".join(problems) or None)
 
 
