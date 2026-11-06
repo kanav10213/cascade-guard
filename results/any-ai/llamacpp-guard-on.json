@@ -1,0 +1,483 @@
+{
+  "agents": "openai · local-gguf at http://localhost:8080/v1",
+  "summary": {
+    "posted": 5,
+    "halted": 1,
+    "unreadable": 0,
+    "fixed_by_guard": 4,
+    "receipts": 6,
+    "total_posted": {
+      "INR": "65535.05"
+    },
+    "agent_calls": 25
+  },
+  "results": [
+    {
+      "name": "examples/receipts/cafe-smudged.txt",
+      "status": "halted",
+      "halted_at": "extract",
+      "fields": null,
+      "decision": null,
+      "entry": null,
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "31/0O/2018",
+            "total": "12.00",
+            "currency": "MYR"
+          },
+          "passed": false,
+          "reason": "'31/0O/2018' is not a date; the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
+        },
+        {
+          "step": "extract",
+          "attempt": 1,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "31/0O/2018",
+            "total": "12.00",
+            "currency": "INR"
+          },
+          "passed": false,
+          "reason": "'31/0O/2018' is not a date"
+        },
+        {
+          "step": "extract",
+          "attempt": 2,
+          "output": {
+            "vendor": "SEDAP CAFE SDN BHD",
+            "date": "31/0O/2018",
+            "total": "12.00",
+            "currency": "RM"
+          },
+          "passed": false,
+          "reason": "'31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)"
+        }
+      ],
+      "agent_calls": 3,
+      "seconds": 14.991,
+      "caught": 3,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": "'31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)"
+    },
+    {
+      "name": "examples/receipts/fuel-pune.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SAI AUTO FUELS",
+        "date": "02 NOV 2026",
+        "total": "2,090.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "Total is below the threshold of 5000.00"
+      },
+      "entry": {
+        "vendor": "SAI AUTO FUELS",
+        "date": "2026-11-02",
+        "amount": "2090.00",
+        "currency": "INR",
+        "category": "fuel",
+        "memo": ""
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SAI AUTO FUELS",
+            "date": "02 NOV 2026",
+            "total": "2,090.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "approve",
+            "reason": "Total is below the threshold of 5000.00"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SAI AUTO FUELS",
+            "date": "2026-11-02",
+            "amount": "2,090.00",
+            "currency": "INR",
+            "category": "fuel",
+            "memo": ""
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 3,
+      "seconds": 16.532,
+      "caught": 0,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": ""
+    },
+    {
+      "name": "examples/receipts/kirana-kothrud.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "SHRI BALAJI KIRANA STORES",
+        "date": "05/11/2026",
+        "total": "497.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "The total is within the approved threshold of 5000.00."
+      },
+      "entry": {
+        "vendor": "SHRI BALAJI KIRANA STORES",
+        "date": "2026-11-05",
+        "amount": "497.00",
+        "currency": "INR",
+        "category": "groceries",
+        "memo": "Receipt for groceries"
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHRI BALAJI KIRANA STORES",
+            "date": "05/11/2026",
+            "total": "497.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "reject",
+            "reason": "total below threshold"
+          },
+          "passed": false,
+          "reason": "under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject'"
+        },
+        {
+          "step": "policy",
+          "attempt": 1,
+          "output": {
+            "decision": "approve",
+            "reason": "The total is within the approved threshold of 5000.00."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "SHRI BALAJI KIRANA STORES",
+            "date": "2026-11-05",
+            "amount": "497.00",
+            "currency": "INR",
+            "category": "groceries",
+            "memo": "Receipt for groceries"
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 22.886,
+      "caught": 1,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": "fixed after: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject'"
+    },
+    {
+      "name": "examples/receipts/kopi-house-kl.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "KOPI HOUSE RESTAURANT",
+        "date": "03/01/2018",
+        "total": "19.05",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "The total is less than 5000.00."
+      },
+      "entry": {
+        "vendor": "KOPI HOUSE RESTAURANT",
+        "date": "2018-01-03",
+        "amount": "19.05",
+        "currency": "INR",
+        "category": "meals",
+        "memo": ""
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "03/01/2018",
+            "total": "19.05",
+            "currency": "MYR"
+          },
+          "passed": false,
+          "reason": "the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
+        },
+        {
+          "step": "extract",
+          "attempt": 1,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "03/01/2018",
+            "total": "19.05",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "reject",
+            "reason": "no positive total"
+          },
+          "passed": false,
+          "reason": "under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject'"
+        },
+        {
+          "step": "policy",
+          "attempt": 1,
+          "output": {
+            "decision": "approve",
+            "reason": "The total is less than 5000.00."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "2018-03-01",
+            "amount": "19.05",
+            "currency": "INR",
+            "category": "meals",
+            "memo": ""
+          },
+          "passed": false,
+          "reason": "the date must be 2018-01-03 (YYYY-MM-DD; the receipt's date 03/01/2018 is day first), not 2018-03-01"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "KOPI HOUSE RESTAURANT",
+            "date": "2018-01-03",
+            "amount": "19.05",
+            "currency": "INR",
+            "category": "meals",
+            "memo": ""
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 6,
+      "seconds": 32.483,
+      "caught": 3,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": "fixed after: the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
+    },
+    {
+      "name": "examples/receipts/laptop-bengaluru.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+        "date": "28-10-2026",
+        "total": "62,499.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "needs_approval",
+        "reason": "Total above 5000.00"
+      },
+      "entry": {
+        "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+        "date": "2026-10-28",
+        "amount": "62499.00",
+        "currency": "INR",
+        "category": "electronics",
+        "memo": ""
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "28-10-2026",
+            "total": "62,499.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "reject",
+            "reason": "Total above 5000.00"
+          },
+          "passed": false,
+          "reason": "under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject'"
+        },
+        {
+          "step": "policy",
+          "attempt": 1,
+          "output": {
+            "decision": "needs_approval",
+            "reason": "Total above 5000.00"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "28-10-2026",
+            "amount": "62,499.00",
+            "currency": "INR",
+            "category": "electronics",
+            "memo": "Purchase of electronic components"
+          },
+          "passed": false,
+          "reason": "the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026"
+        },
+        {
+          "step": "ledger",
+          "attempt": 1,
+          "output": {
+            "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
+            "date": "2026-10-28",
+            "amount": "62,499.00",
+            "currency": "INR",
+            "category": "electronics",
+            "memo": ""
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 5,
+      "seconds": 30.273,
+      "caught": 2,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": "fixed after: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject'"
+    },
+    {
+      "name": "examples/receipts/restaurant-pune.txt",
+      "status": "posted",
+      "halted_at": null,
+      "fields": {
+        "vendor": "Shree Krishna Bhajanalaya",
+        "date": "04/11/2026",
+        "total": "430.00",
+        "currency": "INR"
+      },
+      "decision": {
+        "decision": "approve",
+        "reason": "The total is within the approved threshold of 5000.00."
+      },
+      "entry": {
+        "vendor": "Shree Krishna Bhajanalaya",
+        "date": "2026-11-04",
+        "amount": "430.00",
+        "currency": "INR",
+        "category": "groceries",
+        "memo": ""
+      },
+      "trace": [
+        {
+          "step": "extract",
+          "attempt": 0,
+          "output": {
+            "vendor": "Shree Krishna Bhajanalaya",
+            "date": "04/11/2026",
+            "total": "430.00",
+            "currency": "INR"
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "policy",
+          "attempt": 0,
+          "output": {
+            "decision": "reject",
+            "reason": "total above 5000.00"
+          },
+          "passed": false,
+          "reason": "under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject'"
+        },
+        {
+          "step": "policy",
+          "attempt": 1,
+          "output": {
+            "decision": "approve",
+            "reason": "The total is within the approved threshold of 5000.00."
+          },
+          "passed": true,
+          "reason": null
+        },
+        {
+          "step": "ledger",
+          "attempt": 0,
+          "output": {
+            "vendor": "Shree Krishna Bhajanalaya",
+            "date": "2026-11-04",
+            "amount": "430.00",
+            "currency": "INR",
+            "category": "groceries",
+            "memo": ""
+          },
+          "passed": true,
+          "reason": null
+        }
+      ],
+      "agent_calls": 4,
+      "seconds": 26.449,
+      "caught": 1,
+      "agents": "openai:local-gguf",
+      "guarded": true,
+      "issue": "fixed after: under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject'"
+    }
+  ]
+}

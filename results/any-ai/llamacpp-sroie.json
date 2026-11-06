@@ -38,7 +38,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 17.793
+    "seconds": 23.113
    },
    "with": {
     "outcome": "posted_ok",
@@ -62,7 +62,7 @@
      "memo": ""
     },
     "calls": 3,
-    "seconds": 17.487,
+    "seconds": 23.03,
     "halted_at": null,
     "rejections": []
    }
@@ -92,13 +92,13 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-22",
      "amount": "10.20",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Duplicate"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 18.471
+    "seconds": 24.204
    },
    "with": {
     "outcome": "posted_ok",
@@ -117,12 +117,12 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-22",
      "amount": "10.20",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": ""
     },
     "calls": 4,
-    "seconds": 21.227,
+    "seconds": 27.887,
     "halted_at": null,
     "rejections": [
      {
@@ -164,7 +164,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 21.469
+    "seconds": 27.679
    },
    "with": {
     "outcome": "posted_ok",
@@ -188,7 +188,7 @@
      "memo": ""
     },
     "calls": 4,
-    "seconds": 23.994,
+    "seconds": 31.127,
     "halted_at": null,
     "rejections": [
      {
@@ -224,13 +224,13 @@
      "vendor": "DOMINO'S PIZZA",
      "date": "28/04/18",
      "amount": "30.90",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "meals",
      "memo": "No positive total"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 20.472
+    "seconds": 26.283
    },
    "with": {
     "outcome": "stopped_ok",
@@ -242,7 +242,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 16.267,
+    "seconds": 21.643,
     "halted_at": "extract",
     "rejections": [
      {
@@ -288,13 +288,13 @@
      "vendor": "DOMINO'S PIZZA",
      "date": "28/04/18",
      "amount": "39.60",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "meals",
      "memo": "No positive total"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 18.691
+    "seconds": 24.229
    },
    "with": {
     "outcome": "posted_ok",
@@ -313,12 +313,12 @@
      "vendor": "DOMINO'S PIZZA",
      "date": "2018-04-28",
      "amount": "39.60",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": "Pizza order"
     },
     "calls": 5,
-    "seconds": 28.099,
+    "seconds": 37.244,
     "halted_at": null,
     "rejections": [
      {
@@ -359,13 +359,13 @@
      "vendor": "AEON TEBRAU CITY",
      "date": "2018-04-17",
      "amount": "81.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Rejected due to total below threshold"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 23.916
+    "seconds": 30.63
    },
    "with": {
     "outcome": "posted_ok",
@@ -384,12 +384,12 @@
      "vendor": "AEON TEBRAU CITY",
      "date": "2018-04-17",
      "amount": "81.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": ""
     },
     "calls": 4,
-    "seconds": 26.059,
+    "seconds": 33.489,
     "halted_at": null,
     "rejections": [
      {
@@ -425,13 +425,13 @@
      "vendor": "THE TOAST F&B SDN BHD (965752-T)",
      "date": "2018-04-08",
      "amount": "18.90",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Receipt for breakfast items"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 20.867
+    "seconds": 27.414
    },
    "with": {
     "outcome": "posted_ok",
@@ -450,12 +450,12 @@
      "vendor": "THE TOAST F&B SDN BHD (965752-T)",
      "date": "2018-04-08",
      "amount": "18.90",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": "Receipt for groceries"
     },
     "calls": 5,
-    "seconds": 27.421,
+    "seconds": 36.921,
     "halted_at": null,
     "rejections": [
      {
@@ -502,7 +502,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 20.729
+    "seconds": 26.878
    },
    "with": {
     "outcome": "posted_ok",
@@ -526,7 +526,7 @@
      "memo": "Receipt for groceries"
     },
     "calls": 5,
-    "seconds": 27.43,
+    "seconds": 36.678,
     "halted_at": null,
     "rejections": [
      {
@@ -567,13 +567,13 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-12-04",
      "amount": "50.50",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Rejected due to total exceeding 200.00"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 21.757
+    "seconds": 28.151
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -585,7 +585,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 14.561,
+    "seconds": 20.171,
     "halted_at": "extract",
     "rejections": [
      {
@@ -637,7 +637,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 19.713
+    "seconds": 26.726
    },
    "with": {
     "outcome": "posted_ok",
@@ -661,7 +661,7 @@
      "memo": "Grocery purchase"
     },
     "calls": 5,
-    "seconds": 27.133,
+    "seconds": 36.643,
     "halted_at": null,
     "rejections": [
      {
@@ -702,13 +702,13 @@
      "vendor": "DOMINO'S PIZZA",
      "date": "27/04/18",
      "amount": "7.20",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "meals",
      "memo": "No positive total"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 23.032
+    "seconds": 29.408
    },
    "with": {
     "outcome": "stopped_ok",
@@ -720,7 +720,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 16.22,
+    "seconds": 21.572,
     "halted_at": "extract",
     "rejections": [
      {
@@ -772,7 +772,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 30.354
+    "seconds": 38.548
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -784,23 +784,23 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 24.27,
+    "seconds": 32.217,
     "halted_at": "extract",
     "rejections": [
      {
       "step": "extract",
       "attempt": 0,
-      "reason": "'1010 005 0050063' is not a date"
+      "reason": "'1010 005 0050063' is not a date; the currency is RM, not SR (the receipt prints none; the company's default is RM)"
      },
      {
       "step": "extract",
       "attempt": 1,
-      "reason": "the date 2018-04-10 is not on the receipt"
+      "reason": "'1010 005 0050063' is not a date"
      },
      {
       "step": "extract",
       "attempt": 2,
-      "reason": "the date 2018-04-10 is not on the receipt"
+      "reason": "the date 2018-04-10 is not on the receipt; the currency is RM, not INR (the receipt prints none; the company's default is RM)"
      }
     ]
    }
@@ -836,7 +836,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 23.766
+    "seconds": 30.443
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -848,7 +848,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 15.497,
+    "seconds": 21.016,
     "halted_at": "extract",
     "rejections": [
      {
@@ -894,13 +894,13 @@
      "vendor": "TF VALUE-MART SDN BHD (482123-U)",
      "date": "19/05/18",
      "amount": "52.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Total above 200.00"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 24.394
+    "seconds": 31.184
    },
    "with": {
     "outcome": "posted_ok",
@@ -919,12 +919,12 @@
      "vendor": "TF VALUE-MART SDN BHD (482123-U)",
      "date": "2018-05-19",
      "amount": "52.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": "Purchase of groceries"
     },
     "calls": 5,
-    "seconds": 30.068,
+    "seconds": 39.728,
     "halted_at": null,
     "rejections": [
      {
@@ -971,7 +971,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.66
+    "seconds": 33.153
    },
    "with": {
     "outcome": "posted_ok",
@@ -995,7 +995,7 @@
      "memo": ""
     },
     "calls": 5,
-    "seconds": 30.292,
+    "seconds": 40.296,
     "halted_at": null,
     "rejections": [
      {
@@ -1042,7 +1042,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.866
+    "seconds": 32.868
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -1054,7 +1054,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 14.722,
+    "seconds": 19.932,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1106,7 +1106,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 21.11
+    "seconds": 27.214
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -1118,7 +1118,7 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 11.015,
+    "seconds": 15.738,
     "halted_at": "extract",
     "rejections": [
      {
@@ -1170,7 +1170,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 20.251
+    "seconds": 25.893
    },
    "with": {
     "outcome": "posted_ok",
@@ -1194,7 +1194,7 @@
      "memo": "Grocery purchase"
     },
     "calls": 4,
-    "seconds": 22.471,
+    "seconds": 29.349,
     "halted_at": null,
     "rejections": [
      {
@@ -1236,7 +1236,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.795
+    "seconds": 32.77
    },
    "with": {
     "outcome": "posted_wrong",
@@ -1260,7 +1260,7 @@
      "memo": "Grocery purchase"
     },
     "calls": 4,
-    "seconds": 25.075,
+    "seconds": 32.727,
     "halted_at": null,
     "rejections": [
      {
@@ -1302,7 +1302,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 29.033
+    "seconds": 36.7
    },
    "with": {
     "outcome": "posted_ok",
@@ -1326,7 +1326,7 @@
      "memo": "Grocery purchase"
     },
     "calls": 4,
-    "seconds": 29.127,
+    "seconds": 37.49,
     "halted_at": null,
     "rejections": [
      {
@@ -1368,7 +1368,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 24.853
+    "seconds": 31.594
    },
    "with": {
     "outcome": "posted_ok",
@@ -1392,7 +1392,7 @@
      "memo": ""
     },
     "calls": 5,
-    "seconds": 28.494,
+    "seconds": 37.308,
     "halted_at": null,
     "rejections": [
      {
@@ -1439,7 +1439,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.062
+    "seconds": 31.482
    },
    "with": {
     "outcome": "posted_ok",
@@ -1463,7 +1463,7 @@
      "memo": ""
     },
     "calls": 6,
-    "seconds": 32.237,
+    "seconds": 42.701,
     "halted_at": null,
     "rejections": [
      {
@@ -1515,7 +1515,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.098
+    "seconds": 31.264
    },
    "with": {
     "outcome": "posted_ok",
@@ -1539,7 +1539,7 @@
      "memo": "Purchase of groceries"
     },
     "calls": 5,
-    "seconds": 29.632,
+    "seconds": 38.656,
     "halted_at": null,
     "rejections": [
      {
@@ -1586,7 +1586,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 24.673
+    "seconds": 30.843
    },
    "with": {
     "outcome": "posted_ok",
@@ -1610,7 +1610,7 @@
      "memo": "Purchase of milk"
     },
     "calls": 5,
-    "seconds": 28.406,
+    "seconds": 37.216,
     "halted_at": null,
     "rejections": [
      {
@@ -1651,13 +1651,13 @@
      "vendor": "AA Pharmacy",
      "date": "29/10/2017",
      "amount": "28.90",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "pharmacy",
      "memo": "Duplicate"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 26.029
+    "seconds": 32.512
    },
    "with": {
     "outcome": "posted_ok",
@@ -1676,12 +1676,12 @@
      "vendor": "AA Pharmacy",
      "date": "2017-10-29",
      "amount": "28.90",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "pharmacy",
      "memo": ""
     },
     "calls": 4,
-    "seconds": 28.028,
+    "seconds": 35.939,
     "halted_at": null,
     "rejections": [
      {
@@ -1717,13 +1717,13 @@
      "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
      "date": "13/10/2017",
      "amount": "234.40",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Duplicate"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.781
+    "seconds": 32.879
    },
    "with": {
     "outcome": "posted_ok",
@@ -1742,12 +1742,12 @@
      "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
      "date": "2017-10-13",
      "amount": "234.40",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": ""
     },
     "calls": 4,
-    "seconds": 27.676,
+    "seconds": 35.295,
     "halted_at": null,
     "rejections": [
      {
@@ -1789,7 +1789,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.903
+    "seconds": 32.975
    },
    "with": {
     "outcome": "posted_ok",
@@ -1813,7 +1813,7 @@
      "memo": "Grocery purchase"
     },
     "calls": 6,
-    "seconds": 35.651,
+    "seconds": 47.511,
     "halted_at": null,
     "rejections": [
      {
@@ -1865,7 +1865,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 28.908
+    "seconds": 35.837
    },
    "with": {
     "outcome": "posted_ok",
@@ -1875,23 +1875,28 @@
     "decision": "approve",
     "vendor_ok": false,
     "fields": {
-     "vendor": "AA PHARMACY",
+     "vendor": "AA Pharmacy",
      "date": "11/08/2017",
      "total": "78.10",
-     "currency": "BHD"
+     "currency": "RM"
     },
     "entry": {
-     "vendor": "AA PHARMACY",
+     "vendor": "AA Pharmacy",
      "date": "2017-08-11",
      "amount": "78.10",
-     "currency": "BHD",
+     "currency": "RM",
      "category": "pharmacy",
      "memo": ""
     },
-    "calls": 5,
-    "seconds": 36.055,
+    "calls": 6,
+    "seconds": 49.033,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not BHD (the receipt prints none; the company's default is RM)"
+     },
      {
       "step": "policy",
       "attempt": 0,
@@ -1936,7 +1941,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 30.741
+    "seconds": 38.522
    },
    "with": {
     "outcome": "posted_ok",
@@ -1957,10 +1962,10 @@
      "amount": "33.05",
      "currency": "RM",
      "category": "groceries",
-     "memo": "Receipt for bakery supplies"
+     "memo": ""
     },
     "calls": 5,
-    "seconds": 38.297,
+    "seconds": 48.831,
     "halted_at": null,
     "rejections": [
      {
@@ -2007,7 +2012,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 29.838
+    "seconds": 37.08
    },
    "with": {
     "outcome": "posted_ok",
@@ -2031,7 +2036,7 @@
      "memo": ""
     },
     "calls": 4,
-    "seconds": 33.728,
+    "seconds": 42.543,
     "halted_at": null,
     "rejections": [
      {
@@ -2044,14 +2049,14 @@
   }
  ],
  "usage": {
-  "calls": 217,
+  "calls": 218,
   "cached_calls": 0,
-  "input_tokens": 94841,
-  "output_tokens": 10727,
+  "input_tokens": 95497,
+  "output_tokens": 10763,
   "cost_usd": 0.0,
   "by_purpose": {
    "receipt-agent": {
-    "calls": 217,
+    "calls": 218,
     "cost_usd": 0.0
    }
   }

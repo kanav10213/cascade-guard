@@ -32,13 +32,13 @@
      "vendor": null,
      "date": null,
      "amount": null,
-     "currency": null,
+     "currency": "USD",
      "category": null,
      "memo": null
     },
     "errors": [],
     "calls": 3,
-    "seconds": 27.912
+    "seconds": 29.093
    },
    "with": {
     "outcome": "posted_ok",
@@ -51,20 +51,25 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "18/04/2018",
      "total": "1.75",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-18",
      "amount": "1.75",
-     "currency": "USD",
+     "currency": "RM",
      "category": "other",
      "memo": "Groceries"
     },
-    "calls": 5,
-    "seconds": 22.235,
+    "calls": 6,
+    "seconds": 29.299,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
      {
       "step": "policy",
       "attempt": 0,
@@ -109,7 +114,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 25.999
+    "seconds": 26.591
    },
    "with": {
     "outcome": "posted_ok",
@@ -122,20 +127,25 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "22/04/2018",
      "total": "10.20",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-22",
      "amount": "10.20",
-     "currency": "USD",
+     "currency": "RM",
      "category": "other",
      "memo": "Groceries"
     },
-    "calls": 4,
-    "seconds": 20.021,
+    "calls": 5,
+    "seconds": 29.909,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
      {
       "step": "ledger",
       "attempt": 0,
@@ -175,7 +185,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 30.809
+    "seconds": 32.103
    },
    "with": {
     "outcome": "posted_ok",
@@ -186,26 +196,26 @@
     "vendor_ok": true,
     "fields": {
      "vendor": "AEON CO. (M) BHD",
-     "date": "22/04/2018",
+     "date": "22/04/2018 19:26",
      "total": "98.35",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-22",
      "amount": "98.35",
-     "currency": "USD",
-     "category": "other",
-     "memo": "Groceries"
+     "currency": "RM",
+     "category": "groceries",
+     "memo": "Groceries purchase on April 22, 2018"
     },
     "calls": 4,
-    "seconds": 20.862,
+    "seconds": 24.661,
     "halted_at": null,
     "rejections": [
      {
-      "step": "ledger",
+      "step": "extract",
       "attempt": 0,
-      "reason": "the date must be 2018-04-22 (YYYY-MM-DD; the receipt's date 22/04/2018 is day first), not 22-04-2018"
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
      }
     ]
    }
@@ -241,42 +251,35 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 36.517
+    "seconds": 34.648
    },
    "with": {
-    "outcome": "posted_wrong",
+    "outcome": "stopped_ok",
     "total_ok": false,
-    "date_ok": true,
-    "decision_ok": true,
-    "decision": "approve",
-    "vendor_ok": true,
-    "fields": {
-     "vendor": "DOMINO'S PIZZA",
-     "date": "28/04/18",
-     "total": "45.70",
-     "currency": "USD"
-    },
-    "entry": {
-     "vendor": "DOMINO'S PIZZA",
-     "date": "2018-04-28",
-     "amount": "45.70",
-     "currency": "USD",
-     "category": "meals",
-     "memo": "Pizza purchase"
-    },
-    "calls": 5,
-    "seconds": 24.581,
-    "halted_at": null,
+    "date_ok": false,
+    "decision_ok": false,
+    "decision": null,
+    "vendor_ok": false,
+    "fields": null,
+    "entry": null,
+    "calls": 3,
+    "seconds": 14.537,
+    "halted_at": "extract",
     "rejections": [
      {
       "step": "extract",
       "attempt": 0,
+      "reason": "the receipt has a larger amount, 45.70, that is not cash paid or change; the total is normally the largest; the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
+     {
+      "step": "extract",
+      "attempt": 1,
       "reason": "the receipt has a larger amount, 45.70, that is not cash paid or change; the total is normally the largest"
      },
      {
-      "step": "policy",
-      "attempt": 0,
-      "reason": "under the policy the decision for a total of 45.70 is 'approve' (within 200.00), not 'needs_approval'"
+      "step": "extract",
+      "attempt": 2,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
      }
     ]
    }
@@ -312,7 +315,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 30.868
+    "seconds": 31.691
    },
    "with": {
     "outcome": "posted_ok",
@@ -325,29 +328,29 @@
      "vendor": "DOMINO'S PIZZA",
      "date": "28/04/18",
      "total": "39.60",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "DOMINO'S PIZZA",
      "date": "2018-04-28",
      "amount": "39.60",
-     "currency": "USD",
+     "currency": "RM",
      "category": "meals",
-     "memo": "Pizza for dinner"
+     "memo": "Meal from Domino's Pizza"
     },
     "calls": 5,
-    "seconds": 23.479,
+    "seconds": 25.553,
     "halted_at": null,
     "rejections": [
      {
-      "step": "policy",
+      "step": "extract",
       "attempt": 0,
-      "reason": "under the policy the decision for a total of 39.60 is 'approve' (within 200.00), not 'needs_approval'"
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
      },
      {
-      "step": "ledger",
+      "step": "policy",
       "attempt": 0,
-      "reason": "the date must be 2018-04-28 (YYYY-MM-DD; the receipt's date 28/04/18 is day first), not 28-04-18"
+      "reason": "under the policy the decision for a total of 39.60 is 'approve' (within 200.00), not 'reject'"
      }
     ]
    }
@@ -377,13 +380,13 @@
      "vendor": "YHM AEON TEBRAU CITY",
      "date": "17-04-2018",
      "amount": "81.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": "Groceries purchase at AEON TEBRAU CITY"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 42.021
+    "seconds": 43.879
    },
    "with": {
     "outcome": "posted_ok",
@@ -402,12 +405,12 @@
      "vendor": "YHM AEON TEBRAU CITY",
      "date": "2018-04-17",
      "amount": "81.80",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
-     "memo": "Groceries and miscellaneous purchases"
+     "memo": "Groceries and daily essentials"
     },
     "calls": 4,
-    "seconds": 22.854,
+    "seconds": 22.558,
     "halted_at": null,
     "rejections": [
      {
@@ -449,7 +452,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 37.634
+    "seconds": 38.493
    },
    "with": {
     "outcome": "posted_ok",
@@ -462,20 +465,26 @@
      "vendor": "THE TOAST F&B SDN BHD",
      "date": "08/04/2018",
      "total": "18.90",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "THE TOAST F&B SDN BHD",
      "date": "2018-04-08",
      "amount": "18.90",
-     "currency": "USD",
+     "currency": "RM",
      "category": "meals",
-     "memo": "Meal at The Toast F&B on 08/04/2018"
+     "memo": "Lunch at The Toast F&B"
     },
-    "calls": 3,
-    "seconds": 16.381,
+    "calls": 4,
+    "seconds": 25.821,
     "halted_at": null,
-    "rejections": []
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     }
+    ]
    }
   },
   {
@@ -509,7 +518,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 29.552
+    "seconds": 31.656
    },
    "with": {
     "outcome": "posted_ok",
@@ -522,20 +531,26 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "20/04/2018",
      "total": "46.55",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-20",
      "amount": "46.55",
-     "currency": "USD",
+     "currency": "RM",
      "category": "groceries",
-     "memo": "Groceries purchase on April 20, 2018"
+     "memo": "Groceries purchase on 20 April 2018"
     },
-    "calls": 3,
-    "seconds": 17.381,
+    "calls": 4,
+    "seconds": 26.944,
     "halted_at": null,
-    "rejections": []
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     }
+    ]
    }
   },
   {
@@ -563,13 +578,13 @@
      "vendor": null,
      "date": null,
      "amount": null,
-     "currency": null,
+     "currency": "USD",
      "category": null,
      "memo": null
     },
     "errors": [],
     "calls": 3,
-    "seconds": 29.363
+    "seconds": 31.306
    },
    "with": {
     "outcome": "posted_ok",
@@ -582,20 +597,25 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "12/04/2018",
      "total": "4.40",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-12",
      "amount": "4.40",
-     "currency": "USD",
+     "currency": "RM",
      "category": "groceries",
-     "memo": "Groceries purchase on April 12, 2018"
+     "memo": "Groceries purchase at AEON CO. (M) BHD"
     },
-    "calls": 4,
-    "seconds": 21.525,
+    "calls": 5,
+    "seconds": 29.978,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
      {
       "step": "policy",
       "attempt": 0,
@@ -635,7 +655,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 38.344
+    "seconds": 40.511
    },
    "with": {
     "outcome": "posted_ok",
@@ -659,7 +679,7 @@
      "memo": "Groceries purchase on April 20, 2018"
     },
     "calls": 4,
-    "seconds": 20.108,
+    "seconds": 21.794,
     "halted_at": null,
     "rejections": [
      {
@@ -701,7 +721,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 41.31
+    "seconds": 43.373
    },
    "with": {
     "outcome": "stopped_ok",
@@ -713,13 +733,13 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 14.165,
+    "seconds": 14.919,
     "halted_at": "extract",
     "rejections": [
      {
       "step": "extract",
       "attempt": 0,
-      "reason": "the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest"
+      "reason": "the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest; the currency is RM, not USD (the receipt prints none; the company's default is RM)"
      },
      {
       "step": "extract",
@@ -729,7 +749,7 @@
      {
       "step": "extract",
       "attempt": 2,
-      "reason": "2.80 is the change on the receipt, not the total; the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest"
+      "reason": "2.80 is the change on the receipt, not the total; the receipt has a larger amount, 15.60, that is not cash paid or change; the total is normally the largest; the currency is RM, not USD (the receipt prints none; the company's default is RM)"
      }
     ]
    }
@@ -765,7 +785,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 50.597
+    "seconds": 53.126
    },
    "with": {
     "outcome": "posted_ok",
@@ -778,20 +798,26 @@
      "vendor": "AEON CO. (M) BHD",
      "date": "01/04/2018",
      "total": "122.80",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AEON CO. (M) BHD",
      "date": "2018-04-01",
      "amount": "122.80",
-     "currency": "USD",
+     "currency": "RM",
      "category": "other",
-     "memo": "Purchases from AEON CO. (M) BHD on 01/04/2018"
+     "memo": "Groceries purchased at AEON CO. (M) BHD on 01/04/2018"
     },
-    "calls": 3,
-    "seconds": 21.433,
+    "calls": 4,
+    "seconds": 33.242,
     "halted_at": null,
-    "rejections": []
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     }
+    ]
    }
   },
   {
@@ -825,7 +851,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 45.295
+    "seconds": 47.841
    },
    "with": {
     "outcome": "posted_ok",
@@ -846,10 +872,10 @@
      "amount": "38.37",
      "currency": "RM",
      "category": "other",
-     "memo": "Beauty products purchase"
+     "memo": "Beauty products"
     },
     "calls": 4,
-    "seconds": 27.17,
+    "seconds": 29.084,
     "halted_at": null,
     "rejections": [
      {
@@ -891,7 +917,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 47.988
+    "seconds": 50.575
    },
    "with": {
     "outcome": "posted_ok",
@@ -904,20 +930,30 @@
      "vendor": "TF VALUE-MART SDN BHD",
      "date": "19/05/18",
      "total": "52.80",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "TF VALUE-MART SDN BHD",
      "date": "2018-05-19",
      "amount": "52.80",
-     "currency": "USD",
+     "currency": "RM",
      "category": "other",
      "memo": "Groceries"
     },
-    "calls": 4,
-    "seconds": 27.24,
+    "calls": 6,
+    "seconds": 40.472,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 52.80 is 'approve' (within 200.00), not 'reject'"
+     },
      {
       "step": "ledger",
       "attempt": 0,
@@ -957,7 +993,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 47.115
+    "seconds": 49.304
    },
    "with": {
     "outcome": "posted_ok",
@@ -978,10 +1014,10 @@
      "amount": "20.00",
      "currency": "RM",
      "category": "groceries",
-     "memo": "Groceries purchased on April 28, 2018"
+     "memo": "Groceries purchase on April 28, 2018"
     },
     "calls": 3,
-    "seconds": 23.626,
+    "seconds": 23.495,
     "halted_at": null,
     "rejections": []
    }
@@ -1011,13 +1047,13 @@
      "vendor": "BERRY'S CAKE HOUSE",
      "date": "18-04-2018",
      "amount": "11.25",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Cake purchase"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 47.282
+    "seconds": 49.175
    },
    "with": {
     "outcome": "posted_ok",
@@ -1036,12 +1072,12 @@
      "vendor": "BERRY'S CAKE HOUSE",
      "date": "2018-04-18",
      "amount": "11.25",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Cake purchase"
     },
     "calls": 5,
-    "seconds": 30.202,
+    "seconds": 34.819,
     "halted_at": null,
     "rejections": [
      {
@@ -1088,7 +1124,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 40.312
+    "seconds": 42.004
    },
    "with": {
     "outcome": "stopped_wrong",
@@ -1100,13 +1136,13 @@
     "fields": null,
     "entry": null,
     "calls": 3,
-    "seconds": 12.823,
+    "seconds": 14.198,
     "halted_at": "extract",
     "rejections": [
      {
       "step": "extract",
       "attempt": 0,
-      "reason": "1.40 is the cash paid on the receipt, not the total"
+      "reason": "1.40 is the cash paid on the receipt, not the total; the currency is RM, not USD"
      },
      {
       "step": "extract",
@@ -1116,7 +1152,7 @@
      {
       "step": "extract",
       "attempt": 2,
-      "reason": "1.40 is the cash paid on the receipt, not the total"
+      "reason": "1.40 is the cash paid on the receipt, not the total; the currency is RM, not USD"
      }
     ]
    }
@@ -1152,7 +1188,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 38.113
+    "seconds": 39.726
    },
    "with": {
     "outcome": "posted_ok",
@@ -1173,10 +1209,10 @@
      "amount": "5.00",
      "currency": "RM",
      "category": "stationery",
-     "memo": "Stationery purchase"
+     "memo": "Purchase of stationery items"
     },
     "calls": 5,
-    "seconds": 35.389,
+    "seconds": 33.551,
     "halted_at": null,
     "rejections": [
      {
@@ -1217,13 +1253,13 @@
      "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
      "date": "2018-04-13",
      "amount": "50.00",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
      "memo": "Purchased from GH DISTRIBUTOR & MARKETING SDN BHD on 13/04/2018"
     },
     "errors": [],
     "calls": 3,
-    "seconds": 47.766
+    "seconds": 49.43
    },
    "with": {
     "outcome": "posted_wrong",
@@ -1242,20 +1278,14 @@
      "vendor": "GH DISTRIBUTOR & MARKETING SDN BHD",
      "date": "2018-04-13",
      "amount": "50.00",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "other",
-     "memo": "Purchased office supplies"
+     "memo": "Purchased from GH DISTRIBUTOR & MARKETING SDN BHD on 13/04/2018"
     },
-    "calls": 4,
-    "seconds": 33.234,
+    "calls": 3,
+    "seconds": 27.675,
     "halted_at": null,
-    "rejections": [
-     {
-      "step": "ledger",
-      "attempt": 0,
-      "reason": "the date must be 2018-04-13 (YYYY-MM-DD; the receipt's date 13/04/2018 is day first), not 13-04-2018"
-     }
-    ]
+    "rejections": []
    }
   },
   {
@@ -1289,7 +1319,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 51.872
+    "seconds": 52.354
    },
    "with": {
     "outcome": "posted_ok",
@@ -1308,12 +1338,12 @@
      "vendor": "MENTAI INITIAL SDN BHD",
      "date": "2018-04-21",
      "amount": "41.50",
-     "currency": "MYR",
+     "currency": "RM",
      "category": "groceries",
      "memo": "Groceries purchase on 21-04-2018"
     },
     "calls": 3,
-    "seconds": 34.648,
+    "seconds": 35.88,
     "halted_at": null,
     "rejections": []
    }
@@ -1349,7 +1379,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 45.607
+    "seconds": 46.946
    },
    "with": {
     "outcome": "posted_ok",
@@ -1359,27 +1389,32 @@
     "decision": "approve",
     "vendor_ok": true,
     "fields": {
-     "vendor": "ROTI MAN BAKERY",
+     "vendor": "THE ROTI MAN BAKERY",
      "date": "04-05-2018",
      "total": "20.40",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
-     "vendor": "ROTI MAN BAKERY",
+     "vendor": "THE ROTI MAN BAKERY",
      "date": "2018-05-04",
      "amount": "20.40",
-     "currency": "USD",
+     "currency": "RM",
      "category": "meals",
-     "memo": "Bakery meal"
+     "memo": "Bakery purchase for breakfast"
     },
-    "calls": 4,
-    "seconds": 41.742,
+    "calls": 5,
+    "seconds": 46.644,
     "halted_at": null,
     "rejections": [
      {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD"
+     },
+     {
       "step": "ledger",
       "attempt": 0,
-      "reason": "the date must be 2018-05-04 (YYYY-MM-DD; the receipt's date 04-05-2018 is day first), not 2018-04-05"
+      "reason": "the date must be 2018-05-04 (YYYY-MM-DD; the receipt's date 04-05-2018 is day first), not 04-05-2018"
      }
     ]
    }
@@ -1415,7 +1450,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 42.458
+    "seconds": 43.875
    },
    "with": {
     "outcome": "posted_ok",
@@ -1436,10 +1471,10 @@
      "amount": "3.70",
      "currency": "RM",
      "category": "other",
-     "memo": "Snacks"
+     "memo": "Groceries - Snacks"
     },
-    "calls": 6,
-    "seconds": 47.578,
+    "calls": 5,
+    "seconds": 41.368,
     "halted_at": null,
     "rejections": [
      {
@@ -1451,11 +1486,6 @@
       "step": "policy",
       "attempt": 0,
       "reason": "under the policy the decision for a total of 3.70 is 'approve' (within 200.00), not 'reject'"
-     },
-     {
-      "step": "ledger",
-      "attempt": 0,
-      "reason": "the date must be 2018-04-20 (YYYY-MM-DD; the receipt's date 20/04/2018 is day first), not 20-04-2018"
      }
     ]
    }
@@ -1491,7 +1521,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 49.906
+    "seconds": 51.227
    },
    "with": {
     "outcome": "posted_ok",
@@ -1515,7 +1545,7 @@
      "memo": "Purchases from MAXINCOME RESOURCES SDN BHD"
     },
     "calls": 3,
-    "seconds": 36.853,
+    "seconds": 35.384,
     "halted_at": null,
     "rejections": []
    }
@@ -1551,7 +1581,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 45.505
+    "seconds": 46.581
    },
    "with": {
     "outcome": "posted_ok",
@@ -1575,7 +1605,7 @@
      "memo": "Purchases from R&C VENTURE SDN BHD"
     },
     "calls": 5,
-    "seconds": 44.996,
+    "seconds": 47.453,
     "halted_at": null,
     "rejections": [
      {
@@ -1622,7 +1652,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 50.353
+    "seconds": 52.222
    },
    "with": {
     "outcome": "posted_ok",
@@ -1632,23 +1662,33 @@
     "decision": "approve",
     "vendor_ok": false,
     "fields": {
-     "vendor": "AA PHARMACY",
+     "vendor": "AA PHARMACY SUBANG HEALTHCARE SDN",
      "date": "29/10/2017",
      "total": "28.90",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
-     "vendor": "AA PHARMACY",
+     "vendor": "AA PHARMACY SUBANG HEALTHCARE SDN",
      "date": "2017-10-29",
      "amount": "28.90",
-     "currency": "USD",
+     "currency": "RM",
      "category": "pharmacy",
-     "memo": "Prescription medications"
+     "memo": "Medicine purchase"
     },
-    "calls": 4,
-    "seconds": 42.662,
+    "calls": 6,
+    "seconds": 53.227,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
+     {
+      "step": "policy",
+      "attempt": 0,
+      "reason": "under the policy the decision for a total of 28.90 is 'approve' (within 200.00), not 'reject'"
+     },
      {
       "step": "ledger",
       "attempt": 0,
@@ -1688,7 +1728,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 48.636
+    "seconds": 50.279
    },
    "with": {
     "outcome": "posted_ok",
@@ -1701,20 +1741,25 @@
      "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
      "date": "13/10/2017",
      "total": "234.40",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "DIGI TELECOMMUNICATIONS SDN BHD",
      "date": "2017-10-13",
      "amount": "234.40",
-     "currency": "USD",
+     "currency": "RM",
      "category": "other",
      "memo": "Mobile phone bill"
     },
-    "calls": 4,
-    "seconds": 40.949,
+    "calls": 5,
+    "seconds": 49.696,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD (the receipt prints none; the company's default is RM)"
+     },
      {
       "step": "ledger",
       "attempt": 0,
@@ -1754,7 +1799,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 45.618
+    "seconds": 47.523
    },
    "with": {
     "outcome": "posted_ok",
@@ -1775,10 +1820,10 @@
      "amount": "28.40",
      "currency": "RM",
      "category": "other",
-     "memo": "Purchase of office supplies"
+     "memo": "Groceries"
     },
     "calls": 5,
-    "seconds": 45.28,
+    "seconds": 46.239,
     "halted_at": null,
     "rejections": [
      {
@@ -1825,7 +1870,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 48.533
+    "seconds": 49.794
    },
    "with": {
     "outcome": "posted_ok",
@@ -1838,20 +1883,31 @@
      "vendor": "AA PHARMACY",
      "date": "11/08/2017",
      "total": "78.10",
-     "currency": "BHD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "AA PHARMACY",
      "date": "2017-08-11",
      "amount": "78.10",
-     "currency": "BHD",
+     "currency": "RM",
      "category": "pharmacy",
-     "memo": "Medicine purchase"
+     "memo": "Prescription medications"
     },
-    "calls": 3,
-    "seconds": 34.169,
+    "calls": 5,
+    "seconds": 47.263,
     "halted_at": null,
-    "rejections": []
+    "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not BHD (the receipt prints none; the company's default is RM)"
+     },
+     {
+      "step": "ledger",
+      "attempt": 0,
+      "reason": "the date must be 2017-08-11 (YYYY-MM-DD; the receipt's date 11/08/2017 is day first), not 2017-11-08"
+     }
+    ]
    }
   },
   {
@@ -1879,13 +1935,13 @@
      "vendor": null,
      "date": null,
      "amount": null,
-     "currency": null,
+     "currency": "RM",
      "category": null,
      "memo": null
     },
     "errors": [],
     "calls": 3,
-    "seconds": 52.068
+    "seconds": 53.127
    },
    "with": {
     "outcome": "posted_ok",
@@ -1909,7 +1965,7 @@
      "memo": "Bakery meal"
     },
     "calls": 5,
-    "seconds": 46.255,
+    "seconds": 46.9,
     "halted_at": null,
     "rejections": [
      {
@@ -1956,7 +2012,7 @@
     },
     "errors": [],
     "calls": 3,
-    "seconds": 53.283
+    "seconds": 55.333
    },
    "with": {
     "outcome": "posted_ok",
@@ -1969,20 +2025,25 @@
      "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
      "date": "30/08/2017",
      "total": "53.14",
-     "currency": "USD"
+     "currency": "RM"
     },
     "entry": {
      "vendor": "GARDENIA BAKERIES (KL) SDN BHD",
      "date": "2017-08-30",
      "amount": "53.14",
-     "currency": "USD",
+     "currency": "RM",
      "category": "meals",
      "memo": "Bakery meal"
     },
-    "calls": 5,
-    "seconds": 45.794,
+    "calls": 6,
+    "seconds": 53.779,
     "halted_at": null,
     "rejections": [
+     {
+      "step": "extract",
+      "attempt": 0,
+      "reason": "the currency is RM, not USD"
+     },
      {
       "step": "policy",
       "attempt": 0,
@@ -1998,14 +2059,14 @@
   }
  ],
  "usage": {
-  "calls": 212,
+  "calls": 223,
   "cached_calls": 0,
-  "input_tokens": 87767,
-  "output_tokens": 10715,
+  "input_tokens": 96363,
+  "output_tokens": 11072,
   "cost_usd": 0.0,
   "by_purpose": {
    "receipt-agent": {
-    "calls": 212,
+    "calls": 223,
     "cost_usd": 0.0
    }
   }

@@ -12,8 +12,8 @@ Agents: **openai:local-gguf** · receipts: **30** real scanned receipts (ICDAR 2
 | … with the wrong or badly written date | 14 | 0 |
 | … with a decision that breaks the policy | 29 | 0 |
 | Silent error rate (95% CI) |  96.7%  [83.3, 99.4]  (29/30) |   3.3%  [0.6, 16.7]  (1/30) |
-| Agent calls per receipt | 3.0 | 4.23 |
-| Seconds per receipt | 24.001 | 25.555 |
+| Agent calls per receipt | 3.0 | 4.27 |
+| Seconds per receipt | 30.616 | 33.664 |
 
 - Of the receipts the agents got wrong, the guard kept **28 of 29** out of the ledger (96.5%  [82.8, 99.4]  (28/29)); **21** of them were fixed automatically when the agent was told what was wrong.
 - False alarms: 0 of 1 receipts the agents got right were stopped. Right answers the guard's retry turned wrong: 0.
@@ -27,10 +27,11 @@ What the guard caught (rejections, all steps):
 - a smaller amount taken as the total: 5
 - the change taken as the total: 3
 - total disagrees with cash paid minus change: 3
-- a date that is not on the receipt: 2
+- no date found: 2
 - the subtotal taken as the total: 1
-- no date found: 1
+- a date that is not on the receipt: 1
 - the vendor: 1
+- other: 1
 
 Examples:
 

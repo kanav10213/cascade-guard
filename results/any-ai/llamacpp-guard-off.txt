@@ -4,3 +4,8 @@ Checking 6 receipts with openai · local-gguf at http://localhost:8080/v1. Polic
   OK         fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        reject
   OK         kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 INR  other       reject
   OK         kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-03-01       19.05 RM  meals       reject
+  OK         laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 28-10-2026   62499.00 INR  electronics reject
+  OK         restaurant-pune.txt   Shree Krishna Bhajanalaya    2026-11-04     430.00 INR  other       reject
+
+6 posted (0 of them fixed by the guard first), 0 stopped for a person, 0 unreadable. Posted total: 31.05 RM, 65516.00 INR.
+Wrote out/llamacpp-guard-off.csv and out/llamacpp-guard-off.json.

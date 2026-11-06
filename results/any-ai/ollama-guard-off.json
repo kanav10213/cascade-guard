@@ -74,7 +74,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 30.365,
+      "seconds": 30.285,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
@@ -141,7 +141,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 21.341,
+      "seconds": 21.598,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
@@ -208,7 +208,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 23.494,
+      "seconds": 23.615,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
@@ -275,7 +275,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 24.35,
+      "seconds": 25.138,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
@@ -342,7 +342,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 23.26,
+      "seconds": 23.647,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
@@ -409,7 +409,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 30.181,
+      "seconds": 31.373,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,

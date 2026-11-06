@@ -1,17 +1,17 @@
 ## cascade-guard receipts run examples/receipts --ai 'ollama:qwen2.5:3b' --approval-limit 5000 --currency INR 
 Checking 6 receipts with openai · qwen2.5:3b at http://localhost:11434/v1. Policy: above 5000.00 needs a manager.
-  FIXED      cafe-smudged.txt      SEDAP CAFE SDN BHD           2018-01-31      12.00 USD  meals       approve
-                                     (the guard caught: '3I/O1/2O18' is not a date)
+  STOPPED    cafe-smudged.txt      needs a person: the currency is INR, not USD (the receipt prints none; the company's default is INR)
   FIXED      fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        approve
                                      (the guard caught: the date must be 2026-11-02 (YYYY-MM-DD; the receipt's date 02 NOV 2026 is day first), not 02-11-2026)
-  FIXED      kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 USD  groceries   approve
-                                     (the guard caught: the date must be 2026-11-05 (YYYY-MM-DD; the receipt's date 05/11/2026 is day first), not 2026-05-11)
-  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 USD  meals       approve
-                                     (the guard caught: the date must be 2018-01-03 (YYYY-MM-DD; the receipt's date 03/01/2018 is day first), not 2018-03-01)
+  FIXED      kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 INR  groceries   approve
+                                     (the guard caught: the currency is INR, not USD (the receipt prints none; the company's default is INR))
+  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 INR  meals       approve
+                                     (the guard caught: the currency is INR, not USD (the receipt prints none; the company's default is INR))
   FIXED      laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 2026-10-28   62499.00 INR  electronics needs_approval
                                      (the guard caught: the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026)
   FIXED      restaurant-pune.txt   SHREE KRISHNA BHOJANALAYA    2026-11-04     430.00 INR  meals       approve
                                      (the guard caught: the date must be 2026-11-04 (YYYY-MM-DD; the receipt's date 04/11/2026 is day first), not 2026-04-11)
 
-6 posted (6 of them fixed by the guard first), 0 stopped for a person, 0 unreadable. Posted total: 528.05 USD, 65019.00 INR.
+5 posted (5 of them fixed by the guard first), 1 stopped for a person, 0 unreadable. Posted total: 65535.05 INR.
+Look at: cafe-smudged.txt
 Wrote out/ollama-guard-on.csv and out/ollama-guard-on.json.
