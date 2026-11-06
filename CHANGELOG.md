@@ -21,7 +21,10 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   UPI/Paytm/PhonePe as payments, and a round-off up to a rupee ("NET PAYABLE" after "ROUND OFF"). Indian shop and
   category words were added. The currency is read from the receipt; `RECEIPTS_CURRENCY` and
   `RECEIPTS_APPROVAL_LIMIT` set the defaults. The SROIE results are unchanged.
-- `examples/receipts/`: made-up sample receipts (Indian and Malaysian) to try it on.
+- Sample receipts in the package (made up, Indian and Malaysian): `cascade-guard receipts run --samples`.
+- The guard checks the currency. It must be the one the receipt prints; if it prints none, the currency of the
+  country the receipt is plainly from (GSTIN, CGST, Pune, ... or SDN BHD, Jalan, ...); otherwise the company
+  default. Posted entries are written one way (2090.00, a currency code).
 - The `any-ai` GitHub workflow runs the real local AI servers (Ollama, and llama.cpp's server) through each kind of
   `--ai` setting, plus a slice of the SROIE test receipts.
 - Expense receipts, a real three-agent workflow (`cascade_guard.receipts`): read the receipt (vendor, date, total),

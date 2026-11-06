@@ -82,6 +82,7 @@ Point it at a folder of receipts (text, PDFs or photos) and pick the AI that rea
 
 ```bash
 pip install cascade-guard-ai                     # add [ocr] to read photos
+cascade-guard receipts run --samples                                      # try it on the sample receipts first
 cascade-guard receipts run my-receipts/                                   # no AI: rule-based agents, free, offline
 cascade-guard receipts run my-receipts/ --ai ollama:qwen2.5:7b            # a local AI on your computer, free
 cascade-guard receipts run my-receipts/ --ai gemini:gemini-2.5-flash      # a cloud AI (GEMINI_API_KEY in .env)
@@ -102,8 +103,8 @@ Each receipt goes through three agents: read it, apply the expense policy, write
 checks every hand-off against the receipt itself. A wrong total, such as the cash paid, the tax or the amount before
 the round-off, goes back to the agent with the reason. If it is still wrong, it is stopped for a person. You get a
 CSV for your accounts and a short list of receipts to look at. It reads Indian bills (₹, Rs., lakhs, CGST/SGST/IGST,
-UPI, round-off) as well as Malaysian, US and European ones. Try it on the samples in
-[examples/receipts](examples/receipts).
+UPI, round-off) as well as Malaysian, US and European ones. The currency is checked too. Try it on the
+[sample receipts](cascade_guard/samples/receipts) with `--samples`.
 
 **Which AI:** `cascade-guard ai list` shows every choice and any local AI server running right now. `cascade-guard
 ai test --ai <choice>` sends one small request and shows the answer.
@@ -129,9 +130,23 @@ result = process_receipt(text, client=client_from_ai("lmstudio"))               
 result = process_receipt(text, client=function_client(lambda system, user: my_llm(system + "\n\n" + user)))
 print(result["status"], result["entry"], result["trace"])   # posted / halted, the ledger entry, every check
 ```
-Reasoning models' `<think>` sections are removed before the answer is read. The
-[any-ai workflow](.github/workflows/any-ai.yml) runs these paths with real local AI servers (Ollama and a
-llama.cpp server) on GitHub's machines.
+Reasoning models' `<think>` sections are removed before the answer is read.
+
+**Tested with real local AIs.** The [any-ai workflow](.github/workflows/any-ai.yml) starts real local AI servers on
+GitHub's machines and uses them through `--ai`. With Ollama, it tried `ollama`, `ollama:qwen2.5:3b`, the plain URL
+and `cmd:ollama run qwen2.5:3b`. With a llama.cpp server, it tried `llamacpp` and the plain URL. Each read 30 of the
+held-out SROIE receipts, without and with the guard:
+
+| Local AI | Wrong entries posted: without → with the guard | Fixed automatically | Stopped for a person (of them right) |
+|---|---|---:|---|
+| Ollama, Qwen 2.5 3B | 25 of 30 → **1** | 21 | 3 (2) |
+| llama.cpp server, Qwen 2.5 1.5B (GGUF) | 29 of 30 → **1** | 21 | 7 (2) |
+
+Without the guard, these small models mostly wrote dates wrong (4 Nov became 11 Apr), rejected fine receipts, or
+took the cash paid as the total. On the sample receipts, they also called rupee receipts USD. These are 30
+receipts, so read the numbers as a working demonstration, not a benchmark. The 326-receipt results are
+[above](#real-world-results). The raw logs and CSVs are on the
+[benchmark-results branch](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results/any-ai).
 
 ## Contents
 [Real-world results](#real-world-results) · [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·

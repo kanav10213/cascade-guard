@@ -20,9 +20,9 @@ from cascade_guard.llm.presets import (
     strip_thinking,
 )
 from cascade_guard.receipts import check_extract, currency_of, money, process_receipt
+from cascade_guard.receipts_run import SAMPLES as EXAMPLES  # the sample receipts shipped in the package
 from cascade_guard.receipts_run import find_files, run_files, summary
 
-EXAMPLES = Path(__file__).resolve().parent.parent / "examples" / "receipts"
 TODAY = dt.date(2026, 11, 6)
 
 
@@ -130,7 +130,7 @@ def test_cascade_ai_drives_make_client_everywhere(local_server, monkeypatch):
 
 def test_any_local_ai_reads_receipts_and_the_guard_fixes_its_mistake(local_server, rupees):
     client = client_from_ai(f"{local_server}#tiny-receipt-model", cache_path=None)
-    res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(), client=client, today=TODAY)
+    res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(encoding="utf-8"), client=client, today=TODAY)
     assert res["status"] == "posted" and res["entry"]["amount"] == "497.00"
     first = res["trace"][0]
     assert first["output"]["total"] == "500.00" and "cash paid" in first["reason"]  # caught, then fixed
@@ -139,7 +139,7 @@ def test_any_local_ai_reads_receipts_and_the_guard_fixes_its_mistake(local_serve
 
 def test_a_python_function_or_a_program_can_be_the_ai(tmp_path, rupees):
     fn = function_client(_Model.answer)
-    res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(), client=fn, today=TODAY)
+    res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(encoding="utf-8"), client=fn, today=TODAY)
     assert res["status"] == "posted" and res["entry"]["amount"] == "497.00"
     prog = tmp_path / "echo_ai.py"
     prog.write_text("import sys\nprint('\\x1b[32m<think>hm</think>{\"total\": \"497.00\"}\\x1b[0m')\n")
@@ -157,7 +157,7 @@ def test_thinking_is_dropped_from_answers():
 
 def test_indian_receipts_rupees_lakhs_gst_and_round_off():
     assert money("₹1,25,000.00") == money("125000") and money("Rs. 2,090.00") == money("2090")
-    pune = (EXAMPLES / "restaurant-pune.txt").read_text()
+    pune = (EXAMPLES / "restaurant-pune.txt").read_text(encoding="utf-8")
     assert currency_of(pune) == "INR"
     fields = {"vendor": "SHREE KRISHNA BHOJANALAYA", "date": "04/11/2026"}
     assert check_extract({**fields, "total": "430.00"}, pune, TODAY) == (True, None)  # net payable after round off
@@ -168,12 +168,12 @@ def test_indian_receipts_rupees_lakhs_gst_and_round_off():
 
 
 def test_a_wrong_currency_is_caught(rupees):
-    kirana = (EXAMPLES / "kirana-kothrud.txt").read_text()   # prints no currency: the company default applies
+    kirana = (EXAMPLES / "kirana-kothrud.txt").read_text(encoding="utf-8")   # prints no currency
     fields = {"vendor": "SHRI BALAJI KIRANA STORES", "date": "05/11/2026", "total": "497.00"}
     assert check_extract({**fields, "currency": "INR"}, kirana, TODAY)[0]
     ok, why = check_extract({**fields, "currency": "USD"}, kirana, TODAY)
-    assert not ok and "INR" in why and "default" in why
-    pune = (EXAMPLES / "restaurant-pune.txt").read_text()   # prints ₹
+    assert not ok and "country that uses INR" in why   # Kothrud, Pune
+    pune = (EXAMPLES / "restaurant-pune.txt").read_text(encoding="utf-8")   # prints ₹
     ok, why = check_extract({"vendor": "SHREE KRISHNA BHOJANALAYA", "date": "04/11/2026", "total": "430.00",
                              "currency": "MYR"}, pune, TODAY)
     assert not ok and "the currency is INR" in why
@@ -185,9 +185,19 @@ def test_posted_amounts_are_written_one_way():
         if "amount" in out:
             out["amount"] = "2,090.00"
         return json.dumps(out)
-    res = process_receipt((EXAMPLES / "fuel-pune.txt").read_text(), client=function_client(comma_ai), today=TODAY)
+    res = process_receipt((EXAMPLES / "fuel-pune.txt").read_text(encoding="utf-8"), client=function_client(comma_ai), today=TODAY)
     assert res["status"] == "posted" and res["entry"]["amount"] == "2090.00"
     assert summary([{"name": "f", **res}])["total_posted"] == {"INR": "2090.00"}
+
+
+def test_a_receipt_from_a_known_country_gets_its_currency(rupees):
+    kl = (EXAMPLES / "kopi-house-kl.txt").read_text(encoding="utf-8")  # Kuala Lumpur, prints no currency
+    assert currency_of(kl) == "RM"
+    fields = {"vendor": "KOPI HOUSE RESTAURANT", "date": "03/01/2018", "total": "19.05"}
+    assert check_extract({**fields, "currency": "MYR"}, kl, dt.date(2026, 11, 6))[0]
+    ok, why = check_extract({**fields, "currency": "INR"}, kl, dt.date(2026, 11, 6))
+    assert not ok and "country that uses RM" in why
+    assert currency_of("SOME SHOP\nTOTAL 10.00") == "INR"   # nothing to go on: the company default
 
 
 def test_receipts_run_on_a_folder(tmp_path, monkeypatch):
@@ -204,13 +214,13 @@ def test_receipts_run_on_a_folder(tmp_path, monkeypatch):
         from cascade_guard.receipts_run import main
         monkeypatch.chdir(tmp_path)
         assert main([str(EXAMPLES / "kirana-kothrud.txt"), "--out", "out.csv", "--json", "out.json"]) == 0
-        assert "497.00" in (tmp_path / "out.csv").read_text()
-        assert json.loads((tmp_path / "out.json").read_text())["summary"]["posted"] == 1
+        assert "497.00" in (tmp_path / "out.csv").read_text(encoding="utf-8")
+        assert json.loads((tmp_path / "out.json").read_text(encoding="utf-8"))["summary"]["posted"] == 1
     finally:
         receipts.configure(approval_limit="200", currency="RM")
 
 
-def test_cli_ai_flag_reaches_the_commands(local_server, tmp_path, monkeypatch, capsys):
+def test_cli_ai_flag_reaches_the_commands(local_server, tmp_path, monkeypatch, capsys, rupees):
     from cascade_guard.cli import main
     monkeypatch.delenv("CASCADE_AI", raising=False)
     monkeypatch.chdir(tmp_path)
@@ -222,4 +232,5 @@ def test_cli_ai_flag_reaches_the_commands(local_server, tmp_path, monkeypatch, c
     assert "It works" in capsys.readouterr().out
     assert main(["ai", "list"]) == 0
     assert "ollama" in capsys.readouterr().out
-    receipts.configure(approval_limit="200", currency="RM")
+    assert main(["receipts", "run", "--samples", "--out", "s.csv"]) == 0
+    assert "restaurant-pune.txt" in capsys.readouterr().out

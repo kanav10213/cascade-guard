@@ -68,14 +68,14 @@ jobs:
           for guard in off on; do
             flag=$([ $guard = off ] && echo "--no-guard" || echo "")
             {
-              echo "## cascade-guard receipts run examples/receipts --ai '$main' --approval-limit 5000 --currency INR $flag"
-              python -m cascade_guard receipts run examples/receipts --ai "$main" --approval-limit 5000 --currency INR \
+              echo "## cascade-guard receipts run --samples --ai '$main' --approval-limit 5000 --currency INR $flag"
+              python -m cascade_guard receipts run --samples --ai "$main" --approval-limit 5000 --currency INR \
                 $flag --out out/${{ matrix.server }}-guard-$guard.csv --json out/${{ matrix.server }}-guard-$guard.json
             } 2>&1 | tee out/${{ matrix.server }}-guard-$guard.txt
           done
           if [ "${{ matrix.server }}" = "ollama" ]; then
             { echo "## the same, with the AI run as a program: --ai 'cmd:ollama run $M'"
-              python -m cascade_guard receipts run examples/receipts --ai "cmd:ollama run $M" --approval-limit 5000 \
+              python -m cascade_guard receipts run --samples --ai "cmd:ollama run $M" --approval-limit 5000 \
                 --currency INR --out out/ollama-cmd.csv
             } 2>&1 | tee out/ollama-cmd.txt
           fi

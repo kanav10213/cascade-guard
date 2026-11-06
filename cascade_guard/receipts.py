@@ -346,9 +346,26 @@ def printed_currency(text: str) -> str | None:
     return None
 
 
+# Where a receipt that prints no currency comes from: tax registrations, company forms and big cities.
+COUNTRY_HINTS = [
+    ("INR", re.compile(r"\b(?:GSTIN|FSSAI|[CSI]GST|PVT\.?\s*LTD|PUNE|MUMBAI|DELHI|BENGALURU|BANGALORE|CHENNAI|"
+                       r"HYDERABAD|KOLKATA|AHMEDABAD|JAIPUR|LUCKNOW|INDORE|NAGPUR|NOIDA|GURUGRAM|GURGAON|KOCHI|"
+                       r"INDIA|KOTHRUD|BHOJANALAYA|KIRANA)\b", re.I)),
+    ("RM", re.compile(r"\b(?:SDN\.?\s*BHD|BHD|JALAN|JLN|TAMAN|SELANGOR|JOHOR|KUALA\s+LUMPUR|PETALING|PENANG|"
+                      r"MALAYSIA|KEDAI|RESTORAN)\b", re.I)),
+]
+
+
+def hinted_currency(text: str) -> str | None:
+    """The currency of the country a receipt plainly comes from, when it prints no currency."""
+    found = {code for code, rx in COUNTRY_HINTS if rx.search(text or "")}
+    return found.pop() if len(found) == 1 else None
+
+
 def currency_of(text: str) -> str:
-    """The receipt's currency: the one it prints, else RECEIPTS_CURRENCY (default RM)."""
-    return printed_currency(text) or DEFAULT_CURRENCY
+    """The receipt's currency: the one it prints, else the one its country uses (from its address and tax
+    numbers), else RECEIPTS_CURRENCY (default RM)."""
+    return printed_currency(text) or hinted_currency(text) or DEFAULT_CURRENCY
 
 
 _CURRENCY_NAMES = {"MYR": "RM", "RINGGIT": "RM", "RS": "INR", "RS.": "INR", "₹": "INR", "RUPEE": "INR",
@@ -548,10 +565,12 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
     said = norm_currency(out.get("currency"))
     if said:
         cur_printed = printed_currency(text)
-        want = cur_printed or DEFAULT_CURRENCY
+        cur_hint = None if cur_printed else hinted_currency(text)
+        want = cur_printed or cur_hint or DEFAULT_CURRENCY
         if said != norm_currency(want):
-            problems.append(f"the currency is {want}, not {out.get('currency')}" +
-                            ("" if cur_printed else f" (the receipt prints none; the company's default is {want})"))
+            why = ("" if cur_printed else f" (the receipt prints none, and it is from a country that uses {want})"
+                   if cur_hint else f" (the receipt prints none; the company's default is {want})")
+            problems.append(f"the currency is {want}, not {out.get('currency')}{why}")
     return (not problems), ("; ".join(problems) or None)
 
 

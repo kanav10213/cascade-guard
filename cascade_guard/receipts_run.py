@@ -1,5 +1,6 @@
 """Check your own receipts with any AI: cascade-guard receipts run FOLDER-OR-FILES [--ai ...]
 
+    cascade-guard receipts run --samples                                 try it on the sample receipts
     cascade-guard receipts run my-receipts/                              rule-based agents (free, offline)
     cascade-guard receipts run my-receipts/ --ai ollama:qwen2.5:7b       a local model, free
     cascade-guard receipts run bills/*.pdf --ai gemini:gemini-2.5-flash --approval-limit 5000 --currency INR
@@ -17,6 +18,7 @@ import json
 import sys
 from pathlib import Path
 
+SAMPLES = Path(__file__).parent / "samples" / "receipts"
 TEXT = {".txt", ".text", ".md"}
 PHOTO = {".jpg", ".jpeg", ".png", ".webp"}
 KINDS = TEXT | PHOTO | {".pdf"}
@@ -124,7 +126,8 @@ def _line(r: dict, width: int) -> str:
 
 def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(prog="cascade-guard receipts run", description=__doc__.split("\n\n")[0])
-    p.add_argument("paths", nargs="+", help="receipt files or folders (.txt .pdf .jpg .png .webp)")
+    p.add_argument("paths", nargs="*", help="receipt files or folders (.txt .pdf .jpg .png .webp)")
+    p.add_argument("--samples", action="store_true", help="try it on the sample receipts that come with it")
     p.add_argument("--ai", help="which AI does the reading: rules (default), ollama:<model>, lmstudio, gemini:<model>,"
                                 " a URL, cmd:<program>, ... (see: cascade-guard ai list)")
     p.add_argument("--out", default="receipts-checked.csv", help="CSV to write (default: receipts-checked.csv)")
@@ -141,7 +144,9 @@ def main(argv: list[str]) -> int:
     from cascade_guard.llm.client import BaseClient, NotConfigured
     from cascade_guard.llm.presets import client_from_ai
     receipts.configure(approval_limit=a.approval_limit, currency=a.currency)
-    files = find_files(a.paths)
+    if not a.paths and not a.samples:
+        p.error("name receipt files or a folder, or use --samples to try the samples")
+    files = find_files(a.paths + ([str(SAMPLES)] if a.samples else []))
     if not files:
         raise SystemExit("No receipts found (looked for .txt .md .pdf .jpg .png .webp).")
     import os
