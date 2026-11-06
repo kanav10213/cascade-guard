@@ -28,7 +28,7 @@ def find_files(paths: list[str]) -> list[Path]:
         p = Path(raw).expanduser()
         if p.is_dir():
             out += sorted(f for f in p.rglob("*") if f.is_file() and f.suffix.lower() in KINDS
-                          and not f.name.startswith("."))
+                          and not f.name.startswith(".") and not f.stem.upper().startswith(("README", "LICENSE")))
         elif p.is_file():
             out.append(p)
         else:
