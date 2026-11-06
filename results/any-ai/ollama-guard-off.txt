@@ -1,11 +1,2 @@
 ## cascade-guard receipts run examples/receipts --ai 'ollama:qwen2.5:3b' --approval-limit 5000 --currency INR --no-guard
 Checking 6 receipts with openai · qwen2.5:3b at http://localhost:11434/v1. Policy: above 5000.00 needs a manager.
-  OK         cafe-smudged.txt      SEDAP CAFE SDN BHD           3I-O1-2O18      12.00 USD  meals       approve
-  OK         fuel-pune.txt         SAI AUTO FUELS               02-NOV-2026    2090.00 INR  fuel        approve
-  OK         kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-05-11     497.00 USD  groceries   approve
-  OK         kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 USD  meals       approve
-  OK         laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 28-10-2026   62499.00 INR  electronics needs_approval
-  OK         restaurant-pune.txt   SHREE KRISHNA BHOJANALAYA    2026-04-11     430.00 INR  meals       approve
-
-6 posted (0 of them fixed by the guard first), 0 stopped for a person, 0 unreadable. Posted total: 528.05 USD, 65019.00 INR.
-Wrote out/ollama-guard-off.csv and out/ollama-guard-off.json.
