@@ -9,7 +9,13 @@
     cascade-guard compare              rule-based paired comparison, writes report.json
     cascade-guard eval all --dry-run   real-model evaluation (shows the cost first)
     cascade-guard chain run support-triage --input "..."   run your own agent chain
+    cascade-guard receipts run my-receipts/ --ai ollama:qwen2.5:7b   check your own receipts with any AI
+    cascade-guard ai list              every AI it can use (local, cloud, any URL or program)
     cascade-guard --version
+
+Any command that uses an AI takes --ai (or CASCADE_AI in .env): ollama[:model], lmstudio, llamacpp, vllm, jan,
+localai, openai:<model>, claude, gemini:<model>, groq, openrouter:<model>, mistral:<model>, deepseek,
+http://host:port/v1#model, cmd:<program>, or rules (no AI).
 
 Every command works in the working folder: --home, else CASCADE_HOME, else the
 current folder. It holds .env, data/ (the SQLite database) and .llm_cache/.
@@ -162,7 +168,7 @@ def cmd_ask(args) -> int:
     use_home(args.home)
     load_env()
     client = None
-    if args.model:
+    if args.model or os.getenv("CASCADE_AI", "rules").strip().lower() not in ("", "rules", "none", "off"):
         from cascade_guard.llm.client import NotConfigured, make_client
         try:
             client = make_client(max_cost=float(os.getenv("LLM_MAX_COST", "1.0")), strict_prices=False,
@@ -354,8 +360,22 @@ def cmd_agent(args) -> int:
 
 
 def cmd_receipts(args) -> int:
+    from cascade_guard.config import load_env, use_home
+    use_home(args.home)
+    load_env()
+    if args.rest and args.rest[0] == "run":
+        from cascade_guard.receipts_run import main as run_main
+        return run_main(args.rest[1:])
     from cascade_guard.receipts_bench import main
     return main(args.rest)
+
+
+def cmd_ai(args) -> int:
+    from cascade_guard.ai_cli import main as ai_main
+    from cascade_guard.config import load_env, use_home
+    use_home(args.home)
+    load_env()
+    return ai_main(args.rest)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -363,11 +383,14 @@ def build_parser() -> argparse.ArgumentParser:
                                 "chains of AI agents.", epilog="Docs: README.md, and /docs on a running server.")
     p.add_argument("--version", action="version", version=f"cascade-guard {__version__}")
     p.add_argument("--home", dest="top_home", metavar="HOME", help="working folder (also accepted after the command)")
+    p.add_argument("--ai", dest="top_ai", metavar="AI", help="which AI to use, e.g. ollama:qwen2.5:7b, lmstudio, "
+                   "gemini:<model>, cmd:<program>, rules (sets CASCADE_AI; see: cascade-guard ai list)")
     sub = p.add_subparsers(dest="command", metavar="command")
 
     def add(name, func, help_):
         s = sub.add_parser(name, help=help_, description=help_)
         s.add_argument("--home", help="working folder (default: CASCADE_HOME, else the current folder)")
+        s.add_argument("--ai", help="which AI to use (sets CASCADE_AI; see: cascade-guard ai list)")
         s.set_defaults(func=func)
         return s
 
@@ -416,8 +439,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--timeout", type=float, help="for add: seconds to wait (default 90)")
     s.add_argument("--description", help="for add: one line about the agent")
 
-    s = add("receipts", cmd_receipts, "expense receipts: benchmark on real receipts (benchmark, merge)")
-    s.add_argument("rest", nargs=argparse.REMAINDER, help="benchmark --data DIR [--split test] [--model] | merge FILES")
+    s = add("receipts", cmd_receipts, "expense receipts: check yours (run), or benchmark on real receipts")
+    s.add_argument("rest", nargs=argparse.REMAINDER,
+                   help="run FILES-OR-FOLDER [--ai X] [--out file.csv] | benchmark --data DIR [--ai X] | merge FILES")
+
+    s = add("ai", cmd_ai, "which AIs Cascade Guard can use (list), and check that one answers (test)")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="list | test [--ai X]")
 
     for name, module, help_ in (("compare", "compare", "rule-based paired comparison; writes report.json"),
                                 ("baseline", "baseline", "rule-based chain without the guard"),
@@ -452,6 +479,12 @@ def main(argv=None) -> int:
     elif unknown:
         parser.error("unrecognized arguments: " + " ".join(unknown))
     args.home = args.home or args.top_home
+    ai = getattr(args, "ai", None) or args.top_ai
+    if ai:  # one setting for every command, the server and the MCP tools
+        os.environ["CASCADE_AI"] = ai
+        if args.command in ("receipts", "ai") and args.rest[:1] in (["run"], ["test"], ["benchmark"]) \
+                and "--ai" not in args.rest:
+            args.rest += ["--ai", ai]
     return args.func(args)
 
 

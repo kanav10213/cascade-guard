@@ -29,6 +29,7 @@ from __future__ import annotations
 import datetime as dt
 import difflib
 import json
+import os
 import re
 import time
 from dataclasses import dataclass, field
@@ -36,12 +37,19 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 STEPS = ("extract", "policy", "ledger")
-APPROVAL_LIMIT = Decimal("200.00")      # above this, a manager approves
+APPROVAL_LIMIT = Decimal(os.getenv("RECEIPTS_APPROVAL_LIMIT") or "200.00")   # above this, a manager approves
+DEFAULT_CURRENCY = (os.getenv("RECEIPTS_CURRENCY") or "RM").upper()  # when the receipt prints no currency
 CATEGORIES = ("meals", "groceries", "stationery", "hardware", "fuel", "transport", "pharmacy", "electronics",
               "other")
-POLICY = (f"Expense policy: reject a receipt with no positive total. A receipt already submitted (same vendor, date "
-          f"and total) is a duplicate. A total above {APPROVAL_LIMIT} needs a manager's approval. Anything else is "
-          f"approved.")
+
+
+def _policy_text() -> str:
+    return (f"Expense policy: reject a receipt with no positive total. A receipt already submitted (same vendor, "
+            f"date and total) is a duplicate. A total above {APPROVAL_LIMIT} needs a manager's approval. Anything "
+            f"else is approved.")
+
+
+POLICY = _policy_text()
 
 MONTHS = {m: i for i, m in enumerate(["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV",
                                       "DEC"], 1)}
@@ -53,34 +61,52 @@ DATE_RX = re.compile(
     rf"|(?P<m4>{MONTH_RX})[\s.]+(?P<d4>\d{{1,2}}),?\s*(?P<y4>\d{{4}})"
     rf"|(?P<y6>20\d{{2}})(?P<m6>[01]\d)(?P<d6>[0-3]\d)"
     rf"|(?P<d5>[0-3]\d)(?P<m5>[01]\d)(?P<y5>20\d{{2}}))(?!\d)", re.I)
-MONEY_RX = re.compile(r"(?<![\d.,])(\d{1,3}(?:,\d{3})+|\d+)[.,](\d{2})(?![\d])")
+MONEY_RX = re.compile(r"(?<![\d.,])(\d{1,3}(?:,\d{2})*,\d{3}|\d+)[.,](\d{2})(?![\d])")  # 1,234.50 and 1,25,000.00
+CURRENCIES = [("INR", re.compile(r"₹|\bRS\.?(?=\s*\d)|\bINR\b|\bRUPEES?\b", re.I)),
+              ("RM", re.compile(r"\bRM\s*\d|\bRM\b|\bMYR\b|\bRINGGIT\b", re.I)),
+              ("USD", re.compile(r"\bUSD\b|US\$", re.I)), ("EUR", re.compile(r"€|\bEUR\b", re.I)),
+              ("GBP", re.compile(r"£|\bGBP\b", re.I)), ("SGD", re.compile(r"\bSGD\b|S\$", re.I)),
+              ("AED", re.compile(r"\bAED\b|\bDIRHAMS?\b", re.I))]
 TOTAL_WORDS = re.compile(r"\b(?:TOTAL|TOTAL\s*\(RM\)|NETT|NET\s*TOTAL|GRAND\s*TOTAL|AMOUNT\s*DUE|AMT\s*DUE|TOTAL\s*AMOUNT|"
                          r"ROUND(?:ED|ING)?\s*TOTAL|TOTAL\s*ROUND(?:ED|ING)?|JUMLAH|TOTAL\s*SALES?|TOTAL\s*INCL\w*|"
-                         r"TOTAL\s*PAYABLE|BALANCE\s*DUE|AMOUNT\s*PAYABLE|NET\s*AMOUNT)\b", re.I)
+                         r"TOTAL\s*PAYABLE|BALANCE\s*DUE|AMOUNT\s*PAYABLE|NET\s*AMOUNT|NET\s*PAYABLE|BILL\s*AMOUNT|"
+                         r"INVOICE\s*(?:TOTAL|VALUE|AMOUNT)|PAYABLE\s*AMOUNT|TOTAL\s*BILL|TOTAL\s*RS\.?|"
+                         r"TOTAL\s*\((?:RS\.?|INR|₹)\))(?![A-Z])", re.I)
 NOT_TOTAL = re.compile(r"\b(?:SUB\s*-?\s*TOTAL|TOTAL\s*(?:QTY|QUANTITY|ITEMS?|PCS|UNITS?|GST|TAX|SST|DISC\w*|SAV\w*|"
-                       r"EXCL\w*|BEFORE)|ITEMS?\s*COUNT|NO\.?\s*OF\s*ITEMS?)\b", re.I)
+                       r"EXCL\w*|BEFORE|[CSIU]GST|UTGST|CESS|TAXABLE|VAT)|ITEMS?\s*COUNT|NO\.?\s*OF\s*ITEMS?|"
+                       r"TAXABLE\s*(?:AMOUNT|VALUE|AMT))\b", re.I)
 KINDS = [("cash paid", re.compile(r"\b(?:CASH|TENDER\w*|PAID|PAYMENT|VISA|MASTER\w*|CARD|CREDIT|DEBIT|"
-                                   r"E-?WALLET|BOOST|GRAB\s*PAY|TNG)\b", re.I)),
+                                   r"E-?WALLET|BOOST|GRAB\s*PAY|TNG|UPI|PAYTM|PHONE\s*PE|G\s*PAY|GOOGLE\s*PAY|"
+                                   r"BHIM|NEFT|IMPS|RTGS)\b", re.I)),
          ("change", re.compile(r"\bCHANGE\b|\bBAKI\b", re.I)),
-         ("subtotal", re.compile(r"\bSUB\s*-?\s*TOTAL\b|\bTOTAL\s*(?:EXCL\w*|BEFORE)", re.I)),
-         ("tax", re.compile(r"\b(?:GST|SST|TAX|SR\s*@|ZR\s*@|SERVICE\s*(?:CHARGE|TAX))\b", re.I)),
+         ("subtotal", re.compile(r"\bSUB\s*-?\s*TOTAL\b|\bTOTAL\s*(?:EXCL\w*|BEFORE)|\bTAXABLE\s*(?:AMOUNT|VALUE|AMT)",
+                                  re.I)),
+         ("tax", re.compile(r"\b(?:GST|SST|TAX|SR\s*@|ZR\s*@|SERVICE\s*(?:CHARGE|TAX)|[CSIU]GST|UTGST|CESS|VAT)\b",
+                             re.I)),
          ("discount", re.compile(r"\bDISC(?:OUNT)?\b|\bSAVING", re.I)),
          ("rounding adjustment", re.compile(r"\bROUND\w*\s*(?:ADJ\w*|OFF)\b|\bADJUSTMENT\b", re.I)),
          ("item count", re.compile(r"\b(?:QTY|QUANTITY|ITEMS?|PCS)\b", re.I))]
 VENDOR_HINTS = re.compile(r"\b(?:SDN\.?\s*BHD|BHD|S/B|ENTERPRISE|TRADING|RESTAURANT|RESTORAN|STORE|MART|MARKET|"
                           r"BAKERY|CAFE|PHARMACY|HARDWARE|STATIONERY|BOOK|SHOP|KEDAI|PLT|CO\.|COMPANY|HOLDINGS|"
-                          r"SUPERMARKET|HYPERMARKET|TRADERS?|STATION|MAMAK|KITCHEN|FOOD|LTD|LIMITED|INC)\b", re.I)
+                          r"SUPERMARKET|HYPERMARKET|TRADERS?|STATION|MAMAK|KITCHEN|FOOD|LTD|LIMITED|INC|PVT|PRIVATE|LLP|"
+                          r"ENTERPRISES|STORES|AGENC(?:Y|IES)|BHANDAR|SWEETS|HOTEL|DHABA|MEDICAL|CHEMISTS?|"
+                          r"MEDICOS|PROVISIONS?|EMPORIUM|BAZAAR|CORNER|CENTRE|CENTER)\b", re.I)
 NOT_VENDOR = re.compile(r"\b(?:JALAN|JLN|TAMAN|NO\.|LOT|TEL|FAX|GST|REG|INVOICE|RECEIPT|TAX|CASHIER|DATE|"
-                        r"WELCOME|THANK|PHONE|EMAIL|WWW|LORONG|BANDAR|SELANGOR|JOHOR|KUALA|PULAU)\b", re.I)
+                        r"WELCOME|THANK|PHONE|EMAIL|WWW|LORONG|BANDAR|SELANGOR|JOHOR|KUALA|PULAU|GSTIN|FSSAI|CIN|"
+                        r"PAN|ROAD|NAGAR|MARG|CHOWK|SECTOR|MOB|BILL\s*NO)\b", re.I)
 CATEGORY_WORDS = [
     ("meals", r"RESTAURANT|RESTORAN|CAFE|COFFEE|KOPI|FOOD|KITCHEN|BAKERY|BAKE|NASI|MAMAK|BISTRO|BURGER|PIZZA|"
-              r"CHICKEN|TEA|DRINK|MEAL|DIM\s*SUM|CURRY|NOODLE|MEE"),
-    ("groceries", r"MART|MARKET|SUPERMARKET|HYPERMARKET|GROCER|MINI\s*MARKET|FRESH|AEON|TESCO|GIANT|99\s*SPEED"),
+              r"CHICKEN|TEA|DRINK|MEAL|DIM\s*SUM|CURRY|NOODLE|MEE|HOTEL|DHABA|SWEETS|CANTEEN|"
+              r"ZOMATO|SWIGGY|THALI|BIRYANI|CHAI|DOSA|BHOJAN"),
+    ("groceries", r"MART|MARKET|SUPERMARKET|HYPERMARKET|GROCER|MINI\s*MARKET|FRESH|AEON|TESCO|GIANT|99\s*SPEED|"
+                  r"KIRANA|PROVISION|BIGBASKET|BLINKIT|ZEPTO|GENERAL\s*STORES?"),
     ("stationery", r"STATIONERY|BOOK|PAPER|PRINT|PHOTOSTAT|OFFICE"),
     ("hardware", r"HARDWARE|TOOLS?|BUILDING|ELECTRICAL|TRADING|ENGINEERING|PAINT|STEEL|BESI"),
-    ("fuel", r"PETROL|PETRONAS|SHELL|CALTEX|BHP|PETRON|FUEL|STATION"),
-    ("transport", r"TAXI|GRAB|PARKING|TOLL|TRANSPORT|BUS|TRAIN"),
-    ("pharmacy", r"PHARMACY|FARMASI|CLINIC|KLINIK|HEALTH|GUARDIAN|WATSONS"),
+    ("fuel", r"PETROL|PETRONAS|SHELL|CALTEX|BHP|PETRON|FUEL|STATION|HPCL|BPCL|IOCL|INDIAN\s*OIL|"
+             r"FILLING|DIESEL"),
+    ("transport", r"TAXI|GRAB|PARKING|TOLL|TRANSPORT|BUS|TRAIN|UBER|OLA|RAPIDO|METRO|IRCTC|FASTAG|CAB"),
+    ("pharmacy", r"PHARMACY|FARMASI|CLINIC|KLINIK|HEALTH|GUARDIAN|WATSONS|MEDICAL|CHEMISTS?|MEDICOS|"
+                 r"APOLLO|MEDPLUS"),
     ("electronics", r"ELECTRONIC|COMPUTER|MOBILE|PHONE|GADGET"),
 ]
 
@@ -95,8 +121,8 @@ def money(value) -> Decimal | None:
     """'RM 1,234.50' / '9.00' / 9 -> Decimal with two places, else None."""
     if value is None or isinstance(value, bool):
         return None
-    s = str(value).upper().replace("RM", "").replace("MYR", "").replace("$", "").replace(" ", "").strip()
-    s = s.replace(",", "") if re.fullmatch(r"\d{1,3}(?:,\d{3})+(?:\.\d+)?", s) else s.replace(",", ".")
+    s = re.sub(r"RM|MYR|INR|RS\.?|₹|USD|US\$|S\$|SGD|EUR|€|GBP|£|AED|\$|\s", "", str(value).upper()).strip()
+    s = s.replace(",", "") if re.fullmatch(r"\d{1,3}(?:,\d{2})*,\d{3}(?:\.\d+)?", s) else s.replace(",", ".")
     try:
         d = Decimal(s)
     except (InvalidOperation, ValueError):
@@ -308,7 +334,31 @@ def rule_extract(text: str, avoid: list | None = None) -> dict:
             break
     if not vendor:
         vendor = next((ln for ln in lines[:5] if re.search(r"[A-Za-z]{3,}", ln) and ln not in bad_vendors), "")
-    return {"vendor": vendor, "date": date, "total": None if total is None else f"{total:.2f}", "currency": "RM"}
+    return {"vendor": vendor, "date": date, "total": None if total is None else f"{total:.2f}",
+            "currency": currency_of(text)}
+
+
+def currency_of(text: str) -> str:
+    """The currency the receipt prints (₹ / Rs. / INR, RM, $ ...), else RECEIPTS_CURRENCY (default RM)."""
+    head = text or ""
+    for code, rx in CURRENCIES:
+        if rx.search(head):
+            return code
+    return DEFAULT_CURRENCY
+
+
+def configure(approval_limit=None, currency: str | None = None) -> None:
+    """Change the policy's approval limit and the default currency for this process (the CLI's options)."""
+    global APPROVAL_LIMIT, DEFAULT_CURRENCY, POLICY, POLICY_PROMPT
+    if approval_limit is not None:
+        lim = money(approval_limit)
+        if lim is None or lim <= 0:
+            raise ValueError(f"not an amount: {approval_limit!r}")
+        APPROVAL_LIMIT = lim
+    if currency:
+        DEFAULT_CURRENCY = currency.strip().upper()
+    POLICY = _policy_text()
+    POLICY_PROMPT = _policy_prompt()
 
 
 def decide(fields: dict, seen: set | None = None) -> dict:
@@ -338,7 +388,7 @@ def rule_ledger(fields: dict, decision: dict, text: str = "") -> dict:
     d = parse_date(fields.get("date"))
     amount = money(fields.get("total"))
     return {"vendor": fields.get("vendor", ""), "date": d.isoformat() if d else "",
-            "amount": None if amount is None else f"{amount:.2f}", "currency": fields.get("currency") or "RM",
+            "amount": None if amount is None else f"{amount:.2f}", "currency": fields.get("currency") or DEFAULT_CURRENCY,
             "category": category_of(fields.get("vendor", ""), text),
             "memo": f"{fields.get('vendor', '')} receipt, {decision.get('decision', '')}"}
 
@@ -346,9 +396,13 @@ def rule_ledger(fields: dict, decision: dict, text: str = "") -> dict:
 EXTRACT_PROMPT = """You read shop receipts for a finance team. The receipt text comes from OCR and may have errors.
 Return ONLY a JSON object: {"vendor": "<the shop or company name>", "date": "<the receipt date as printed>",
 "total": "<the final amount the customer paid for the purchase, with 2 decimals, no currency sign>",
-"currency": "<currency code, e.g. RM>"}"""
-POLICY_PROMPT = f"""You apply a company expense policy to a receipt's fields. {POLICY}
+"currency": "<currency code, e.g. INR, RM, USD>"}"""
+def _policy_prompt() -> str:
+    return f"""You apply a company expense policy to a receipt's fields. {POLICY}
 Return ONLY a JSON object: {{"decision": "approve" | "needs_approval" | "duplicate" | "reject", "reason": "<short>"}}"""
+
+
+POLICY_PROMPT = _policy_prompt()
 LEDGER_PROMPT = f"""You write accounting ledger entries from approved receipt fields.
 Return ONLY a JSON object: {{"vendor": "<as given>", "date": "<YYYY-MM-DD; receipt dates are day first>",
 "amount": "<the total, 2 decimals>", "currency": "<as given>", "category": "<one of: {', '.join(CATEGORIES)}>",
@@ -371,7 +425,7 @@ def llm_extract(client, text: str, attempt: int = 0, feedback: str | None = None
     d = _ask(client, EXTRACT_PROMPT, "RECEIPT TEXT:\n" + text[:6000], attempt, feedback)
     return {"vendor": str(d.get("vendor") or ""), "date": str(d.get("date") or ""),
             "total": None if d.get("total") in (None, "") else str(d.get("total")),
-            "currency": str(d.get("currency") or "RM")}
+            "currency": str(d.get("currency") or currency_of(text))}
 
 
 def llm_policy(client, fields: dict, already: list, attempt: int = 0, feedback: str | None = None) -> dict:
@@ -421,6 +475,8 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
         printed = {x["amount"] for x in labelled}
         changes = {x["amount"] for x in labelled if _k(x) == "change"}
         tol = Decimal("0.05")
+        # A printed round-off (Indian bills round to the rupee: "ROUND OFF -0.50") explains a larger pre-rounding total.
+        adjust = {abs(x["amount"]) for x in labelled if _k(x) == "rounding adjustment" and abs(x["amount"]) < 1}
         # A larger amount that is the change (a bigger amount, the cash given, minus it is the total), or the cash
         # given (it minus a printed change is the total), is a payment even when its label was not read.
         payments |= {b for b in printed if b > total and (any(a > b and abs(a - b - total) <= tol for a in printed)
@@ -430,15 +486,21 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
                          and not x["summary"] and _k(x) in ("total", None)
                          and not (cash is not None and x["amount"] >= cash)
                          and not (rounding and x["amount"] - total <= Decimal("0.05"))
+                         and not any(abs(x["amount"] - total - r) <= Decimal("0.005") for r in adjust)
                          and not (_k(x) is None and x["amount"] % 1 == 0)},   # a round amount: likely cash given
                         reverse=True)
         if bigger and (paid is None or not any(x["amount"] == paid for x in labelled)):
             problems.append(f"the receipt has a larger amount, {bigger[0]}, that is not cash paid or change; the "
                             f"total is normally the largest")
         rounded = [x["amount"] for x in labelled
-                   if re.search(r"ROUND\w*\s*(?:ED\s*)?TOTAL|TOTAL\s*ROUND|NETT|NET\s*TOTAL|GRAND\s*TOTAL",
-                                x["label"], re.I) and _k(x) == "total"]
-        if rounded and total not in rounded and all(abs(r - total) <= Decimal("0.05") for r in rounded):
+                   if re.search(r"ROUND\w*\s*(?:ED\s*)?TOTAL|TOTAL\s*ROUND|NETT|NET\s*TOTAL|GRAND\s*TOTAL|"
+                                r"NET\s*PAYABLE|AMOUNT\s*PAYABLE|TOTAL\s*PAYABLE", x["label"], re.I) and _k(x) == "total"]
+        if adjust and rounded:  # with a printed round-off, the payable amount after it is the final total
+            final = [r for r in rounded if any(abs(o - r - a) <= Decimal("0.005") or abs(r - o - a) <= Decimal("0.005")
+                                               for o in rounded for a in adjust)]
+            rounded = [r for r in final if r % 1 == 0] or rounded
+        reach = max([Decimal("0.05"), *adjust])
+        if rounded and total not in rounded and all(abs(r - total) <= reach for r in rounded):
             problems.append(f"the receipt's final (rounded or net) total is {rounded[-1]}, not {total}")
     date = parse_date(out.get("date"))
     if date is None:

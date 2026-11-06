@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import time
 from collections import Counter
 from pathlib import Path
@@ -207,7 +208,8 @@ def main(argv=None) -> int:
     b.add_argument("--split", choices=list(SPLITS), default="test")
     b.add_argument("--limit", type=int, help="only the first N receipts of the split")
     b.add_argument("--shard", help="i/n: this run's share of the split, e.g. 2/4")
-    b.add_argument("--model", action="store_true", help="LLM agents from the configured model (LLM_PROVIDER, ...)")
+    b.add_argument("--model", action="store_true", help="LLM agents from the configured model (CASCADE_AI, ...)")
+    b.add_argument("--ai", help="LLM agents from this AI, e.g. ollama:qwen2.5:7b (implies --model)")
     b.add_argument("--max-retries", type=int, default=2)
     b.add_argument("--photos", action="store_true", help="read each receipt from its photo with OCR (needs [ocr])")
     b.add_argument("--out", help="write the raw results (JSON) here")
@@ -228,9 +230,10 @@ def main(argv=None) -> int:
             i, n = (int(x) for x in args.shard.split("/"))
             receipts = receipts[i - 1::n]
         client = None
+        if args.ai:
+            os.environ["CASCADE_AI"] = args.ai
+            args.model = args.ai.strip().lower() not in ("rules", "none", "off")
         if args.model:
-            import os
-
             from cascade_guard.llm.client import make_client
             cache = os.getenv("LLM_CACHE") or None
             if cache and cache != ":memory:":

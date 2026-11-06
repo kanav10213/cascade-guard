@@ -7,6 +7,9 @@
     resp = client.complete(system, user, max_tokens=200)
 
 Configuration (environment variables, or a .env file in the project folder):
+    CASCADE_AI         any AI in one setting, e.g. ollama:qwen2.5:7b, lmstudio, gemini:<model>, cmd:<program>,
+                       http://host:port/v1#model, rules (see cascade_guard/llm/presets.py). When set, it wins
+                       over the settings below.
     LLM_PROVIDER       anthropic | openai | auto | fake     (default anthropic)
                        auto: anthropic when ANTHROPIC_API_KEY is set, else openai when OPENAI_API_KEY is
                        set, else the offline simulator, so a server works before any key is added
@@ -348,6 +351,9 @@ class OpenAICompatClient(BaseClient):
                 raise RuntimeError(f"HTTP {r.status_code} from {self.base_url}: {r.text[:300]}")
             data = r.json()
             text = (data["choices"][0]["message"].get("content") or "")
+            if "<think" in text[:200].lower():  # a reasoning model's thoughts before its answer
+                from cascade_guard.llm.presets import strip_thinking
+                text = strip_thinking(text).strip()
             usage = data.get("usage") or {}
             return LLMResponse(text, usage.get("prompt_tokens") or approx_tokens(system + user),
                                usage.get("completion_tokens") or approx_tokens(text))
@@ -382,7 +388,15 @@ def approx_tokens(text: str) -> int:
     return max(1, round(len(text) / 3.5))
 
 
-def make_client(fake=False, model=None, provider=None, **kw) -> BaseClient:
+def make_client(fake=False, model=None, provider=None, ai=None, **kw) -> BaseClient:
+    """`ai` (or CASCADE_AI in the environment) picks any AI in one setting: see cascade_guard.llm.presets."""
+    ai = ai or (None if fake or provider else os.getenv("CASCADE_AI"))
+    if ai:
+        from cascade_guard.llm.presets import client_from_ai, parse_ai
+        spec = parse_ai(ai)
+        if model and not spec.model:
+            spec.model = model
+        return client_from_ai(spec, **kw)
     provider = (provider or os.getenv("LLM_PROVIDER") or "anthropic").strip().lower()
     if provider == "auto":
         provider = ("anthropic" if os.getenv("ANTHROPIC_API_KEY") else

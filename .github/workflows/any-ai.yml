@@ -1,0 +1,125 @@
+# Proof that one --ai setting works with real local AIs: two different local servers (Ollama, and llama.cpp's
+# OpenAI-compatible server via llama-cpp-python), a raw URL and a command-line program, all free on GitHub's
+# machines. Each reads the example receipts without and with Cascade Guard. Logs and CSVs are committed to the
+# benchmark-results branch under results/any-ai/.
+name: any-ai
+on:
+  workflow_dispatch:
+    inputs:
+      ollama_model:
+        description: "Ollama model"
+        default: "qwen2.5:3b"
+      gguf_url:
+        description: "GGUF model for the llama.cpp server"
+        default: "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf"
+      sroie_receipts:
+        description: "also benchmark this many real SROIE test receipts with each server (0: skip)"
+        default: "30"
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        server: [ollama, llamacpp]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt .
+      - name: Start Ollama
+        if: matrix.server == 'ollama'
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          sudo systemctl stop ollama 2>/dev/null || true
+          OLLAMA_CONTEXT_LENGTH=8192 nohup ollama serve > server.log 2>&1 &
+          for i in $(seq 1 30); do curl -s localhost:11434/api/version && break; sleep 2; done
+          ollama pull "${{ inputs.ollama_model }}"
+      - name: Start a llama.cpp server
+        if: matrix.server == 'llamacpp'
+        run: |
+          pip install "llama-cpp-python[server]" --prefer-binary \
+            --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+          curl -fsSL -o model.gguf "${{ inputs.gguf_url }}"
+          nohup python -m llama_cpp.server --model model.gguf --model_alias local-gguf --port 8080 \
+            --n_ctx 8192 > server.log 2>&1 &
+          for i in $(seq 1 90); do curl -s localhost:8080/v1/models && break; sleep 2; done
+      - name: Use it through every kind of --ai setting
+        env:
+          LLM_TIMEOUT: "600"
+        run: |
+          mkdir -p out
+          M="${{ inputs.ollama_model }}"
+          {
+            echo "## cascade-guard ai list"; python -m cascade_guard ai list
+            if [ "${{ matrix.server }}" = "ollama" ]; then
+              specs=("ollama" "ollama:$M" "http://localhost:11434/v1#$M" "cmd:ollama run $M")
+            else
+              specs=("llamacpp" "http://localhost:8080/v1#local-gguf")
+            fi
+            for s in "${specs[@]}"; do echo; echo "## cascade-guard ai test --ai '$s'"; python -m cascade_guard ai test --ai "$s" || true; done
+          } 2>&1 | tee out/${{ matrix.server }}-connect.txt
+          main=$([ "${{ matrix.server }}" = "ollama" ] && echo "ollama:$M" || echo "llamacpp")
+          for guard in off on; do
+            flag=$([ $guard = off ] && echo "--no-guard" || echo "")
+            {
+              echo "## cascade-guard receipts run examples/receipts --ai '$main' --approval-limit 5000 --currency INR $flag"
+              python -m cascade_guard receipts run examples/receipts --ai "$main" --approval-limit 5000 --currency INR \
+                $flag --out out/${{ matrix.server }}-guard-$guard.csv --json out/${{ matrix.server }}-guard-$guard.json
+            } 2>&1 | tee out/${{ matrix.server }}-guard-$guard.txt
+          done
+          if [ "${{ matrix.server }}" = "ollama" ]; then
+            { echo "## the same, with the AI run as a program: --ai 'cmd:ollama run $M'"
+              python -m cascade_guard receipts run examples/receipts --ai "cmd:ollama run $M" --approval-limit 5000 \
+                --currency INR --out out/ollama-cmd.csv
+            } 2>&1 | tee out/ollama-cmd.txt
+          fi
+      - name: Real SROIE receipts with this server
+        if: inputs.sroie_receipts != '0'
+        env:
+          LLM_TIMEOUT: "600"
+        run: |
+          git init -q sroie && cd sroie
+          git remote add origin https://github.com/zzzDavid/ICDAR-2019-SROIE
+          git fetch -q --depth 1 origin 27be4271b251c256f695acbade9a801bffe85994
+          git checkout -q FETCH_HEAD -- data/box data/key && cd ..
+          main=$([ "${{ matrix.server }}" = "ollama" ] && echo "ollama:${{ inputs.ollama_model }}" || echo "llamacpp")
+          python -m cascade_guard receipts benchmark --data sroie/data --split test --limit ${{ inputs.sroie_receipts }} \
+            --ai "$main" --out out/${{ matrix.server }}-sroie.json --md out/${{ matrix.server }}-sroie.md
+      - if: always()
+        run: cp server.log out/${{ matrix.server }}-server.log 2>/dev/null || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: any-ai-${{ matrix.server }}
+          path: out
+
+  commit:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+      - name: Commit to the benchmark-results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code origin benchmark-results >/dev/null; then
+            git fetch -q origin benchmark-results && git checkout -q -B benchmark-results origin/benchmark-results
+          else
+            git checkout -q --orphan benchmark-results && git rm -rq --cached . && git clean -fdq -e parts
+          fi
+          mkdir -p results/any-ai && cp parts/*/* results/any-ai/ 2>/dev/null || true
+          git add results
+          git commit -qm "any-ai: local AI servers (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push -q origin benchmark-results

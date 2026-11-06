@@ -20,8 +20,9 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from cascade_guard import receipts as _receipts
 from cascade_guard.auth import RANK, ensure, require
-from cascade_guard.receipts import APPROVAL_LIMIT, CATEGORIES, Batch, OCRUnavailable, ocr_available, process_receipt, text_from_image
+from cascade_guard.receipts import CATEGORIES, Batch, OCRUnavailable, ocr_available, process_receipt, text_from_image
 
 router = APIRouter(tags=["receipts"])
 PAGE = Path(__file__).parent / "static" / "receipts.html"
@@ -58,7 +59,7 @@ def info(role: str = Depends(require("viewer"))):
     real = _model()
     return {"role": role, "photos": ocr_available(), "model": None if real is None else real.model,
             "model_available": real is not None and RANK[role] >= RANK[model_role()],
-            "approval_limit": str(APPROVAL_LIMIT), "categories": list(CATEGORIES),
+            "approval_limit": str(_receipts.APPROVAL_LIMIT), "currency": _receipts.DEFAULT_CURRENCY, "categories": list(CATEGORIES),
             "max_receipts": MAX_ITEMS, "max_model_receipts": MAX_MODEL_ITEMS}
 
 
