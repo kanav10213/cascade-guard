@@ -7,13 +7,14 @@
     "fixed_by_guard": 5,
     "receipts": 6,
     "total_posted": {
-      "INR": "65535.05"
+      "INR": "65516.00",
+      "RM": "19.05"
     },
     "agent_calls": 25
   },
   "results": [
     {
-      "name": "examples/receipts/cafe-smudged.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/cafe-smudged.txt",
       "status": "halted",
       "halted_at": "extract",
       "fields": null,
@@ -30,7 +31,7 @@
             "currency": "USD"
           },
           "passed": false,
-          "reason": "'3I/O1/2O18' is not a date; the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+          "reason": "'3I/O1/2O18' is not a date; the currency is RM, not USD (the receipt prints none, and it is from a country that uses RM)"
         },
         {
           "step": "extract",
@@ -39,7 +40,7 @@
             "vendor": "SEDAP CAFE SDN BHD",
             "date": "3I/O1/2O18",
             "total": "12.00",
-            "currency": "INR"
+            "currency": "RM"
           },
           "passed": false,
           "reason": "'3I/O1/2O18' is not a date"
@@ -54,18 +55,18 @@
             "currency": "USD"
           },
           "passed": false,
-          "reason": "the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+          "reason": "the currency is RM, not USD (the receipt prints none, and it is from a country that uses RM)"
         }
       ],
       "agent_calls": 3,
-      "seconds": 16.927,
+      "seconds": 12.345,
       "caught": 3,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,
-      "issue": "the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+      "issue": "the currency is RM, not USD (the receipt prints none, and it is from a country that uses RM)"
     },
     {
-      "name": "examples/receipts/fuel-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/fuel-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -139,14 +140,14 @@
         }
       ],
       "agent_calls": 4,
-      "seconds": 27.446,
+      "seconds": 19.836,
       "caught": 1,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,
       "issue": "fixed after: the date must be 2026-11-02 (YYYY-MM-DD; the receipt's date 02 NOV 2026 is day first), not 02-11-2026"
     },
     {
-      "name": "examples/receipts/kirana-kothrud.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kirana-kothrud.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -178,7 +179,7 @@
             "currency": "USD"
           },
           "passed": false,
-          "reason": "the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+          "reason": "the currency is INR, not USD (the receipt prints none, and it is from a country that uses INR)"
         },
         {
           "step": "extract",
@@ -232,21 +233,21 @@
         }
       ],
       "agent_calls": 5,
-      "seconds": 35.746,
+      "seconds": 25.21,
       "caught": 2,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,
-      "issue": "fixed after: the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+      "issue": "fixed after: the currency is INR, not USD (the receipt prints none, and it is from a country that uses INR)"
     },
     {
-      "name": "examples/receipts/kopi-house-kl.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kopi-house-kl.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
         "vendor": "KOPI HOUSE RESTAURANT",
         "date": "03/01/2018",
         "total": "19.05",
-        "currency": "INR"
+        "currency": "RM"
       },
       "decision": {
         "decision": "approve",
@@ -256,7 +257,7 @@
         "vendor": "KOPI HOUSE RESTAURANT",
         "date": "2018-01-03",
         "amount": "19.05",
-        "currency": "INR",
+        "currency": "RM",
         "category": "meals",
         "memo": "Meal at Kopi House Restaurant"
       },
@@ -271,7 +272,7 @@
             "currency": "USD"
           },
           "passed": false,
-          "reason": "the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+          "reason": "the currency is RM, not USD (the receipt prints none, and it is from a country that uses RM)"
         },
         {
           "step": "extract",
@@ -280,7 +281,7 @@
             "vendor": "KOPI HOUSE RESTAURANT",
             "date": "03/01/2018",
             "total": "19.05",
-            "currency": "INR"
+            "currency": "RM"
           },
           "passed": true,
           "reason": null
@@ -302,7 +303,7 @@
             "vendor": "KOPI HOUSE RESTAURANT",
             "date": "2018-03-01",
             "amount": "19.05",
-            "currency": "INR",
+            "currency": "RM",
             "category": "meals",
             "memo": "Meal at Kopi House Restaurant"
           },
@@ -316,7 +317,7 @@
             "vendor": "KOPI HOUSE RESTAURANT",
             "date": "2018-01-03",
             "amount": "19.05",
-            "currency": "INR",
+            "currency": "RM",
             "category": "meals",
             "memo": "Meal at Kopi House Restaurant"
           },
@@ -325,14 +326,14 @@
         }
       ],
       "agent_calls": 5,
-      "seconds": 36.098,
+      "seconds": 24.88,
       "caught": 2,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,
-      "issue": "fixed after: the currency is INR, not USD (the receipt prints none; the company's default is INR)"
+      "issue": "fixed after: the currency is RM, not USD (the receipt prints none, and it is from a country that uses RM)"
     },
     {
-      "name": "examples/receipts/laptop-bengaluru.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/laptop-bengaluru.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -343,7 +344,7 @@
       },
       "decision": {
         "decision": "needs_approval",
-        "reason": "Total above 5000.00 requires manager's approval"
+        "reason": "Total above 5000.00"
       },
       "entry": {
         "vendor": "DIGITAL WORLD ELECTRONICS PVT LTD",
@@ -371,7 +372,7 @@
           "attempt": 0,
           "output": {
             "decision": "needs_approval",
-            "reason": "Total above 5000.00 requires manager's approval"
+            "reason": "Total above 5000.00"
           },
           "passed": true,
           "reason": null
@@ -406,14 +407,14 @@
         }
       ],
       "agent_calls": 4,
-      "seconds": 31.313,
+      "seconds": 22.001,
       "caught": 1,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,
       "issue": "fixed after: the date must be 2026-10-28 (YYYY-MM-DD; the receipt's date 28-10-2026 is day first), not 28-10-2026"
     },
     {
-      "name": "examples/receipts/restaurant-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/restaurant-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -432,7 +433,7 @@
         "amount": "430.00",
         "currency": "INR",
         "category": "meals",
-        "memo": "Bhajji and Rice for lunch"
+        "memo": "Bhajji and Rice Lunch"
       },
       "trace": [
         {
@@ -466,7 +467,7 @@
             "amount": "430.00",
             "currency": "INR",
             "category": "meals",
-            "memo": "Bhajjan from Shree Krishna Bhojanalaya"
+            "memo": "Bhajji and drinks for dinner"
           },
           "passed": false,
           "reason": "the date must be 2026-11-04 (YYYY-MM-DD; the receipt's date 04/11/2026 is day first), not 2026-04-11"
@@ -480,14 +481,14 @@
             "amount": "430.00",
             "currency": "INR",
             "category": "meals",
-            "memo": "Bhajji and Rice for lunch"
+            "memo": "Bhajji and Rice Lunch"
           },
           "passed": true,
           "reason": null
         }
       ],
       "agent_calls": 4,
-      "seconds": 36.947,
+      "seconds": 24.923,
       "caught": 1,
       "agents": "openai:qwen2.5:3b",
       "guarded": true,

@@ -2013,7 +2013,7 @@ llama_graph_n_input_tensors: input tensor '                         inp_pos' [i3
 llama_graph_n_input_tensors: input tensor '                      inp_tokens' [i32, ne = {   512,     1,     1,     1 }] is used by node 'embd' (GET_ROWS)
 sched_reserve:        CPU compute buffer size =   305.75 MiB
 sched_reserve: graph: nodes = 1098, splits = 1, input objects = 4, input tensors = 6
-sched_reserve: reserve took 6.62 ms, sched copies = 1
+sched_reserve: reserve took 7.97 ms, sched copies = 1
 CPU : SSE3 = 1 | SSSE3 = 1 | AVX = 1 | AVX2 = 1 | F16C = 1 | FMA = 1 | BMI2 = 1 | LLAMAFILE = 1 | OPENMP = 1 | REPACK = 1 | 
 Model metadata: {'tokenizer.ggml.add_bos_token': 'false', 'tokenizer.ggml.bos_token_id': '151643', 'general.file_type': '15', 'qwen2.attention.layer_norm_rms_epsilon': '0.000001', 'general.architecture': 'qwen2', 'tokenizer.ggml.padding_token_id': '151643', 'qwen2.embedding_length': '1536', 'tokenizer.ggml.pre': 'qwen2', 'general.name': 'qwen2.5-1.5b-instruct', 'qwen2.block_count': '28', 'general.version': 'v0.1', 'tokenizer.ggml.eos_token_id': '151645', 'qwen2.rope.freq_base': '1000000.000000', 'general.finetune': 'qwen2.5-1.5b-instruct', 'general.type': 'model', 'general.size_label': '1.8B', 'qwen2.context_length': '32768', 'tokenizer.chat_template': '{%- if tools %}\n    {{- \'<|im_start|>system\\n\' }}\n    {%- if messages[0][\'role\'] == \'system\' %}\n        {{- messages[0][\'content\'] }}\n    {%- else %}\n        {{- \'You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\' }}\n    {%- endif %}\n    {{- "\\n\\n# Tools\\n\\nYou may call one or more functions to assist with the user query.\\n\\nYou are provided with function signatures within <tools></tools> XML tags:\\n<tools>" }}\n    {%- for tool in tools %}\n        {{- "\\n" }}\n        {{- tool | tojson }}\n    {%- endfor %}\n    {{- "\\n</tools>\\n\\nFor each function call, return a json object with function name and arguments within <tool_call></tool_call> XML tags:\\n<tool_call>\\n{{\\"name\\": <function-name>, \\"arguments\\": <args-json-object>}}\\n</tool_call><|im_end|>\\n" }}\n{%- else %}\n    {%- if messages[0][\'role\'] == \'system\' %}\n        {{- \'<|im_start|>system\\n\' + messages[0][\'content\'] + \'<|im_end|>\\n\' }}\n    {%- else %}\n        {{- \'<|im_start|>system\\nYou are Qwen, created by Alibaba Cloud. You are a helpful assistant.<|im_end|>\\n\' }}\n    {%- endif %}\n{%- endif %}\n{%- for message in messages %}\n    {%- if (message.role == "user") or (message.role == "system" and not loop.first) or (message.role == "assistant" and not message.tool_calls) %}\n        {{- \'<|im_start|>\' + message.role + \'\\n\' + message.content + \'<|im_end|>\' + \'\\n\' }}\n    {%- elif message.role == "assistant" %}\n        {{- \'<|im_start|>\' + message.role }}\n        {%- if message.content %}\n            {{- \'\\n\' + message.content }}\n        {%- endif %}\n        {%- for tool_call in message.tool_calls %}\n            {%- if tool_call.function is defined %}\n                {%- set tool_call = tool_call.function %}\n            {%- endif %}\n            {{- \'\\n<tool_call>\\n{"name": "\' }}\n            {{- tool_call.name }}\n            {{- \'", "arguments": \' }}\n            {{- tool_call.arguments | tojson }}\n            {{- \'}\\n</tool_call>\' }}\n        {%- endfor %}\n        {{- \'<|im_end|>\\n\' }}\n    {%- elif message.role == "tool" %}\n        {%- if (loop.index0 == 0) or (messages[loop.index0 - 1].role != "tool") %}\n            {{- \'<|im_start|>user\' }}\n        {%- endif %}\n        {{- \'\\n<tool_response>\\n\' }}\n        {{- message.content }}\n        {{- \'\\n</tool_response>\' }}\n        {%- if loop.last or (messages[loop.index0 + 1].role != "tool") %}\n            {{- \'<|im_end|>\\n\' }}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{%- if add_generation_prompt %}\n    {{- \'<|im_start|>assistant\\n\' }}\n{%- endif %}\n', 'qwen2.attention.head_count_kv': '2', 'general.quantization_version': '2', 'tokenizer.ggml.model': 'gpt2', 'qwen2.feed_forward_length': '8960', 'qwen2.attention.head_count': '12'}
 Available chat formats from metadata: chat_template.default
@@ -2074,1853 +2074,319 @@ Using gguf chat template: {%- if tools %}
 
 Using chat eos_token: <|im_end|>
 Using chat bos_token: <|endoftext|>
-INFO:     Started server process [2518]
+INFO:     Started server process [2515]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://localhost:8080 (Press CTRL+C to quit)
-INFO:     ::1:37066 - "GET /v1/models HTTP/1.1" 200 OK
-INFO:     ::1:37076 - "GET /v1/models HTTP/1.1" 200 OK
-INFO:     ::1:33112 - "GET /v1/models HTTP/1.1" 200 OK
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.05 ms /    65 tokens (    0.00 ms per token, 1300000.00 tokens per second)
-llama_perf_context_print:        eval time =     770.82 ms /    14 runs   (   55.06 ms per token,    18.16 tokens per second)
-llama_perf_context_print:       total time =    2211.83 ms /    79 tokens
+INFO:     ::1:38538 - "GET /v1/models HTTP/1.1" 200 OK
+INFO:     ::1:38552 - "GET /v1/models HTTP/1.1" 200 OK
+INFO:     ::1:38554 - "GET /v1/models HTTP/1.1" 200 OK
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.05 ms /    65 tokens (    0.00 ms per token, 1413043.48 tokens per second)
+llama_perf_context_print:        eval time =     595.75 ms /    14 runs   (   42.55 ms per token,    23.50 tokens per second)
+llama_perf_context_print:       total time =    1982.62 ms /    79 tokens
 llama_perf_context_print:    graphs reused =         13
-INFO:     ::1:33116 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38568 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 64 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
+llama_perf_context_print:        load time =       0.23 ms
 llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =     809.63 ms /    15 runs   (   53.98 ms per token,    18.53 tokens per second)
-llama_perf_context_print:       total time =     828.35 ms /    16 tokens
+llama_perf_context_print:        eval time =     648.98 ms /    15 runs   (   43.27 ms per token,    23.11 tokens per second)
+llama_perf_context_print:       total time =     664.71 ms /    16 tokens
 llama_perf_context_print:    graphs reused =         15
-INFO:     ::1:33122 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-INFO:     ::1:33128 - "GET /v1/models HTTP/1.1" 200 OK
+INFO:     ::1:38574 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38582 - "GET /v1/models HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 207 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.13 ms /   207 tokens (    0.00 ms per token, 1629921.26 tokens per second)
-llama_perf_context_print:        eval time =    2992.03 ms /    55 runs   (   54.40 ms per token,    18.38 tokens per second)
-llama_perf_context_print:       total time =    6830.65 ms /   262 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.10 ms /   207 tokens (    0.00 ms per token, 2178947.37 tokens per second)
+llama_perf_context_print:        eval time =    2311.90 ms /    55 runs   (   42.03 ms per token,    23.79 tokens per second)
+llama_perf_context_print:       total time =    6141.25 ms /   262 tokens
 llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 166 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2984.58 ms /   166 tokens (   17.98 ms per token,    55.62 tokens per second)
-llama_perf_context_print:        eval time =    1452.48 ms /    27 runs   (   53.80 ms per token,    18.59 tokens per second)
-llama_perf_context_print:       total time =    4482.16 ms /   193 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    2963.29 ms /   166 tokens (   17.85 ms per token,    56.02 tokens per second)
+llama_perf_context_print:        eval time =    1240.94 ms /    27 runs   (   45.96 ms per token,    21.76 tokens per second)
+llama_perf_context_print:       total time =    4243.94 ms /   193 tokens
 llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 173 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3086.86 ms /   173 tokens (   17.84 ms per token,    56.04 tokens per second)
-llama_perf_context_print:        eval time =    3456.20 ms /    64 runs   (   54.00 ms per token,    18.52 tokens per second)
-llama_perf_context_print:       total time =    6644.73 ms /   237 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3260.32 ms /   173 tokens (   18.85 ms per token,    53.06 tokens per second)
+llama_perf_context_print:        eval time =    2638.35 ms /    64 runs   (   41.22 ms per token,    24.26 tokens per second)
+llama_perf_context_print:       total time =    5974.04 ms /   237 tokens
 llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 187 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3349.34 ms /   187 tokens (   17.91 ms per token,    55.83 tokens per second)
-llama_perf_context_print:        eval time =    3031.97 ms /    55 runs   (   55.13 ms per token,    18.14 tokens per second)
-llama_perf_context_print:       total time =    6468.22 ms /   242 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3310.46 ms /   187 tokens (   17.70 ms per token,    56.49 tokens per second)
+llama_perf_context_print:        eval time =    2403.97 ms /    55 runs   (   43.71 ms per token,    22.88 tokens per second)
+llama_perf_context_print:       total time =    5782.78 ms /   242 tokens
 llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 194 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3459.31 ms /   194 tokens (   17.83 ms per token,    56.08 tokens per second)
-llama_perf_context_print:        eval time =    1592.44 ms /    29 runs   (   54.91 ms per token,    18.21 tokens per second)
-llama_perf_context_print:       total time =    5100.36 ms /   223 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3444.86 ms /   194 tokens (   17.76 ms per token,    56.32 tokens per second)
+llama_perf_context_print:        eval time =    1184.81 ms /    29 runs   (   40.86 ms per token,    24.48 tokens per second)
+llama_perf_context_print:       total time =    4666.82 ms /   223 tokens
 llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 175 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3207.84 ms /   175 tokens (   18.33 ms per token,    54.55 tokens per second)
-llama_perf_context_print:        eval time =    4222.54 ms /    78 runs   (   54.14 ms per token,    18.47 tokens per second)
-llama_perf_context_print:       total time =    7549.30 ms /   253 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3147.43 ms /   175 tokens (   17.99 ms per token,    55.60 tokens per second)
+llama_perf_context_print:        eval time =    3272.51 ms /    78 runs   (   41.96 ms per token,    23.83 tokens per second)
+llama_perf_context_print:       total time =    6512.48 ms /   253 tokens
 llama_perf_context_print:    graphs reused =         76
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 236 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.11 ms /   236 tokens (    0.00 ms per token, 2070175.44 tokens per second)
-llama_perf_context_print:        eval time =    3168.10 ms /    58 runs   (   54.62 ms per token,    18.31 tokens per second)
-llama_perf_context_print:       total time =    7471.93 ms /   294 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.10 ms /   236 tokens (    0.00 ms per token, 2269230.77 tokens per second)
+llama_perf_context_print:        eval time =    2423.40 ms /    58 runs   (   41.78 ms per token,    23.93 tokens per second)
+llama_perf_context_print:       total time =    6740.60 ms /   294 tokens
 llama_perf_context_print:    graphs reused =         56
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 225 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3946.14 ms /   225 tokens (   17.54 ms per token,    57.02 tokens per second)
-llama_perf_context_print:        eval time =    1189.64 ms /    22 runs   (   54.07 ms per token,    18.49 tokens per second)
-llama_perf_context_print:       total time =    5176.01 ms /   247 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4002.16 ms /   225 tokens (   17.79 ms per token,    56.22 tokens per second)
+llama_perf_context_print:        eval time =     948.59 ms /    22 runs   (   43.12 ms per token,    23.19 tokens per second)
+llama_perf_context_print:       total time =    4981.70 ms /   247 tokens
 llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 171 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3072.74 ms /   171 tokens (   17.97 ms per token,    55.65 tokens per second)
-llama_perf_context_print:        eval time =    3328.80 ms /    62 runs   (   53.69 ms per token,    18.63 tokens per second)
-llama_perf_context_print:       total time =    6495.72 ms /   233 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3071.49 ms /   171 tokens (   17.96 ms per token,    55.67 tokens per second)
+llama_perf_context_print:        eval time =    2585.50 ms /    62 runs   (   41.70 ms per token,    23.98 tokens per second)
+llama_perf_context_print:       total time =    5730.07 ms /   233 tokens
 llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 256 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.15 ms /   256 tokens (    0.00 ms per token, 1729729.73 tokens per second)
-llama_perf_context_print:        eval time =    2978.32 ms /    54 runs   (   55.15 ms per token,    18.13 tokens per second)
-llama_perf_context_print:       total time =    7704.32 ms /   310 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.11 ms /   256 tokens (    0.00 ms per token, 2285714.29 tokens per second)
+llama_perf_context_print:        eval time =    2307.37 ms /    54 runs   (   42.73 ms per token,    23.40 tokens per second)
+llama_perf_context_print:       total time =    7066.60 ms /   310 tokens
 llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 253 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4581.44 ms /   253 tokens (   18.11 ms per token,    55.22 tokens per second)
-llama_perf_context_print:        eval time =    1218.60 ms /    22 runs   (   55.39 ms per token,    18.05 tokens per second)
-llama_perf_context_print:       total time =    5842.08 ms /   275 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4623.30 ms /   253 tokens (   18.27 ms per token,    54.72 tokens per second)
+llama_perf_context_print:        eval time =     941.41 ms /    22 runs   (   42.79 ms per token,    23.37 tokens per second)
+llama_perf_context_print:       total time =    5595.63 ms /   275 tokens
 llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 167 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3013.94 ms /   167 tokens (   18.05 ms per token,    55.41 tokens per second)
-llama_perf_context_print:        eval time =    3171.79 ms /    59 runs   (   53.76 ms per token,    18.60 tokens per second)
-llama_perf_context_print:       total time =    6276.85 ms /   226 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    2999.87 ms /   167 tokens (   17.96 ms per token,    55.67 tokens per second)
+llama_perf_context_print:        eval time =    2768.75 ms /    59 runs   (   46.93 ms per token,    21.31 tokens per second)
+llama_perf_context_print:       total time =    5849.78 ms /   226 tokens
 llama_perf_context_print:    graphs reused =         58
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 233 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4111.34 ms /   233 tokens (   17.65 ms per token,    56.67 tokens per second)
-llama_perf_context_print:        eval time =    3352.21 ms /    60 runs   (   55.87 ms per token,    17.90 tokens per second)
-llama_perf_context_print:       total time =    7559.80 ms /   293 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4114.15 ms /   233 tokens (   17.66 ms per token,    56.63 tokens per second)
+llama_perf_context_print:        eval time =    2574.57 ms /    60 runs   (   42.91 ms per token,    23.30 tokens per second)
+llama_perf_context_print:       total time =    6761.23 ms /   293 tokens
 llama_perf_context_print:    graphs reused =         58
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 287 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.14 ms /   287 tokens (    0.00 ms per token, 2094890.51 tokens per second)
-llama_perf_context_print:        eval time =    1597.28 ms /    29 runs   (   55.08 ms per token,    18.16 tokens per second)
-llama_perf_context_print:       total time =    6942.64 ms /   316 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.12 ms /   287 tokens (    0.00 ms per token, 2296000.00 tokens per second)
+llama_perf_context_print:        eval time =    1251.56 ms /    29 runs   (   43.16 ms per token,    23.17 tokens per second)
+llama_perf_context_print:       total time =    6682.50 ms /   316 tokens
 llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 180 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3179.19 ms /   180 tokens (   17.66 ms per token,    56.62 tokens per second)
-llama_perf_context_print:        eval time =    3973.73 ms /    74 runs   (   53.70 ms per token,    18.62 tokens per second)
-llama_perf_context_print:       total time =    7265.11 ms /   254 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3186.20 ms /   180 tokens (   17.70 ms per token,    56.49 tokens per second)
+llama_perf_context_print:        eval time =    3100.44 ms /    74 runs   (   41.90 ms per token,    23.87 tokens per second)
+llama_perf_context_print:       total time =    6373.08 ms /   254 tokens
 llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 306 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.14 ms /   306 tokens (    0.00 ms per token, 2110344.83 tokens per second)
-llama_perf_context_print:        eval time =    3073.77 ms /    55 runs   (   55.89 ms per token,    17.89 tokens per second)
-llama_perf_context_print:       total time =    8852.36 ms /   361 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.13 ms /   306 tokens (    0.00 ms per token, 2300751.88 tokens per second)
+llama_perf_context_print:        eval time =    2448.42 ms /    55 runs   (   44.52 ms per token,    22.46 tokens per second)
+llama_perf_context_print:       total time =    8251.33 ms /   361 tokens
 llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 315 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.15 ms /   315 tokens (    0.00 ms per token, 2128378.38 tokens per second)
-llama_perf_context_print:        eval time =    1628.11 ms /    29 runs   (   56.14 ms per token,    17.81 tokens per second)
-llama_perf_context_print:       total time =    7517.33 ms /   344 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.23 ms /   315 tokens (    0.00 ms per token, 1400000.00 tokens per second)
+llama_perf_context_print:        eval time =    1275.59 ms /    29 runs   (   43.99 ms per token,    22.73 tokens per second)
+llama_perf_context_print:       total time =    7210.78 ms /   344 tokens
 llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 175 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3135.87 ms /   175 tokens (   17.92 ms per token,    55.81 tokens per second)
-llama_perf_context_print:        eval time =    4055.95 ms /    74 runs   (   54.81 ms per token,    18.24 tokens per second)
-llama_perf_context_print:       total time =    7305.66 ms /   249 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3137.51 ms /   175 tokens (   17.93 ms per token,    55.78 tokens per second)
+llama_perf_context_print:        eval time =    3126.19 ms /    74 runs   (   42.25 ms per token,    23.67 tokens per second)
+llama_perf_context_print:       total time =    6353.15 ms /   249 tokens
 llama_perf_context_print:    graphs reused =         73
-INFO:     ::1:33138 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-INFO:     ::1:36256 - "GET /v1/models HTTP/1.1" 200 OK
+INFO:     ::1:38598 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43888 - "GET /v1/models HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 207 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3681.90 ms /   207 tokens (   17.79 ms per token,    56.22 tokens per second)
-llama_perf_context_print:        eval time =    3028.34 ms /    55 runs   (   55.06 ms per token,    18.16 tokens per second)
-llama_perf_context_print:       total time =    6797.09 ms /   262 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3694.45 ms /   207 tokens (   17.85 ms per token,    56.03 tokens per second)
+llama_perf_context_print:        eval time =    2284.09 ms /    55 runs   (   41.53 ms per token,    24.08 tokens per second)
+llama_perf_context_print:       total time =    6045.47 ms /   262 tokens
 llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 205 prefix-match hit, remaining 71 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1437.95 ms /    71 tokens (   20.25 ms per token,    49.38 tokens per second)
-llama_perf_context_print:        eval time =    3090.72 ms /    55 runs   (   56.19 ms per token,    17.80 tokens per second)
-llama_perf_context_print:       total time =    4609.39 ms /   126 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 234 prefix-match hit, remaining 19 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     456.28 ms /    19 tokens (   24.01 ms per token,    41.64 tokens per second)
-llama_perf_context_print:        eval time =    3036.00 ms /    54 runs   (   56.22 ms per token,    17.79 tokens per second)
-llama_perf_context_print:       total time =    3569.28 ms /    73 tokens
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 205 prefix-match hit, remaining 48 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =     875.12 ms /    48 tokens (   18.23 ms per token,    54.85 tokens per second)
+llama_perf_context_print:        eval time =    2277.92 ms /    54 runs   (   42.18 ms per token,    23.71 tokens per second)
+llama_perf_context_print:       total time =    3213.78 ms /   102 tokens
 llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 252 prefix-match hit, remaining 1 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
+llama_perf_context_print:        eval time =    2400.17 ms /    55 runs   (   43.64 ms per token,    22.92 tokens per second)
+llama_perf_context_print:       total time =    2459.62 ms /    56 tokens
+llama_perf_context_print:    graphs reused =         53
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 101 prefix-match hit, remaining 90 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1684.27 ms /    90 tokens (   18.71 ms per token,    53.44 tokens per second)
-llama_perf_context_print:        eval time =    3030.64 ms /    55 runs   (   55.10 ms per token,    18.15 tokens per second)
-llama_perf_context_print:       total time =    4795.12 ms /   145 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1683.32 ms /    90 tokens (   18.70 ms per token,    53.47 tokens per second)
+llama_perf_context_print:        eval time =    2385.91 ms /    55 runs   (   43.38 ms per token,    23.05 tokens per second)
+llama_perf_context_print:       total time =    4132.38 ms /   145 tokens
 llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 166 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3092.20 ms /   166 tokens (   18.63 ms per token,    53.68 tokens per second)
-llama_perf_context_print:        eval time =    1814.38 ms /    33 runs   (   54.98 ms per token,    18.19 tokens per second)
-llama_perf_context_print:       total time =    4959.17 ms /   199 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3428.11 ms /   166 tokens (   20.65 ms per token,    48.42 tokens per second)
+llama_perf_context_print:        eval time =    1358.88 ms /    33 runs   (   41.18 ms per token,    24.28 tokens per second)
+llama_perf_context_print:       total time =    4827.18 ms /   199 tokens
 llama_perf_context_print:    graphs reused =         32
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 179 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3187.62 ms /   179 tokens (   17.81 ms per token,    56.15 tokens per second)
-llama_perf_context_print:        eval time =    3479.01 ms /    64 runs   (   54.36 ms per token,    18.40 tokens per second)
-llama_perf_context_print:       total time =    6765.71 ms /   243 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3167.08 ms /   179 tokens (   17.69 ms per token,    56.52 tokens per second)
+llama_perf_context_print:        eval time =    2604.10 ms /    64 runs   (   40.69 ms per token,    24.58 tokens per second)
+llama_perf_context_print:       total time =    5846.30 ms /   243 tokens
 llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 236 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4169.12 ms /   236 tokens (   17.67 ms per token,    56.61 tokens per second)
-llama_perf_context_print:        eval time =    3209.86 ms /    58 runs   (   55.34 ms per token,    18.07 tokens per second)
-llama_perf_context_print:       total time =    7471.24 ms /   294 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4150.09 ms /   236 tokens (   17.59 ms per token,    56.87 tokens per second)
+llama_perf_context_print:        eval time =    2408.58 ms /    58 runs   (   41.53 ms per token,    24.08 tokens per second)
+llama_perf_context_print:       total time =    6627.74 ms /   294 tokens
 llama_perf_context_print:    graphs reused =         56
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 196 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3484.34 ms /   196 tokens (   17.78 ms per token,    56.25 tokens per second)
-llama_perf_context_print:        eval time =    1203.19 ms /    22 runs   (   54.69 ms per token,    18.28 tokens per second)
-llama_perf_context_print:       total time =    4727.86 ms /   218 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3495.93 ms /   196 tokens (   17.84 ms per token,    56.07 tokens per second)
+llama_perf_context_print:        eval time =     894.21 ms /    22 runs   (   40.65 ms per token,    24.60 tokens per second)
+llama_perf_context_print:       total time =    4418.93 ms /   218 tokens
 llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 194 prefix-match hit, remaining 67 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1372.38 ms /    67 tokens (   20.48 ms per token,    48.82 tokens per second)
-llama_perf_context_print:        eval time =    1965.30 ms /    35 runs   (   56.15 ms per token,    17.81 tokens per second)
-llama_perf_context_print:       total time =    3389.33 ms /   102 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1362.93 ms /    67 tokens (   20.34 ms per token,    49.16 tokens per second)
+llama_perf_context_print:        eval time =    1484.85 ms /    35 runs   (   42.42 ms per token,    23.57 tokens per second)
+llama_perf_context_print:       total time =    2887.50 ms /   102 tokens
 llama_perf_context_print:    graphs reused =         34
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 185 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3263.73 ms /   185 tokens (   17.64 ms per token,    56.68 tokens per second)
-llama_perf_context_print:        eval time =    3907.08 ms /    71 runs   (   55.03 ms per token,    18.17 tokens per second)
-llama_perf_context_print:       total time =    7280.84 ms /   256 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3287.43 ms /   185 tokens (   17.77 ms per token,    56.27 tokens per second)
+llama_perf_context_print:        eval time =    2887.41 ms /    71 runs   (   40.67 ms per token,    24.59 tokens per second)
+llama_perf_context_print:       total time =    6258.50 ms /   256 tokens
 llama_perf_context_print:    graphs reused =         69
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 256 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4573.52 ms /   256 tokens (   17.87 ms per token,    55.97 tokens per second)
-llama_perf_context_print:        eval time =    3024.90 ms /    54 runs   (   56.02 ms per token,    17.85 tokens per second)
-llama_perf_context_print:       total time =    7686.60 ms /   310 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4605.81 ms /   256 tokens (   17.99 ms per token,    55.58 tokens per second)
+llama_perf_context_print:        eval time =    2379.82 ms /    54 runs   (   44.07 ms per token,    22.69 tokens per second)
+llama_perf_context_print:       total time =    7053.21 ms /   310 tokens
 llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 254 prefix-match hit, remaining 54 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1089.78 ms /    54 tokens (   20.18 ms per token,    49.55 tokens per second)
-llama_perf_context_print:        eval time =    3038.00 ms /    54 runs   (   56.26 ms per token,    17.77 tokens per second)
-llama_perf_context_print:       total time =    4206.19 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 224 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3867.23 ms /   224 tokens (   17.26 ms per token,    57.92 tokens per second)
-llama_perf_context_print:        eval time =    1201.86 ms /    22 runs   (   54.63 ms per token,    18.31 tokens per second)
-llama_perf_context_print:       total time =    5109.93 ms /   246 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3861.71 ms /   224 tokens (   17.24 ms per token,    58.01 tokens per second)
+llama_perf_context_print:        eval time =     912.10 ms /    22 runs   (   41.46 ms per token,    24.12 tokens per second)
+llama_perf_context_print:       total time =    4803.86 ms /   246 tokens
 llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 222 prefix-match hit, remaining 66 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1350.27 ms /    66 tokens (   20.46 ms per token,    48.88 tokens per second)
-llama_perf_context_print:        eval time =    1809.84 ms /    32 runs   (   56.56 ms per token,    17.68 tokens per second)
-llama_perf_context_print:       total time =    3206.76 ms /    98 tokens
-llama_perf_context_print:    graphs reused =         31
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 178 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3166.48 ms /   178 tokens (   17.79 ms per token,    56.21 tokens per second)
-llama_perf_context_print:        eval time =    3522.37 ms /    63 runs   (   55.91 ms per token,    17.89 tokens per second)
-llama_perf_context_print:       total time =    6788.84 ms /   241 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 176 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1623.32 ms /    83 tokens (   19.56 ms per token,    51.13 tokens per second)
-llama_perf_context_print:        eval time =    3738.13 ms /    67 runs   (   55.79 ms per token,    17.92 tokens per second)
-llama_perf_context_print:       total time =    5458.68 ms /   150 tokens
-llama_perf_context_print:    graphs reused =         66
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 233 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4108.40 ms /   233 tokens (   17.63 ms per token,    56.71 tokens per second)
-llama_perf_context_print:        eval time =    3322.84 ms /    60 runs   (   55.38 ms per token,    18.06 tokens per second)
-llama_perf_context_print:       total time =    7525.97 ms /   293 tokens
-llama_perf_context_print:    graphs reused =         58
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 258 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4779.31 ms /   258 tokens (   18.52 ms per token,    53.98 tokens per second)
-llama_perf_context_print:        eval time =    1624.98 ms /    29 runs   (   56.03 ms per token,    17.85 tokens per second)
-llama_perf_context_print:       total time =    6460.69 ms /   287 tokens
-llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 256 prefix-match hit, remaining 71 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1436.68 ms /    71 tokens (   20.23 ms per token,    49.42 tokens per second)
-llama_perf_context_print:        eval time =    1680.50 ms /    30 runs   (   56.02 ms per token,    17.85 tokens per second)
-llama_perf_context_print:       total time =    3161.12 ms /   101 tokens
-llama_perf_context_print:    graphs reused =         29
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3211.14 ms /   181 tokens (   17.74 ms per token,    56.37 tokens per second)
-llama_perf_context_print:        eval time =    3999.49 ms /    73 runs   (   54.79 ms per token,    18.25 tokens per second)
-llama_perf_context_print:       total time =    7323.28 ms /   254 tokens
-llama_perf_context_print:    graphs reused =         71
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 179 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1638.45 ms /    83 tokens (   19.74 ms per token,    50.66 tokens per second)
-llama_perf_context_print:        eval time =    4038.08 ms /    72 runs   (   56.08 ms per token,    17.83 tokens per second)
-llama_perf_context_print:       total time =    5781.45 ms /   155 tokens
-llama_perf_context_print:    graphs reused =         71
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 306 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5674.06 ms /   306 tokens (   18.54 ms per token,    53.93 tokens per second)
-llama_perf_context_print:        eval time =    3178.23 ms /    55 runs   (   57.79 ms per token,    17.31 tokens per second)
-llama_perf_context_print:       total time =    8948.32 ms /   361 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 286 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5358.23 ms /   286 tokens (   18.74 ms per token,    53.38 tokens per second)
-llama_perf_context_print:        eval time =    1654.64 ms /    29 runs   (   57.06 ms per token,    17.53 tokens per second)
-llama_perf_context_print:       total time =    7067.55 ms /   315 tokens
-llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 284 prefix-match hit, remaining 67 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1423.62 ms /    67 tokens (   21.25 ms per token,    47.06 tokens per second)
-llama_perf_context_print:        eval time =    1990.92 ms /    35 runs   (   56.88 ms per token,    17.58 tokens per second)
-llama_perf_context_print:       total time =    3467.39 ms /   102 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1353.87 ms /    66 tokens (   20.51 ms per token,    48.75 tokens per second)
+llama_perf_context_print:        eval time =    1564.20 ms /    35 runs   (   44.69 ms per token,    22.38 tokens per second)
+llama_perf_context_print:       total time =    2958.30 ms /   101 tokens
 llama_perf_context_print:    graphs reused =         34
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 182 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3303.63 ms /   182 tokens (   18.15 ms per token,    55.09 tokens per second)
-llama_perf_context_print:        eval time =    3545.17 ms /    64 runs   (   55.39 ms per token,    18.05 tokens per second)
-llama_perf_context_print:       total time =    6947.93 ms /   246 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:36266 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-INFO:     ::1:54468 - "GET /v1/models HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 491 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.24 ms /   491 tokens (    0.00 ms per token, 2020576.13 tokens per second)
-llama_perf_context_print:        eval time =    3075.96 ms /    54 runs   (   56.96 ms per token,    17.56 tokens per second)
-llama_perf_context_print:       total time =   12224.76 ms /   545 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 164 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2953.18 ms /   164 tokens (   18.01 ms per token,    55.53 tokens per second)
-llama_perf_context_print:        eval time =    1308.57 ms /    24 runs   (   54.52 ms per token,    18.34 tokens per second)
-llama_perf_context_print:       total time =    4301.78 ms /   188 tokens
-llama_perf_context_print:    graphs reused =         23
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 169 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3025.61 ms /   169 tokens (   17.90 ms per token,    55.86 tokens per second)
-llama_perf_context_print:        eval time =    3450.53 ms /    63 runs   (   54.77 ms per token,    18.26 tokens per second)
-llama_perf_context_print:       total time =    6572.64 ms /   232 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 491 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8902.97 ms /   491 tokens (   18.13 ms per token,    55.15 tokens per second)
-llama_perf_context_print:        eval time =    3106.25 ms /    54 runs   (   57.52 ms per token,    17.38 tokens per second)
-llama_perf_context_print:       total time =   12110.86 ms /   545 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 164 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2945.81 ms /   164 tokens (   17.96 ms per token,    55.67 tokens per second)
-llama_perf_context_print:        eval time =    1322.84 ms /    24 runs   (   55.12 ms per token,    18.14 tokens per second)
-llama_perf_context_print:       total time =    4309.77 ms /   188 tokens
-llama_perf_context_print:    graphs reused =         23
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 169 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3030.61 ms /   169 tokens (   17.93 ms per token,    55.76 tokens per second)
-llama_perf_context_print:        eval time =    3465.98 ms /    63 runs   (   55.02 ms per token,    18.18 tokens per second)
-llama_perf_context_print:       total time =    6594.27 ms /   232 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 519 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     222.02 ms /   519 tokens (    0.43 ms per token,  2337.64 tokens per second)
-llama_perf_context_print:        eval time =    3227.89 ms /    56 runs   (   57.64 ms per token,    17.35 tokens per second)
-llama_perf_context_print:       total time =   13313.53 ms /   575 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 194 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3457.63 ms /   194 tokens (   17.82 ms per token,    56.11 tokens per second)
-llama_perf_context_print:        eval time =    1093.51 ms /    20 runs   (   54.68 ms per token,    18.29 tokens per second)
-llama_perf_context_print:       total time =    4587.36 ms /   214 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 167 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3019.24 ms /   167 tokens (   18.08 ms per token,    55.31 tokens per second)
-llama_perf_context_print:        eval time =    3181.61 ms /    58 runs   (   54.86 ms per token,    18.23 tokens per second)
-llama_perf_context_print:       total time =    6292.03 ms /   225 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 519 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9691.10 ms /   519 tokens (   18.67 ms per token,    53.55 tokens per second)
-llama_perf_context_print:        eval time =    3267.33 ms /    56 runs   (   58.35 ms per token,    17.14 tokens per second)
-llama_perf_context_print:       total time =   13063.85 ms /   575 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 194 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3465.91 ms /   194 tokens (   17.87 ms per token,    55.97 tokens per second)
-llama_perf_context_print:        eval time =    1106.93 ms /    20 runs   (   55.35 ms per token,    18.07 tokens per second)
-llama_perf_context_print:       total time =    4609.42 ms /   214 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 192 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1299.43 ms /    65 tokens (   19.99 ms per token,    50.02 tokens per second)
-llama_perf_context_print:        eval time =    1934.53 ms /    34 runs   (   56.90 ms per token,    17.58 tokens per second)
-llama_perf_context_print:       total time =    3284.46 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 182 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3233.08 ms /   182 tokens (   17.76 ms per token,    56.29 tokens per second)
-llama_perf_context_print:        eval time =    3577.49 ms /    65 runs   (   55.04 ms per token,    18.17 tokens per second)
-llama_perf_context_print:       total time =    6911.92 ms /   247 tokens
-llama_perf_context_print:    graphs reused =         64
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 678 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12709.68 ms /   678 tokens (   18.75 ms per token,    53.35 tokens per second)
-llama_perf_context_print:        eval time =    3165.41 ms /    55 runs   (   57.55 ms per token,    17.38 tokens per second)
-llama_perf_context_print:       total time =   15996.89 ms /   733 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 223 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3913.43 ms /   223 tokens (   17.55 ms per token,    56.98 tokens per second)
-llama_perf_context_print:        eval time =    1090.30 ms /    20 runs   (   54.52 ms per token,    18.34 tokens per second)
-llama_perf_context_print:       total time =    5041.34 ms /   243 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 166 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2983.22 ms /   166 tokens (   17.97 ms per token,    55.64 tokens per second)
-llama_perf_context_print:        eval time =    3546.63 ms /    65 runs   (   54.56 ms per token,    18.33 tokens per second)
-llama_perf_context_print:       total time =    6629.01 ms /   231 tokens
-llama_perf_context_print:    graphs reused =         64
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 678 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12639.66 ms /   678 tokens (   18.64 ms per token,    53.64 tokens per second)
-llama_perf_context_print:        eval time =    3204.35 ms /    55 runs   (   58.26 ms per token,    17.16 tokens per second)
-llama_perf_context_print:       total time =   15954.46 ms /   733 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 223 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3916.33 ms /   223 tokens (   17.56 ms per token,    56.94 tokens per second)
-llama_perf_context_print:        eval time =    1099.06 ms /    20 runs   (   54.95 ms per token,    18.20 tokens per second)
-llama_perf_context_print:       total time =    5053.27 ms /   243 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 221 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1297.47 ms /    65 tokens (   19.96 ms per token,    50.10 tokens per second)
-llama_perf_context_print:        eval time =    1921.69 ms /    34 runs   (   56.52 ms per token,    17.69 tokens per second)
-llama_perf_context_print:       total time =    3269.67 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3207.75 ms /   181 tokens (   17.72 ms per token,    56.43 tokens per second)
-llama_perf_context_print:        eval time =    3523.57 ms /    64 runs   (   55.06 ms per token,    18.16 tokens per second)
-llama_perf_context_print:       total time =    6831.01 ms /   245 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 611 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11435.92 ms /   611 tokens (   18.72 ms per token,    53.43 tokens per second)
-llama_perf_context_print:        eval time =    3012.19 ms /    51 runs   (   59.06 ms per token,    16.93 tokens per second)
-llama_perf_context_print:       total time =   14548.93 ms /   662 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 249 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4348.90 ms /   249 tokens (   17.47 ms per token,    57.26 tokens per second)
-llama_perf_context_print:        eval time =    1241.64 ms /    22 runs   (   56.44 ms per token,    17.72 tokens per second)
-llama_perf_context_print:       total time =    5632.34 ms /   271 tokens
-llama_perf_context_print:    graphs reused =         20
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 164 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2943.83 ms /   164 tokens (   17.95 ms per token,    55.71 tokens per second)
-llama_perf_context_print:        eval time =    3060.26 ms /    56 runs   (   54.65 ms per token,    18.30 tokens per second)
-llama_perf_context_print:       total time =    6090.36 ms /   220 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 611 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11445.75 ms /   611 tokens (   18.73 ms per token,    53.38 tokens per second)
-llama_perf_context_print:        eval time =    2890.52 ms /    51 runs   (   56.68 ms per token,    17.64 tokens per second)
-llama_perf_context_print:       total time =   14437.15 ms /   662 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 610 prefix-match hit, remaining 60 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1197.09 ms /    60 tokens (   19.95 ms per token,    50.12 tokens per second)
-llama_perf_context_print:        eval time =    2888.45 ms /    51 runs   (   56.64 ms per token,    17.66 tokens per second)
-llama_perf_context_print:       total time =    4159.65 ms /   111 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 669 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =    2954.85 ms /    52 runs   (   56.82 ms per token,    17.60 tokens per second)
-llama_perf_context_print:       total time =    3026.34 ms /    53 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 194 prefix-match hit, remaining 462 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8720.40 ms /   462 tokens (   18.88 ms per token,    52.98 tokens per second)
-llama_perf_context_print:        eval time =    2952.68 ms /    51 runs   (   57.90 ms per token,    17.27 tokens per second)
-llama_perf_context_print:       total time =   11766.76 ms /   513 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 274 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5015.11 ms /   274 tokens (   18.30 ms per token,    54.63 tokens per second)
-llama_perf_context_print:        eval time =    1239.24 ms /    22 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    6297.65 ms /   296 tokens
-llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 164 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2970.67 ms /   164 tokens (   18.11 ms per token,    55.21 tokens per second)
-llama_perf_context_print:        eval time =    3095.14 ms /    56 runs   (   55.27 ms per token,    18.09 tokens per second)
-llama_perf_context_print:       total time =    6152.77 ms /   220 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 652 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12242.43 ms /   652 tokens (   18.78 ms per token,    53.26 tokens per second)
-llama_perf_context_print:        eval time =    2933.50 ms /    51 runs   (   57.52 ms per token,    17.39 tokens per second)
-llama_perf_context_print:       total time =   15278.47 ms /   703 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 249 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    4351.89 ms /   249 tokens (   17.48 ms per token,    57.22 tokens per second)
-llama_perf_context_print:        eval time =    1241.68 ms /    22 runs   (   56.44 ms per token,    17.72 tokens per second)
-llama_perf_context_print:       total time =    5635.77 ms /   271 tokens
-llama_perf_context_print:    graphs reused =         20
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 247 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1303.13 ms /    65 tokens (   20.05 ms per token,    49.88 tokens per second)
-llama_perf_context_print:        eval time =    2401.98 ms /    43 runs   (   55.86 ms per token,    17.90 tokens per second)
-llama_perf_context_print:       total time =    3767.62 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 186 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3284.98 ms /   186 tokens (   17.66 ms per token,    56.62 tokens per second)
-llama_perf_context_print:        eval time =    3608.02 ms /    66 runs   (   54.67 ms per token,    18.29 tokens per second)
-llama_perf_context_print:       total time =    6993.74 ms /   252 tokens
-llama_perf_context_print:    graphs reused =         65
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 184 prefix-match hit, remaining 79 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1566.65 ms /    79 tokens (   19.83 ms per token,    50.43 tokens per second)
-llama_perf_context_print:        eval time =    3879.74 ms /    69 runs   (   56.23 ms per token,    17.78 tokens per second)
-llama_perf_context_print:       total time =    5545.46 ms /   148 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 715 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13322.03 ms /   715 tokens (   18.63 ms per token,    53.67 tokens per second)
-llama_perf_context_print:        eval time =    3122.31 ms /    54 runs   (   57.82 ms per token,    17.29 tokens per second)
-llama_perf_context_print:       total time =   16555.89 ms /   769 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 302 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5572.76 ms /   302 tokens (   18.45 ms per token,    54.19 tokens per second)
-llama_perf_context_print:        eval time =    1794.72 ms /    32 runs   (   56.08 ms per token,    17.83 tokens per second)
-llama_perf_context_print:       total time =    7426.74 ms /   334 tokens
-llama_perf_context_print:    graphs reused =         31
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 177 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3235.24 ms /   177 tokens (   18.28 ms per token,    54.71 tokens per second)
-llama_perf_context_print:        eval time =    3306.91 ms /    61 runs   (   54.21 ms per token,    18.45 tokens per second)
-llama_perf_context_print:       total time =    6636.20 ms /   238 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 715 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13300.52 ms /   715 tokens (   18.60 ms per token,    53.76 tokens per second)
-llama_perf_context_print:        eval time =    3143.72 ms /    54 runs   (   58.22 ms per token,    17.18 tokens per second)
-llama_perf_context_print:       total time =   16556.46 ms /   769 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 277 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5046.22 ms /   277 tokens (   18.22 ms per token,    54.89 tokens per second)
-llama_perf_context_print:        eval time =    1804.34 ms /    32 runs   (   56.39 ms per token,    17.74 tokens per second)
-llama_perf_context_print:       total time =    6907.09 ms /   309 tokens
-llama_perf_context_print:    graphs reused =         31
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 275 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1298.92 ms /    65 tokens (   19.98 ms per token,    50.04 tokens per second)
-llama_perf_context_print:        eval time =    1920.89 ms /    34 runs   (   56.50 ms per token,    17.70 tokens per second)
-llama_perf_context_print:       total time =    3269.48 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 180 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3181.97 ms /   180 tokens (   17.68 ms per token,    56.57 tokens per second)
-llama_perf_context_print:        eval time =    3457.10 ms /    63 runs   (   54.87 ms per token,    18.22 tokens per second)
-llama_perf_context_print:       total time =    6737.17 ms /   243 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3230.83 ms /   181 tokens (   17.85 ms per token,    56.02 tokens per second)
+llama_perf_context_print:        eval time =    2616.71 ms /    63 runs   (   41.54 ms per token,    24.08 tokens per second)
+llama_perf_context_print:       total time =    5922.04 ms /   244 tokens
 llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 477 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8624.45 ms /   477 tokens (   18.08 ms per token,    55.31 tokens per second)
-llama_perf_context_print:        eval time =    3649.85 ms /    64 runs   (   57.03 ms per token,    17.53 tokens per second)
-llama_perf_context_print:       total time =   12386.70 ms /   541 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 340 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6178.00 ms /   340 tokens (   18.17 ms per token,    55.03 tokens per second)
-llama_perf_context_print:        eval time =    1630.41 ms /    28 runs   (   58.23 ms per token,    17.17 tokens per second)
-llama_perf_context_print:       total time =    7864.27 ms /   368 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 183 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3291.09 ms /   183 tokens (   17.98 ms per token,    55.60 tokens per second)
-llama_perf_context_print:        eval time =    3753.38 ms /    69 runs   (   54.40 ms per token,    18.38 tokens per second)
-llama_perf_context_print:       total time =    7150.87 ms /   252 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 477 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8629.01 ms /   477 tokens (   18.09 ms per token,    55.28 tokens per second)
-llama_perf_context_print:        eval time =    3596.99 ms /    64 runs   (   56.20 ms per token,    17.79 tokens per second)
-llama_perf_context_print:       total time =   12337.98 ms /   541 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 315 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5734.14 ms /   315 tokens (   18.20 ms per token,    54.93 tokens per second)
-llama_perf_context_print:        eval time =    1574.62 ms /    28 runs   (   56.24 ms per token,    17.78 tokens per second)
-llama_perf_context_print:       total time =    7362.94 ms /   343 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 313 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1295.41 ms /    65 tokens (   19.93 ms per token,    50.18 tokens per second)
-llama_perf_context_print:        eval time =    1902.33 ms /    34 runs   (   55.95 ms per token,    17.87 tokens per second)
-llama_perf_context_print:       total time =    3248.09 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 190 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3347.99 ms /   190 tokens (   17.62 ms per token,    56.75 tokens per second)
-llama_perf_context_print:        eval time =    4213.29 ms /    77 runs   (   54.72 ms per token,    18.28 tokens per second)
-llama_perf_context_print:       total time =    7678.34 ms /   267 tokens
-llama_perf_context_print:    graphs reused =         75
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 188 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1625.17 ms /    83 tokens (   19.58 ms per token,    51.07 tokens per second)
-llama_perf_context_print:        eval time =    4530.22 ms /    81 runs   (   55.93 ms per token,    17.88 tokens per second)
-llama_perf_context_print:       total time =    6272.13 ms /   164 tokens
-llama_perf_context_print:    graphs reused =         80
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 504 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9032.17 ms /   504 tokens (   17.92 ms per token,    55.80 tokens per second)
-llama_perf_context_print:        eval time =    3171.47 ms /    55 runs   (   57.66 ms per token,    17.34 tokens per second)
-llama_perf_context_print:       total time =   12306.66 ms /   559 tokens
-llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 369 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6744.25 ms /   369 tokens (   18.28 ms per token,    54.71 tokens per second)
-llama_perf_context_print:        eval time =    1127.89 ms /    20 runs   (   56.39 ms per token,    17.73 tokens per second)
-llama_perf_context_print:       total time =    7918.24 ms /   389 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 166 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3013.29 ms /   166 tokens (   18.15 ms per token,    55.09 tokens per second)
-llama_perf_context_print:        eval time =    3527.31 ms /    65 runs   (   54.27 ms per token,    18.43 tokens per second)
-llama_perf_context_print:       total time =    6641.17 ms /   231 tokens
-llama_perf_context_print:    graphs reused =         64
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 504 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9030.46 ms /   504 tokens (   17.92 ms per token,    55.81 tokens per second)
-llama_perf_context_print:        eval time =    3138.11 ms /    55 runs   (   57.06 ms per token,    17.53 tokens per second)
-llama_perf_context_print:       total time =   12274.43 ms /   559 tokens
-llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 344 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6262.08 ms /   344 tokens (   18.20 ms per token,    54.93 tokens per second)
-llama_perf_context_print:        eval time =    1243.60 ms /    22 runs   (   56.53 ms per token,    17.69 tokens per second)
-llama_perf_context_print:       total time =    7552.11 ms /   366 tokens
-llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 342 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1297.41 ms /    65 tokens (   19.96 ms per token,    50.10 tokens per second)
-llama_perf_context_print:        eval time =    2439.60 ms /    43 runs   (   56.73 ms per token,    17.63 tokens per second)
-llama_perf_context_print:       total time =    3800.52 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 190 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3356.46 ms /   190 tokens (   17.67 ms per token,    56.61 tokens per second)
-llama_perf_context_print:        eval time =    3778.47 ms /    68 runs   (   55.57 ms per token,    18.00 tokens per second)
-llama_perf_context_print:       total time =    7240.31 ms /   258 tokens
-llama_perf_context_print:    graphs reused =         66
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 188 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1626.94 ms /    83 tokens (   19.60 ms per token,    51.02 tokens per second)
-llama_perf_context_print:        eval time =    4057.02 ms /    72 runs   (   56.35 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    5789.68 ms /   155 tokens
-llama_perf_context_print:    graphs reused =         71
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 486 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8793.43 ms /   486 tokens (   18.09 ms per token,    55.27 tokens per second)
-llama_perf_context_print:        eval time =    3210.95 ms /    56 runs   (   57.34 ms per token,    17.44 tokens per second)
-llama_perf_context_print:       total time =   12105.50 ms /   542 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 400 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7367.48 ms /   400 tokens (   18.42 ms per token,    54.29 tokens per second)
-llama_perf_context_print:        eval time =    1574.90 ms /    28 runs   (   56.25 ms per token,    17.78 tokens per second)
-llama_perf_context_print:       total time =    8999.40 ms /   428 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 175 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3136.04 ms /   175 tokens (   17.92 ms per token,    55.80 tokens per second)
-llama_perf_context_print:        eval time =    3793.30 ms /    69 runs   (   54.98 ms per token,    18.19 tokens per second)
-llama_perf_context_print:       total time =    7034.55 ms /   244 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 486 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8783.60 ms /   486 tokens (   18.07 ms per token,    55.33 tokens per second)
-llama_perf_context_print:        eval time =    3199.22 ms /    56 runs   (   57.13 ms per token,    17.50 tokens per second)
-llama_perf_context_print:       total time =   12084.43 ms /   542 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 485 prefix-match hit, remaining 49 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1027.49 ms /    49 tokens (   20.97 ms per token,    47.69 tokens per second)
-llama_perf_context_print:        eval time =    3582.84 ms /    62 runs   (   57.79 ms per token,    17.30 tokens per second)
-llama_perf_context_print:       total time =    4700.59 ms /   111 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 533 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =    3290.82 ms /    57 runs   (   57.73 ms per token,    17.32 tokens per second)
-llama_perf_context_print:       total time =    3369.62 ms /    58 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 101 prefix-match hit, remaining 340 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6613.34 ms /   340 tokens (   19.45 ms per token,    51.41 tokens per second)
-llama_perf_context_print:        eval time =    3578.67 ms /    57 runs   (   62.78 ms per token,    15.93 tokens per second)
-llama_perf_context_print:       total time =   10294.98 ms /   397 tokens
-llama_perf_context_print:    graphs reused =         56
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 431 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7826.58 ms /   431 tokens (   18.16 ms per token,    55.07 tokens per second)
-llama_perf_context_print:        eval time =    1586.96 ms /    28 runs   (   56.68 ms per token,    17.64 tokens per second)
-llama_perf_context_print:       total time =    9474.15 ms /   459 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 176 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3091.85 ms /   176 tokens (   17.57 ms per token,    56.92 tokens per second)
-llama_perf_context_print:        eval time =    3748.71 ms /    67 runs   (   55.95 ms per token,    17.87 tokens per second)
-llama_perf_context_print:       total time =    6945.25 ms /   243 tokens
-llama_perf_context_print:    graphs reused =         66
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 437 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7859.32 ms /   437 tokens (   17.98 ms per token,    55.60 tokens per second)
-llama_perf_context_print:        eval time =    3190.44 ms /    57 runs   (   55.97 ms per token,    17.87 tokens per second)
-llama_perf_context_print:       total time =   11152.78 ms /   494 tokens
-llama_perf_context_print:    graphs reused =         56
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 376 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6751.92 ms /   376 tokens (   17.96 ms per token,    55.69 tokens per second)
-llama_perf_context_print:        eval time =    1835.97 ms /    32 runs   (   57.37 ms per token,    17.43 tokens per second)
-llama_perf_context_print:       total time =    8650.26 ms /   408 tokens
-llama_perf_context_print:    graphs reused =         31
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 374 prefix-match hit, remaining 64 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1182.11 ms /    64 tokens (   18.47 ms per token,    54.14 tokens per second)
-llama_perf_context_print:        eval time =    2349.24 ms /    42 runs   (   55.93 ms per token,    17.88 tokens per second)
-llama_perf_context_print:       total time =    3592.95 ms /   106 tokens
-llama_perf_context_print:    graphs reused =         41
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 191 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3369.43 ms /   191 tokens (   17.64 ms per token,    56.69 tokens per second)
-llama_perf_context_print:        eval time =    3847.47 ms /    70 runs   (   54.96 ms per token,    18.19 tokens per second)
-llama_perf_context_print:       total time =    7325.60 ms /   261 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 189 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1623.33 ms /    83 tokens (   19.56 ms per token,    51.13 tokens per second)
-llama_perf_context_print:        eval time =    4168.66 ms /    74 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    5900.44 ms /   157 tokens
-llama_perf_context_print:    graphs reused =         73
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 576 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10679.57 ms /   576 tokens (   18.54 ms per token,    53.93 tokens per second)
-llama_perf_context_print:        eval time =    2882.46 ms /    50 runs   (   57.65 ms per token,    17.35 tokens per second)
-llama_perf_context_print:       total time =   13661.61 ms /   626 tokens
-llama_perf_context_print:    graphs reused =         49
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 456 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8447.29 ms /   456 tokens (   18.52 ms per token,    53.98 tokens per second)
-llama_perf_context_print:        eval time =    1221.83 ms /    22 runs   (   55.54 ms per token,    18.01 tokens per second)
-llama_perf_context_print:       total time =    9721.66 ms /   478 tokens
-llama_perf_context_print:    graphs reused =         21
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 163 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2949.31 ms /   163 tokens (   18.09 ms per token,    55.27 tokens per second)
-llama_perf_context_print:        eval time =    2978.68 ms /    55 runs   (   54.16 ms per token,    18.46 tokens per second)
-llama_perf_context_print:       total time =    6013.27 ms /   218 tokens
-llama_perf_context_print:    graphs reused =         54
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 576 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10672.12 ms /   576 tokens (   18.53 ms per token,    53.97 tokens per second)
-llama_perf_context_print:        eval time =    2873.10 ms /    50 runs   (   57.46 ms per token,    17.40 tokens per second)
-llama_perf_context_print:       total time =   13644.62 ms /   626 tokens
-llama_perf_context_print:    graphs reused =         49
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 575 prefix-match hit, remaining 60 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1203.28 ms /    60 tokens (   20.05 ms per token,    49.86 tokens per second)
-llama_perf_context_print:        eval time =    2918.69 ms /    51 runs   (   57.23 ms per token,    17.47 tokens per second)
-llama_perf_context_print:       total time =    4195.72 ms /   111 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 588 prefix-match hit, remaining 35 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     775.89 ms /    35 tokens (   22.17 ms per token,    45.11 tokens per second)
-llama_perf_context_print:        eval time =    2864.34 ms /    50 runs   (   57.29 ms per token,    17.46 tokens per second)
-llama_perf_context_print:       total time =    3712.87 ms /    85 tokens
-llama_perf_context_print:    graphs reused =         49
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 101 prefix-match hit, remaining 876 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   16530.40 ms /   876 tokens (   18.87 ms per token,    52.99 tokens per second)
-llama_perf_context_print:        eval time =    3703.56 ms /    62 runs   (   59.73 ms per token,    16.74 tokens per second)
-llama_perf_context_print:       total time =   20387.41 ms /   938 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 492 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8897.09 ms /   492 tokens (   18.08 ms per token,    55.30 tokens per second)
-llama_perf_context_print:        eval time =    1667.29 ms /    28 runs   (   59.55 ms per token,    16.79 tokens per second)
-llama_perf_context_print:       total time =   10626.27 ms /   520 tokens
-llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3205.07 ms /   181 tokens (   17.71 ms per token,    56.47 tokens per second)
-llama_perf_context_print:        eval time =    4201.64 ms /    77 runs   (   54.57 ms per token,    18.33 tokens per second)
-llama_perf_context_print:       total time =    7522.00 ms /   258 tokens
-llama_perf_context_print:    graphs reused =         75
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 973 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   18452.50 ms /   973 tokens (   18.96 ms per token,    52.73 tokens per second)
-llama_perf_context_print:        eval time =    3692.80 ms /    62 runs   (   59.56 ms per token,    16.79 tokens per second)
-llama_perf_context_print:       total time =   22283.90 ms /  1035 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 972 prefix-match hit, remaining 74 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1619.61 ms /    74 tokens (   21.89 ms per token,    45.69 tokens per second)
-llama_perf_context_print:        eval time =    3750.79 ms /    62 runs   (   60.50 ms per token,    16.53 tokens per second)
-llama_perf_context_print:       total time =    5468.03 ms /   136 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 1007 prefix-match hit, remaining 19 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     507.37 ms /    19 tokens (   26.70 ms per token,    37.45 tokens per second)
-llama_perf_context_print:        eval time =    3844.46 ms /    63 runs   (   61.02 ms per token,    16.39 tokens per second)
-llama_perf_context_print:       total time =    4442.13 ms /    82 tokens
-llama_perf_context_print:    graphs reused =         62
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 101 prefix-match hit, remaining 436 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8124.92 ms /   436 tokens (   18.64 ms per token,    53.66 tokens per second)
-llama_perf_context_print:        eval time =    3234.43 ms /    56 runs   (   57.76 ms per token,    17.31 tokens per second)
-llama_perf_context_print:       total time =   11460.22 ms /   492 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 523 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9854.47 ms /   523 tokens (   18.84 ms per token,    53.07 tokens per second)
-llama_perf_context_print:        eval time =    1612.54 ms /    28 runs   (   57.59 ms per token,    17.36 tokens per second)
-llama_perf_context_print:       total time =   11532.67 ms /   551 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 175 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3135.22 ms /   175 tokens (   17.92 ms per token,    55.82 tokens per second)
-llama_perf_context_print:        eval time =    4186.56 ms /    77 runs   (   54.37 ms per token,    18.39 tokens per second)
-llama_perf_context_print:       total time =    7438.03 ms /   252 tokens
-llama_perf_context_print:    graphs reused =         76
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 533 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9955.36 ms /   533 tokens (   18.68 ms per token,    53.54 tokens per second)
-llama_perf_context_print:        eval time =    3216.19 ms /    56 runs   (   57.43 ms per token,    17.41 tokens per second)
-llama_perf_context_print:       total time =   13278.06 ms /   589 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 532 prefix-match hit, remaining 49 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1020.70 ms /    49 tokens (   20.83 ms per token,    48.01 tokens per second)
-llama_perf_context_print:        eval time =    3247.81 ms /    56 runs   (   58.00 ms per token,    17.24 tokens per second)
-llama_perf_context_print:       total time =    4348.64 ms /   105 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 580 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =    3292.72 ms /    57 runs   (   57.77 ms per token,    17.31 tokens per second)
-llama_perf_context_print:       total time =    3370.71 ms /    58 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 101 prefix-match hit, remaining 438 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8156.59 ms /   438 tokens (   18.62 ms per token,    53.70 tokens per second)
-llama_perf_context_print:        eval time =    3527.59 ms /    61 runs   (   57.83 ms per token,    17.29 tokens per second)
-llama_perf_context_print:       total time =   11789.59 ms /   499 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 559 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10428.86 ms /   559 tokens (   18.66 ms per token,    53.60 tokens per second)
-llama_perf_context_print:        eval time =    1625.94 ms /    28 runs   (   58.07 ms per token,    17.22 tokens per second)
-llama_perf_context_print:       total time =   12120.84 ms /   587 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 180 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3190.38 ms /   180 tokens (   17.72 ms per token,    56.42 tokens per second)
-llama_perf_context_print:        eval time =    3962.13 ms /    71 runs   (   55.80 ms per token,    17.92 tokens per second)
-llama_perf_context_print:       total time =    7261.73 ms /   251 tokens
-llama_perf_context_print:    graphs reused =         70
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 535 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9991.38 ms /   535 tokens (   18.68 ms per token,    53.55 tokens per second)
-llama_perf_context_print:        eval time =    3493.56 ms /    61 runs   (   57.27 ms per token,    17.46 tokens per second)
-llama_perf_context_print:       total time =   13596.76 ms /   596 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 412 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7463.98 ms /   412 tokens (   18.12 ms per token,    55.20 tokens per second)
-llama_perf_context_print:        eval time =    1591.56 ms /    28 runs   (   56.84 ms per token,    17.59 tokens per second)
-llama_perf_context_print:       total time =    9114.19 ms /   440 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 410 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1323.94 ms /    65 tokens (   20.37 ms per token,    49.10 tokens per second)
-llama_perf_context_print:        eval time =    1915.35 ms /    34 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    3289.03 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 187 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3333.76 ms /   187 tokens (   17.83 ms per token,    56.09 tokens per second)
-llama_perf_context_print:        eval time =    4067.13 ms /    74 runs   (   54.96 ms per token,    18.19 tokens per second)
-llama_perf_context_print:       total time =    7515.88 ms /   261 tokens
-llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 185 prefix-match hit, remaining 79 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1566.95 ms /    79 tokens (   19.83 ms per token,    50.42 tokens per second)
-llama_perf_context_print:        eval time =    4506.01 ms /    80 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    6189.74 ms /   159 tokens
-llama_perf_context_print:    graphs reused =         79
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 493 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8922.40 ms /   493 tokens (   18.10 ms per token,    55.25 tokens per second)
-llama_perf_context_print:        eval time =    3731.99 ms /    65 runs   (   57.42 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =   12770.33 ms /   558 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 598 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11282.41 ms /   598 tokens (   18.87 ms per token,    53.00 tokens per second)
-llama_perf_context_print:        eval time =    1621.90 ms /    28 runs   (   57.93 ms per token,    17.26 tokens per second)
-llama_perf_context_print:       total time =   12973.13 ms /   626 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 184 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3240.85 ms /   184 tokens (   17.61 ms per token,    56.78 tokens per second)
-llama_perf_context_print:        eval time =    4043.54 ms /    74 runs   (   54.64 ms per token,    18.30 tokens per second)
-llama_perf_context_print:       total time =    7397.64 ms /   258 tokens
-llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 493 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8908.78 ms /   493 tokens (   18.07 ms per token,    55.34 tokens per second)
-llama_perf_context_print:        eval time =    3744.97 ms /    65 runs   (   57.61 ms per token,    17.36 tokens per second)
-llama_perf_context_print:       total time =   12770.07 ms /   558 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 451 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8226.64 ms /   451 tokens (   18.24 ms per token,    54.82 tokens per second)
-llama_perf_context_print:        eval time =    1621.96 ms /    29 runs   (   55.93 ms per token,    17.88 tokens per second)
-llama_perf_context_print:       total time =    9909.53 ms /   480 tokens
-llama_perf_context_print:    graphs reused =         28
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 449 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1341.71 ms /    65 tokens (   20.64 ms per token,    48.45 tokens per second)
-llama_perf_context_print:        eval time =    2487.36 ms /    43 runs   (   57.85 ms per token,    17.29 tokens per second)
-llama_perf_context_print:       total time =    3892.46 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 200 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3558.80 ms /   200 tokens (   17.79 ms per token,    56.20 tokens per second)
-llama_perf_context_print:        eval time =    4076.61 ms /    74 runs   (   55.09 ms per token,    18.15 tokens per second)
-llama_perf_context_print:       total time =    7748.94 ms /   274 tokens
-llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 198 prefix-match hit, remaining 101 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1962.03 ms /   101 tokens (   19.43 ms per token,    51.48 tokens per second)
-llama_perf_context_print:        eval time =    3887.85 ms /    69 runs   (   56.35 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    5953.45 ms /   170 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 528 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9889.03 ms /   528 tokens (   18.73 ms per token,    53.39 tokens per second)
-llama_perf_context_print:        eval time =    2927.63 ms /    51 runs   (   57.40 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =   12914.58 ms /   579 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 624 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11597.19 ms /   624 tokens (   18.59 ms per token,    53.81 tokens per second)
-llama_perf_context_print:        eval time =    1611.36 ms /    28 runs   (   57.55 ms per token,    17.38 tokens per second)
-llama_perf_context_print:       total time =   13276.94 ms /   652 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 170 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3055.59 ms /   170 tokens (   17.97 ms per token,    55.64 tokens per second)
-llama_perf_context_print:        eval time =    3510.78 ms /    64 runs   (   54.86 ms per token,    18.23 tokens per second)
-llama_perf_context_print:       total time =    6664.94 ms /   234 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 528 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9792.27 ms /   528 tokens (   18.55 ms per token,    53.92 tokens per second)
-llama_perf_context_print:        eval time =    2947.16 ms /    51 runs   (   57.79 ms per token,    17.30 tokens per second)
-llama_perf_context_print:       total time =   12838.55 ms /   579 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 527 prefix-match hit, remaining 47 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     988.06 ms /    47 tokens (   21.02 ms per token,    47.57 tokens per second)
-llama_perf_context_print:        eval time =    2946.82 ms /    51 runs   (   57.78 ms per token,    17.31 tokens per second)
-llama_perf_context_print:       total time =    4009.77 ms /    98 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 573 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =    2993.53 ms /    52 runs   (   57.57 ms per token,    17.37 tokens per second)
-llama_perf_context_print:       total time =    3065.74 ms /    53 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 109 prefix-match hit, remaining 217 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3944.64 ms /   217 tokens (   18.18 ms per token,    55.01 tokens per second)
-llama_perf_context_print:        eval time =    2813.35 ms /    50 runs   (   56.27 ms per token,    17.77 tokens per second)
-llama_perf_context_print:       total time =    6840.17 ms /   267 tokens
-llama_perf_context_print:    graphs reused =         49
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 649 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12195.20 ms /   649 tokens (   18.79 ms per token,    53.22 tokens per second)
-llama_perf_context_print:        eval time =    1607.39 ms /    28 runs   (   57.41 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =   13873.28 ms /   677 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 169 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3027.94 ms /   169 tokens (   17.92 ms per token,    55.81 tokens per second)
-llama_perf_context_print:        eval time =    3365.66 ms /    62 runs   (   54.28 ms per token,    18.42 tokens per second)
-llama_perf_context_print:       total time =    6488.77 ms /   231 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 322 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5866.84 ms /   322 tokens (   18.22 ms per token,    54.88 tokens per second)
-llama_perf_context_print:        eval time =    2919.39 ms /    50 runs   (   58.39 ms per token,    17.13 tokens per second)
-llama_perf_context_print:       total time =    8873.63 ms /   372 tokens
-llama_perf_context_print:    graphs reused =         49
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 321 prefix-match hit, remaining 48 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =     899.39 ms /    48 tokens (   18.74 ms per token,    53.37 tokens per second)
-llama_perf_context_print:        eval time =    2869.65 ms /    51 runs   (   56.27 ms per token,    17.77 tokens per second)
-llama_perf_context_print:       total time =    3843.03 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 368 prefix-match hit, remaining 1 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =       0.00 ms /     1 tokens (    0.00 ms per token,      inf tokens per second)
-llama_perf_context_print:        eval time =    2935.71 ms /    52 runs   (   56.46 ms per token,    17.71 tokens per second)
-llama_perf_context_print:       total time =    3007.26 ms /    53 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 115 prefix-match hit, remaining 202 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3721.76 ms /   202 tokens (   18.42 ms per token,    54.28 tokens per second)
-llama_perf_context_print:        eval time =    2775.01 ms /    49 runs   (   56.63 ms per token,    17.66 tokens per second)
-llama_perf_context_print:       total time =    6575.32 ms /   251 tokens
-llama_perf_context_print:    graphs reused =         48
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 672 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12446.00 ms /   672 tokens (   18.52 ms per token,    53.99 tokens per second)
-llama_perf_context_print:        eval time =    1152.99 ms /    20 runs   (   57.65 ms per token,    17.35 tokens per second)
-llama_perf_context_print:       total time =   13661.05 ms /   692 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 160 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2784.92 ms /   160 tokens (   17.41 ms per token,    57.45 tokens per second)
-llama_perf_context_print:        eval time =    2782.78 ms /    51 runs   (   54.56 ms per token,    18.33 tokens per second)
-llama_perf_context_print:       total time =    5645.22 ms /   211 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 313 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5784.56 ms /   313 tokens (   18.48 ms per token,    54.11 tokens per second)
-llama_perf_context_print:        eval time =    2756.34 ms /    49 runs   (   56.25 ms per token,    17.78 tokens per second)
-llama_perf_context_print:       total time =    8626.26 ms /   362 tokens
-llama_perf_context_print:    graphs reused =         48
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 475 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8605.14 ms /   475 tokens (   18.12 ms per token,    55.20 tokens per second)
-llama_perf_context_print:        eval time =    1589.22 ms /    28 runs   (   56.76 ms per token,    17.62 tokens per second)
-llama_perf_context_print:       total time =   10256.51 ms /   503 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 473 prefix-match hit, remaining 64 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1227.60 ms /    64 tokens (   19.18 ms per token,    52.13 tokens per second)
-llama_perf_context_print:        eval time =    2437.37 ms /    42 runs   (   58.03 ms per token,    17.23 tokens per second)
-llama_perf_context_print:       total time =    3727.69 ms /   106 tokens
-llama_perf_context_print:    graphs reused =         41
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 183 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3248.30 ms /   183 tokens (   17.75 ms per token,    56.34 tokens per second)
-llama_perf_context_print:        eval time =    3378.71 ms /    62 runs   (   54.50 ms per token,    18.35 tokens per second)
-llama_perf_context_print:       total time =    6721.58 ms /   245 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 421 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7654.84 ms /   421 tokens (   18.18 ms per token,    55.00 tokens per second)
-llama_perf_context_print:        eval time =    3138.49 ms /    56 runs   (   56.04 ms per token,    17.84 tokens per second)
-llama_perf_context_print:       total time =   10891.48 ms /   477 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 703 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13080.96 ms /   703 tokens (   18.61 ms per token,    53.74 tokens per second)
-llama_perf_context_print:        eval time =    1619.92 ms /    28 runs   (   57.85 ms per token,    17.28 tokens per second)
-llama_perf_context_print:       total time =   14773.40 ms /   731 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 175 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3137.63 ms /   175 tokens (   17.93 ms per token,    55.77 tokens per second)
-llama_perf_context_print:        eval time =    3849.71 ms /    69 runs   (   55.79 ms per token,    17.92 tokens per second)
-llama_perf_context_print:       total time =    7093.72 ms /   244 tokens
-llama_perf_context_print:    graphs reused =         68
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 421 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7654.21 ms /   421 tokens (   18.18 ms per token,    55.00 tokens per second)
-llama_perf_context_print:        eval time =    3127.87 ms /    56 runs   (   55.85 ms per token,    17.90 tokens per second)
-llama_perf_context_print:       total time =   10882.09 ms /   477 tokens
-llama_perf_context_print:    graphs reused =         55
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 506 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    9082.40 ms /   506 tokens (   17.95 ms per token,    55.71 tokens per second)
-llama_perf_context_print:        eval time =    1615.45 ms /    28 runs   (   57.69 ms per token,    17.33 tokens per second)
-llama_perf_context_print:       total time =   10761.64 ms /   534 tokens
-llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 504 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1341.97 ms /    65 tokens (   20.65 ms per token,    48.44 tokens per second)
-llama_perf_context_print:        eval time =    2411.46 ms /    42 runs   (   57.42 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =    3815.15 ms /   107 tokens
-llama_perf_context_print:    graphs reused =         41
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 190 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3350.50 ms /   190 tokens (   17.63 ms per token,    56.71 tokens per second)
-llama_perf_context_print:        eval time =    3790.16 ms /    69 runs   (   54.93 ms per token,    18.21 tokens per second)
-llama_perf_context_print:       total time =    7250.59 ms /   259 tokens
-llama_perf_context_print:    graphs reused =         67
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 553 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10313.23 ms /   553 tokens (   18.65 ms per token,    53.62 tokens per second)
-llama_perf_context_print:        eval time =    3579.26 ms /    62 runs   (   57.73 ms per token,    17.32 tokens per second)
-llama_perf_context_print:       total time =   14010.51 ms /   615 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 740 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13861.72 ms /   740 tokens (   18.73 ms per token,    53.38 tokens per second)
-llama_perf_context_print:        eval time =    1619.09 ms /    28 runs   (   57.82 ms per token,    17.29 tokens per second)
-llama_perf_context_print:       total time =   15555.87 ms /   768 tokens
-llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3210.40 ms /   181 tokens (   17.74 ms per token,    56.38 tokens per second)
-llama_perf_context_print:        eval time =    3804.16 ms /    70 runs   (   54.35 ms per token,    18.40 tokens per second)
-llama_perf_context_print:       total time =    7121.96 ms /   251 tokens
-llama_perf_context_print:    graphs reused =         69
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 553 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10311.76 ms /   553 tokens (   18.65 ms per token,    53.63 tokens per second)
-llama_perf_context_print:        eval time =    3552.12 ms /    62 runs   (   57.29 ms per token,    17.45 tokens per second)
-llama_perf_context_print:       total time =   13984.06 ms /   615 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 543 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10131.44 ms /   543 tokens (   18.66 ms per token,    53.60 tokens per second)
-llama_perf_context_print:        eval time =    1623.29 ms /    28 runs   (   57.97 ms per token,    17.25 tokens per second)
-llama_perf_context_print:       total time =   11821.91 ms /   571 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 541 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1338.60 ms /    65 tokens (   20.59 ms per token,    48.56 tokens per second)
-llama_perf_context_print:        eval time =    2492.19 ms /    43 runs   (   57.96 ms per token,    17.25 tokens per second)
-llama_perf_context_print:       total time =    3894.86 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 197 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3506.95 ms /   197 tokens (   17.80 ms per token,    56.17 tokens per second)
-llama_perf_context_print:        eval time =    4148.09 ms /    75 runs   (   55.31 ms per token,    18.08 tokens per second)
-llama_perf_context_print:       total time =    7770.44 ms /   272 tokens
-llama_perf_context_print:    graphs reused =         73
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 312 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5667.29 ms /   312 tokens (   18.16 ms per token,    55.05 tokens per second)
-llama_perf_context_print:        eval time =    2992.41 ms /    53 runs   (   56.46 ms per token,    17.71 tokens per second)
-llama_perf_context_print:       total time =    8749.05 ms /   365 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 768 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14429.68 ms /   768 tokens (   18.79 ms per token,    53.22 tokens per second)
-llama_perf_context_print:        eval time =    1645.83 ms /    28 runs   (   58.78 ms per token,    17.01 tokens per second)
-llama_perf_context_print:       total time =   16152.59 ms /   796 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 172 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3071.05 ms /   172 tokens (   17.85 ms per token,    56.01 tokens per second)
-llama_perf_context_print:        eval time =    3509.10 ms /    66 runs   (   53.17 ms per token,    18.81 tokens per second)
-llama_perf_context_print:       total time =    6680.29 ms /   238 tokens
-llama_perf_context_print:    graphs reused =         65
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 312 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5664.60 ms /   312 tokens (   18.16 ms per token,    55.08 tokens per second)
-llama_perf_context_print:        eval time =    2950.03 ms /    53 runs   (   55.66 ms per token,    17.97 tokens per second)
-llama_perf_context_print:       total time =    8705.07 ms /   365 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 571 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   10637.64 ms /   571 tokens (   18.63 ms per token,    53.68 tokens per second)
-llama_perf_context_print:        eval time =    1594.89 ms /    28 runs   (   56.96 ms per token,    17.56 tokens per second)
-llama_perf_context_print:       total time =   12297.97 ms /   599 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 569 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1338.79 ms /    65 tokens (   20.60 ms per token,    48.55 tokens per second)
-llama_perf_context_print:        eval time =    2513.48 ms /    44 runs   (   57.12 ms per token,    17.51 tokens per second)
-llama_perf_context_print:       total time =    3916.52 ms /   109 tokens
-llama_perf_context_print:    graphs reused =         43
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 189 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3328.79 ms /   189 tokens (   17.61 ms per token,    56.78 tokens per second)
-llama_perf_context_print:        eval time =    3551.30 ms /    66 runs   (   53.81 ms per token,    18.58 tokens per second)
-llama_perf_context_print:       total time =    6981.91 ms /   255 tokens
-llama_perf_context_print:    graphs reused =         64
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 187 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1618.25 ms /    83 tokens (   19.50 ms per token,    51.29 tokens per second)
-llama_perf_context_print:        eval time =    3669.96 ms /    66 runs   (   55.61 ms per token,    17.98 tokens per second)
-llama_perf_context_print:       total time =    5385.67 ms /   149 tokens
-llama_perf_context_print:    graphs reused =         65
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 394 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7337.45 ms /   394 tokens (   18.62 ms per token,    53.70 tokens per second)
-llama_perf_context_print:        eval time =    2631.42 ms /    47 runs   (   55.99 ms per token,    17.86 tokens per second)
-llama_perf_context_print:       total time =   10054.63 ms /   441 tokens
-llama_perf_context_print:    graphs reused =         46
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 761 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14090.57 ms /   761 tokens (   18.52 ms per token,    54.01 tokens per second)
-llama_perf_context_print:        eval time =    1178.25 ms /    20 runs   (   58.91 ms per token,    16.97 tokens per second)
-llama_perf_context_print:       total time =   15332.86 ms /   781 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 158 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2812.51 ms /   158 tokens (   17.80 ms per token,    56.18 tokens per second)
-llama_perf_context_print:        eval time =    3182.35 ms /    58 runs   (   54.87 ms per token,    18.23 tokens per second)
-llama_perf_context_print:       total time =    6083.02 ms /   216 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 394 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7235.12 ms /   394 tokens (   18.36 ms per token,    54.46 tokens per second)
-llama_perf_context_print:        eval time =    2647.62 ms /    47 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    9966.22 ms /   441 tokens
-llama_perf_context_print:    graphs reused =         46
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 392 prefix-match hit, remaining 80 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1522.45 ms /    80 tokens (   19.03 ms per token,    52.55 tokens per second)
-llama_perf_context_print:        eval time =    2664.04 ms /    47 runs   (   56.68 ms per token,    17.64 tokens per second)
-llama_perf_context_print:       total time =    4255.05 ms /   127 tokens
-llama_perf_context_print:    graphs reused =         45
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 593 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11084.89 ms /   593 tokens (   18.69 ms per token,    53.50 tokens per second)
-llama_perf_context_print:        eval time =    1847.27 ms /    32 runs   (   57.73 ms per token,    17.32 tokens per second)
-llama_perf_context_print:       total time =   13004.67 ms /   625 tokens
-llama_perf_context_print:    graphs reused =         31
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 591 prefix-match hit, remaining 64 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1224.58 ms /    64 tokens (   19.13 ms per token,    52.26 tokens per second)
-llama_perf_context_print:        eval time =    2421.74 ms /    42 runs   (   57.66 ms per token,    17.34 tokens per second)
-llama_perf_context_print:       total time =    3708.08 ms /   106 tokens
-llama_perf_context_print:    graphs reused =         41
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3319.70 ms /   181 tokens (   18.34 ms per token,    54.52 tokens per second)
-llama_perf_context_print:        eval time =    3261.75 ms /    60 runs   (   54.36 ms per token,    18.40 tokens per second)
-llama_perf_context_print:       total time =    6673.36 ms /   241 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
 Llama.generate: 179 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1623.97 ms /    83 tokens (   19.57 ms per token,    51.11 tokens per second)
-llama_perf_context_print:        eval time =    3355.12 ms /    60 runs   (   55.92 ms per token,    17.88 tokens per second)
-llama_perf_context_print:       total time =    5066.64 ms /   143 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 413 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7503.16 ms /   413 tokens (   18.17 ms per token,    55.04 tokens per second)
-llama_perf_context_print:        eval time =    2695.39 ms /    48 runs   (   56.15 ms per token,    17.81 tokens per second)
-llama_perf_context_print:       total time =   10284.68 ms /   461 tokens
-llama_perf_context_print:    graphs reused =         47
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 754 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14017.95 ms /   754 tokens (   18.59 ms per token,    53.79 tokens per second)
-llama_perf_context_print:        eval time =    1181.00 ms /    20 runs   (   59.05 ms per token,    16.93 tokens per second)
-llama_perf_context_print:       total time =   15264.24 ms /   774 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 159 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2834.09 ms /   159 tokens (   17.82 ms per token,    56.10 tokens per second)
-llama_perf_context_print:        eval time =    2791.55 ms /    51 runs   (   54.74 ms per token,    18.27 tokens per second)
-llama_perf_context_print:       total time =    5702.94 ms /   210 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 413 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7506.16 ms /   413 tokens (   18.17 ms per token,    55.02 tokens per second)
-llama_perf_context_print:        eval time =    2703.75 ms /    48 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =   10296.74 ms /   461 tokens
-llama_perf_context_print:    graphs reused =         47
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 412 prefix-match hit, remaining 85 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1644.19 ms /    85 tokens (   19.34 ms per token,    51.70 tokens per second)
-llama_perf_context_print:        eval time =    2755.19 ms /    48 runs   (   57.40 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =    4469.00 ms /   133 tokens
-llama_perf_context_print:    graphs reused =         46
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 616 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11594.99 ms /   616 tokens (   18.82 ms per token,    53.13 tokens per second)
-llama_perf_context_print:        eval time =    1607.21 ms /    28 runs   (   57.40 ms per token,    17.42 tokens per second)
-llama_perf_context_print:       total time =   13271.77 ms /   644 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 614 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1339.45 ms /    65 tokens (   20.61 ms per token,    48.53 tokens per second)
-llama_perf_context_print:        eval time =    2528.77 ms /    44 runs   (   57.47 ms per token,    17.40 tokens per second)
-llama_perf_context_print:       total time =    3932.85 ms /   109 tokens
-llama_perf_context_print:    graphs reused =         43
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 184 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3243.02 ms /   184 tokens (   17.63 ms per token,    56.74 tokens per second)
-llama_perf_context_print:        eval time =    3325.89 ms /    61 runs   (   54.52 ms per token,    18.34 tokens per second)
-llama_perf_context_print:       total time =    6661.62 ms /   245 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 368 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6625.28 ms /   368 tokens (   18.00 ms per token,    55.54 tokens per second)
-llama_perf_context_print:        eval time =    2921.16 ms /    52 runs   (   56.18 ms per token,    17.80 tokens per second)
-llama_perf_context_print:       total time =    9636.79 ms /   420 tokens
-llama_perf_context_print:    graphs reused =         51
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 751 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13969.43 ms /   751 tokens (   18.60 ms per token,    53.76 tokens per second)
-llama_perf_context_print:        eval time =    1168.83 ms /    20 runs   (   58.44 ms per token,    17.11 tokens per second)
-llama_perf_context_print:       total time =   15202.45 ms /   771 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 163 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2950.71 ms /   163 tokens (   18.10 ms per token,    55.24 tokens per second)
-llama_perf_context_print:        eval time =    2957.05 ms /    54 runs   (   54.76 ms per token,    18.26 tokens per second)
-llama_perf_context_print:       total time =    5991.68 ms /   217 tokens
-llama_perf_context_print:    graphs reused =         53
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 368 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    6638.70 ms /   368 tokens (   18.04 ms per token,    55.43 tokens per second)
-llama_perf_context_print:        eval time =    3008.68 ms /    52 runs   (   57.86 ms per token,    17.28 tokens per second)
-llama_perf_context_print:       total time =    9739.32 ms /   420 tokens
-llama_perf_context_print:    graphs reused =         51
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 367 prefix-match hit, remaining 51 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1037.23 ms /    51 tokens (   20.34 ms per token,    49.17 tokens per second)
-llama_perf_context_print:        eval time =    2755.53 ms /    49 runs   (   56.24 ms per token,    17.78 tokens per second)
-llama_perf_context_print:       total time =    3863.48 ms /   100 tokens
-llama_perf_context_print:    graphs reused =         48
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 640 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11855.25 ms /   640 tokens (   18.52 ms per token,    53.98 tokens per second)
-llama_perf_context_print:        eval time =    1160.92 ms /    20 runs   (   58.05 ms per token,    17.23 tokens per second)
-llama_perf_context_print:       total time =   13075.21 ms /   660 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 638 prefix-match hit, remaining 64 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1225.46 ms /    64 tokens (   19.15 ms per token,    52.23 tokens per second)
-llama_perf_context_print:        eval time =    2482.47 ms /    43 runs   (   57.73 ms per token,    17.32 tokens per second)
-llama_perf_context_print:       total time =    3770.85 ms /   107 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 184 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3246.01 ms /   184 tokens (   17.64 ms per token,    56.68 tokens per second)
-llama_perf_context_print:        eval time =    3402.13 ms /    62 runs   (   54.87 ms per token,    18.22 tokens per second)
-llama_perf_context_print:       total time =    6743.56 ms /   246 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 475 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8612.36 ms /   475 tokens (   18.13 ms per token,    55.15 tokens per second)
-llama_perf_context_print:        eval time =    2783.22 ms /    49 runs   (   56.80 ms per token,    17.61 tokens per second)
-llama_perf_context_print:       total time =   11487.02 ms /   524 tokens
-llama_perf_context_print:    graphs reused =         47
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 750 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13961.97 ms /   750 tokens (   18.62 ms per token,    53.72 tokens per second)
-llama_perf_context_print:        eval time =    1168.82 ms /    20 runs   (   58.44 ms per token,    17.11 tokens per second)
-llama_perf_context_print:       total time =   15196.09 ms /   770 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 160 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2789.26 ms /   160 tokens (   17.43 ms per token,    57.36 tokens per second)
-llama_perf_context_print:        eval time =    2947.33 ms /    52 runs   (   56.68 ms per token,    17.64 tokens per second)
-llama_perf_context_print:       total time =    5816.34 ms /   212 tokens
-llama_perf_context_print:    graphs reused =         51
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 475 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    8657.58 ms /   475 tokens (   18.23 ms per token,    54.87 tokens per second)
-llama_perf_context_print:        eval time =    2780.16 ms /    49 runs   (   56.74 ms per token,    17.62 tokens per second)
-llama_perf_context_print:       total time =   11529.70 ms /   524 tokens
-llama_perf_context_print:    graphs reused =         47
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 664 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12341.77 ms /   664 tokens (   18.59 ms per token,    53.80 tokens per second)
-llama_perf_context_print:        eval time =    1627.80 ms /    28 runs   (   58.14 ms per token,    17.20 tokens per second)
-llama_perf_context_print:       total time =   14039.01 ms /   692 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 662 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1343.57 ms /    65 tokens (   20.67 ms per token,    48.38 tokens per second)
-llama_perf_context_print:        eval time =    2431.39 ms /    42 runs   (   57.89 ms per token,    17.27 tokens per second)
-llama_perf_context_print:       total time =    3837.04 ms /   107 tokens
-llama_perf_context_print:    graphs reused =         40
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 183 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3243.08 ms /   183 tokens (   17.72 ms per token,    56.43 tokens per second)
-llama_perf_context_print:        eval time =    3183.80 ms /    58 runs   (   54.89 ms per token,    18.22 tokens per second)
-llama_perf_context_print:       total time =    6515.33 ms /   241 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 421 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7658.63 ms /   421 tokens (   18.19 ms per token,    54.97 tokens per second)
-llama_perf_context_print:        eval time =    3281.62 ms /    58 runs   (   56.58 ms per token,    17.67 tokens per second)
-llama_perf_context_print:       total time =   11044.00 ms /   479 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 757 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14183.83 ms /   757 tokens (   18.74 ms per token,    53.37 tokens per second)
-llama_perf_context_print:        eval time =    1178.20 ms /    20 runs   (   58.91 ms per token,    16.97 tokens per second)
-llama_perf_context_print:       total time =   15428.77 ms /   777 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 169 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3031.00 ms /   169 tokens (   17.93 ms per token,    55.76 tokens per second)
-llama_perf_context_print:        eval time =    3267.17 ms /    60 runs   (   54.45 ms per token,    18.36 tokens per second)
-llama_perf_context_print:       total time =    6394.08 ms /   229 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 421 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    7660.17 ms /   421 tokens (   18.20 ms per token,    54.96 tokens per second)
-llama_perf_context_print:        eval time =    3236.86 ms /    58 runs   (   55.81 ms per token,    17.92 tokens per second)
-llama_perf_context_print:       total time =   11000.13 ms /   479 tokens
-llama_perf_context_print:    graphs reused =         57
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 696 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   12922.54 ms /   696 tokens (   18.57 ms per token,    53.86 tokens per second)
-llama_perf_context_print:        eval time =    1154.60 ms /    20 runs   (   57.73 ms per token,    17.32 tokens per second)
-llama_perf_context_print:       total time =   14139.43 ms /   716 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 694 prefix-match hit, remaining 67 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1421.84 ms /    67 tokens (   21.22 ms per token,    47.12 tokens per second)
-llama_perf_context_print:        eval time =    1708.46 ms /    29 runs   (   58.91 ms per token,    16.97 tokens per second)
-llama_perf_context_print:       total time =    3172.67 ms /    96 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 178 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3163.51 ms /   178 tokens (   17.77 ms per token,    56.27 tokens per second)
-llama_perf_context_print:        eval time =    3697.26 ms /    67 runs   (   55.18 ms per token,    18.12 tokens per second)
-llama_perf_context_print:       total time =    6964.75 ms /   245 tokens
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1629.15 ms /    83 tokens (   19.63 ms per token,    50.95 tokens per second)
+llama_perf_context_print:        eval time =    2836.77 ms /    67 runs   (   42.34 ms per token,    23.62 tokens per second)
+llama_perf_context_print:       total time =    4543.83 ms /   150 tokens
 llama_perf_context_print:    graphs reused =         66
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 321 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5831.14 ms /   321 tokens (   18.17 ms per token,    55.05 tokens per second)
-llama_perf_context_print:        eval time =    3609.13 ms /    64 runs   (   56.39 ms per token,    17.73 tokens per second)
-llama_perf_context_print:       total time =    9545.92 ms /   385 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 767 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14511.78 ms /   767 tokens (   18.92 ms per token,    52.85 tokens per second)
-llama_perf_context_print:        eval time =    1617.69 ms /    28 runs   (   57.77 ms per token,    17.31 tokens per second)
-llama_perf_context_print:       total time =   16204.27 ms /   795 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 183 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3243.31 ms /   183 tokens (   17.72 ms per token,    56.42 tokens per second)
-llama_perf_context_print:        eval time =    3861.18 ms /    72 runs   (   53.63 ms per token,    18.65 tokens per second)
-llama_perf_context_print:       total time =    7212.82 ms /   255 tokens
-llama_perf_context_print:    graphs reused =         70
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 321 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    5801.86 ms /   321 tokens (   18.07 ms per token,    55.33 tokens per second)
-llama_perf_context_print:        eval time =    3539.88 ms /    64 runs   (   55.31 ms per token,    18.08 tokens per second)
-llama_perf_context_print:       total time =    9445.60 ms /   385 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 319 prefix-match hit, remaining 67 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1380.52 ms /    67 tokens (   20.60 ms per token,    48.53 tokens per second)
-llama_perf_context_print:        eval time =    3555.29 ms /    64 runs   (   55.55 ms per token,    18.00 tokens per second)
-llama_perf_context_print:       total time =    5028.47 ms /   131 tokens
-llama_perf_context_print:    graphs reused =         63
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 734 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   13615.62 ms /   734 tokens (   18.55 ms per token,    53.91 tokens per second)
-llama_perf_context_print:        eval time =    1157.88 ms /    20 runs   (   57.89 ms per token,    17.27 tokens per second)
-llama_perf_context_print:       total time =   14837.57 ms /   754 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 732 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1381.61 ms /    65 tokens (   21.26 ms per token,    47.05 tokens per second)
-llama_perf_context_print:        eval time =    2591.06 ms /    44 runs   (   58.89 ms per token,    16.98 tokens per second)
-llama_perf_context_print:       total time =    4037.29 ms /   109 tokens
-llama_perf_context_print:    graphs reused =         43
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 200 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3548.22 ms /   200 tokens (   17.74 ms per token,    56.37 tokens per second)
-llama_perf_context_print:        eval time =    4039.82 ms /    73 runs   (   55.34 ms per token,    18.07 tokens per second)
-llama_perf_context_print:       total time =    7699.18 ms /   273 tokens
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 233 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4558.05 ms /   233 tokens (   19.56 ms per token,    51.12 tokens per second)
+llama_perf_context_print:        eval time =    2591.29 ms /    60 runs   (   43.19 ms per token,    23.15 tokens per second)
+llama_perf_context_print:       total time =    7222.84 ms /   293 tokens
+llama_perf_context_print:    graphs reused =         58
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 258 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    4854.95 ms /   258 tokens (   18.82 ms per token,    53.14 tokens per second)
+llama_perf_context_print:        eval time =    1223.38 ms /    29 runs   (   42.19 ms per token,    23.70 tokens per second)
+llama_perf_context_print:       total time =    6116.15 ms /   287 tokens
+llama_perf_context_print:    graphs reused =         28
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 256 prefix-match hit, remaining 71 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1440.83 ms /    71 tokens (   20.29 ms per token,    49.28 tokens per second)
+llama_perf_context_print:        eval time =    1270.57 ms /    30 runs   (   42.35 ms per token,    23.61 tokens per second)
+llama_perf_context_print:       total time =    2745.47 ms /   101 tokens
+llama_perf_context_print:    graphs reused =         29
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 181 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3222.59 ms /   181 tokens (   17.80 ms per token,    56.17 tokens per second)
+llama_perf_context_print:        eval time =    3047.18 ms /    73 runs   (   41.74 ms per token,    23.96 tokens per second)
+llama_perf_context_print:       total time =    6354.97 ms /   254 tokens
 llama_perf_context_print:    graphs reused =         71
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 198 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1765.84 ms /    83 tokens (   21.28 ms per token,    47.00 tokens per second)
-llama_perf_context_print:        eval time =    4547.88 ms /    81 runs   (   56.15 ms per token,    17.81 tokens per second)
-llama_perf_context_print:       total time =    6436.34 ms /   164 tokens
-llama_perf_context_print:    graphs reused =         80
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 623 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11640.66 ms /   623 tokens (   18.68 ms per token,    53.52 tokens per second)
-llama_perf_context_print:        eval time =    2915.86 ms /    51 runs   (   57.17 ms per token,    17.49 tokens per second)
-llama_perf_context_print:       total time =   14662.98 ms /   674 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 755 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14017.04 ms /   755 tokens (   18.57 ms per token,    53.86 tokens per second)
-llama_perf_context_print:        eval time =    1176.89 ms /    20 runs   (   58.84 ms per token,    16.99 tokens per second)
-llama_perf_context_print:       total time =   15260.08 ms /   775 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 162 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    2924.84 ms /   162 tokens (   18.05 ms per token,    55.39 tokens per second)
-llama_perf_context_print:        eval time =    2892.62 ms /    53 runs   (   54.58 ms per token,    18.32 tokens per second)
-llama_perf_context_print:       total time =    5901.38 ms /   215 tokens
-llama_perf_context_print:    graphs reused =         52
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 623 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11667.64 ms /   623 tokens (   18.73 ms per token,    53.40 tokens per second)
-llama_perf_context_print:        eval time =    2949.51 ms /    51 runs   (   57.83 ms per token,    17.29 tokens per second)
-llama_perf_context_print:       total time =   14718.40 ms /   674 tokens
-llama_perf_context_print:    graphs reused =         50
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 622 prefix-match hit, remaining 52 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1068.04 ms /    52 tokens (   20.54 ms per token,    48.69 tokens per second)
-llama_perf_context_print:        eval time =    2823.04 ms /    48 runs   (   58.81 ms per token,    17.00 tokens per second)
-llama_perf_context_print:       total time =    3961.27 ms /   100 tokens
-llama_perf_context_print:    graphs reused =         47
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 757 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14027.11 ms /   757 tokens (   18.53 ms per token,    53.97 tokens per second)
-llama_perf_context_print:        eval time =    1178.10 ms /    20 runs   (   58.91 ms per token,    16.98 tokens per second)
-llama_perf_context_print:       total time =   15271.14 ms /   777 tokens
-llama_perf_context_print:    graphs reused =         18
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 755 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1378.43 ms /    65 tokens (   21.21 ms per token,    47.15 tokens per second)
-llama_perf_context_print:        eval time =    2003.15 ms /    34 runs   (   58.92 ms per token,    16.97 tokens per second)
-llama_perf_context_print:       total time =    3431.53 ms /    99 tokens
-llama_perf_context_print:    graphs reused =         33
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 174 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3110.56 ms /   174 tokens (   17.88 ms per token,    55.94 tokens per second)
-llama_perf_context_print:        eval time =    3322.78 ms /    61 runs   (   54.47 ms per token,    18.36 tokens per second)
-llama_perf_context_print:       total time =    6525.99 ms /   235 tokens
-llama_perf_context_print:    graphs reused =         60
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 172 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1576.24 ms /    83 tokens (   18.99 ms per token,    52.66 tokens per second)
-llama_perf_context_print:        eval time =    3429.81 ms /    61 runs   (   56.23 ms per token,    17.79 tokens per second)
-llama_perf_context_print:       total time =    5095.49 ms /   144 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 633 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11787.49 ms /   633 tokens (   18.62 ms per token,    53.70 tokens per second)
-llama_perf_context_print:        eval time =    3481.03 ms /    60 runs   (   58.02 ms per token,    17.24 tokens per second)
-llama_perf_context_print:       total time =   15392.94 ms /   693 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 759 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14134.94 ms /   759 tokens (   18.62 ms per token,    53.70 tokens per second)
-llama_perf_context_print:        eval time =    1646.17 ms /    28 runs   (   58.79 ms per token,    17.01 tokens per second)
-llama_perf_context_print:       total time =   15857.54 ms /   787 tokens
-llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 179 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3184.74 ms /   179 tokens (   17.79 ms per token,    56.21 tokens per second)
-llama_perf_context_print:        eval time =    3964.29 ms /    73 runs   (   54.31 ms per token,    18.41 tokens per second)
-llama_perf_context_print:       total time =    7259.44 ms /   252 tokens
-llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 633 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11784.05 ms /   633 tokens (   18.62 ms per token,    53.72 tokens per second)
-llama_perf_context_print:        eval time =    3442.60 ms /    60 runs   (   57.38 ms per token,    17.43 tokens per second)
-llama_perf_context_print:       total time =   15341.42 ms /   693 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 763 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14171.98 ms /   763 tokens (   18.57 ms per token,    53.84 tokens per second)
-llama_perf_context_print:        eval time =    1657.85 ms /    28 runs   (   59.21 ms per token,    16.89 tokens per second)
-llama_perf_context_print:       total time =   15904.68 ms /   791 tokens
-llama_perf_context_print:    graphs reused =         26
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 761 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1378.88 ms /    65 tokens (   21.21 ms per token,    47.14 tokens per second)
-llama_perf_context_print:        eval time =    2544.66 ms /    43 runs   (   59.18 ms per token,    16.90 tokens per second)
-llama_perf_context_print:       total time =    3987.23 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 195 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3490.94 ms /   195 tokens (   17.90 ms per token,    55.86 tokens per second)
-llama_perf_context_print:        eval time =    4126.77 ms /    75 runs   (   55.02 ms per token,    18.17 tokens per second)
-llama_perf_context_print:       total time =    7731.69 ms /   270 tokens
-llama_perf_context_print:    graphs reused =         73
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 193 prefix-match hit, remaining 83 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1622.76 ms /    83 tokens (   19.55 ms per token,    51.15 tokens per second)
-llama_perf_context_print:        eval time =    4111.84 ms /    73 runs   (   56.33 ms per token,    17.75 tokens per second)
-llama_perf_context_print:       total time =    5841.73 ms /   156 tokens
-llama_perf_context_print:    graphs reused =         72
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 611 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11545.65 ms /   611 tokens (   18.90 ms per token,    52.92 tokens per second)
-llama_perf_context_print:        eval time =    3441.90 ms /    60 runs   (   57.36 ms per token,    17.43 tokens per second)
-llama_perf_context_print:       total time =   15100.24 ms /   671 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 764 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14163.53 ms /   764 tokens (   18.54 ms per token,    53.94 tokens per second)
-llama_perf_context_print:        eval time =    1181.18 ms /    20 runs   (   59.06 ms per token,    16.93 tokens per second)
-llama_perf_context_print:       total time =   15410.94 ms /   784 tokens
-llama_perf_context_print:    graphs reused =         19
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 171 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3076.70 ms /   171 tokens (   17.99 ms per token,    55.58 tokens per second)
-llama_perf_context_print:        eval time =    3385.13 ms /    62 runs   (   54.60 ms per token,    18.32 tokens per second)
-llama_perf_context_print:       total time =    6556.27 ms /   233 tokens
-llama_perf_context_print:    graphs reused =         61
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 611 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   11449.18 ms /   611 tokens (   18.74 ms per token,    53.37 tokens per second)
-llama_perf_context_print:        eval time =    3457.70 ms /    60 runs   (   57.63 ms per token,    17.35 tokens per second)
-llama_perf_context_print:       total time =   15020.02 ms /   671 tokens
-llama_perf_context_print:    graphs reused =         59
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 768 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =   14444.21 ms /   768 tokens (   18.81 ms per token,    53.17 tokens per second)
-llama_perf_context_print:        eval time =    1650.42 ms /    28 runs   (   58.94 ms per token,    16.97 tokens per second)
-llama_perf_context_print:       total time =   16170.13 ms /   796 tokens
-llama_perf_context_print:    graphs reused =         27
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 766 prefix-match hit, remaining 65 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    1382.26 ms /    65 tokens (   21.27 ms per token,    47.02 tokens per second)
-llama_perf_context_print:        eval time =    2523.04 ms /    43 runs   (   58.68 ms per token,    17.04 tokens per second)
-llama_perf_context_print:       total time =    3967.97 ms /   108 tokens
-llama_perf_context_print:    graphs reused =         42
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
-Llama.generate: 4 prefix-match hit, remaining 195 prompt tokens to eval
-llama_perf_context_print:        load time =       0.26 ms
-llama_perf_context_print: prompt eval time =    3482.37 ms /   195 tokens (   17.86 ms per token,    56.00 tokens per second)
-llama_perf_context_print:        eval time =    3777.58 ms /    69 runs   (   54.75 ms per token,    18.27 tokens per second)
-llama_perf_context_print:       total time =    7365.50 ms /   264 tokens
-llama_perf_context_print:    graphs reused =         67
-INFO:     ::1:54478 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 179 prefix-match hit, remaining 83 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1652.26 ms /    83 tokens (   19.91 ms per token,    50.23 tokens per second)
+llama_perf_context_print:        eval time =    3073.77 ms /    72 runs   (   42.69 ms per token,    23.42 tokens per second)
+llama_perf_context_print:       total time =    4810.05 ms /   155 tokens
+llama_perf_context_print:    graphs reused =         71
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 306 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    5637.84 ms /   306 tokens (   18.42 ms per token,    54.28 tokens per second)
+llama_perf_context_print:        eval time =    2332.18 ms /    55 runs   (   42.40 ms per token,    23.58 tokens per second)
+llama_perf_context_print:       total time =    8039.89 ms /   361 tokens
+llama_perf_context_print:    graphs reused =         54
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 286 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    5262.65 ms /   286 tokens (   18.40 ms per token,    54.35 tokens per second)
+llama_perf_context_print:        eval time =    1216.78 ms /    29 runs   (   41.96 ms per token,    23.83 tokens per second)
+llama_perf_context_print:       total time =    6518.33 ms /   315 tokens
+llama_perf_context_print:    graphs reused =         28
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 284 prefix-match hit, remaining 67 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    1362.60 ms /    67 tokens (   20.34 ms per token,    49.17 tokens per second)
+llama_perf_context_print:        eval time =    1469.40 ms /    35 runs   (   41.98 ms per token,    23.82 tokens per second)
+llama_perf_context_print:       total time =    2872.28 ms /   102 tokens
+llama_perf_context_print:    graphs reused =         34
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+Llama.generate: 4 prefix-match hit, remaining 182 prompt tokens to eval
+llama_perf_context_print:        load time =       0.23 ms
+llama_perf_context_print: prompt eval time =    3206.15 ms /   182 tokens (   17.62 ms per token,    56.77 tokens per second)
+llama_perf_context_print:        eval time =    2614.16 ms /    64 runs   (   40.85 ms per token,    24.48 tokens per second)
+llama_perf_context_print:       total time =    5895.78 ms /   246 tokens
+llama_perf_context_print:    graphs reused =         63
+INFO:     ::1:43896 - "POST /v1/chat/completions HTTP/1.1" 200 OK

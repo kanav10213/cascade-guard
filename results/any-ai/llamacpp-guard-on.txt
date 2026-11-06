@@ -1,16 +1,16 @@
-## cascade-guard receipts run examples/receipts --ai 'llamacpp' --approval-limit 5000 --currency INR 
+## cascade-guard receipts run --samples --ai 'llamacpp' --approval-limit 5000 --currency INR 
 Checking 6 receipts with openai · local-gguf at http://localhost:8080/v1. Policy: above 5000.00 needs a manager.
-  STOPPED    cafe-smudged.txt      needs a person: '31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)
+  STOPPED    cafe-smudged.txt      needs a person: '31/0O/2018' is not a date
   OK         fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        approve
   FIXED      kirana-kothrud.txt    SHRI BALAJI KIRANA STORES    2026-11-05     497.00 INR  groceries   approve
                                      (the guard caught: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject')
-  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03      19.05 INR  meals       approve
-                                     (the guard caught: the currency is INR, not MYR (the receipt prints none; the company's default is INR))
+  FIXED      kopi-house-kl.txt     KOPI HOUSE RESTAURANT        2018-01-03       19.05 RM  meals       approve
+                                     (the guard caught: under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject')
   FIXED      laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 2026-10-28   62499.00 INR  electronics needs_approval
                                      (the guard caught: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject')
   FIXED      restaurant-pune.txt   Shree Krishna Bhajanalaya    2026-11-04     430.00 INR  groceries   approve
                                      (the guard caught: under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject')
 
-5 posted (4 of them fixed by the guard first), 1 stopped for a person, 0 unreadable. Posted total: 65535.05 INR.
+5 posted (4 of them fixed by the guard first), 1 stopped for a person, 0 unreadable. Posted total: 65516.00 INR, 19.05 RM.
 Look at: cafe-smudged.txt
 Wrote out/llamacpp-guard-on.csv and out/llamacpp-guard-on.json.

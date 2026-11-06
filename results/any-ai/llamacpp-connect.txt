@@ -29,7 +29,7 @@ CASCADE_AI is not set: the rule-based agents are used unless you pass --ai.
 
 ## cascade-guard ai test --ai 'llamacpp'
 Asking openai · local-gguf at http://localhost:8080/v1 ...
-Answer (2.2 s): {
+Answer (2.0 s): {
   "total": "500.00"
 }
 It answers. (It did not read this total right on its own; that is the kind of mistake the guard is for.)
@@ -37,7 +37,7 @@ Use it:  cascade-guard receipts run <folder> --ai llamacpp
 
 ## cascade-guard ai test --ai 'http://localhost:8080/v1#local-gguf'
 Asking openai · local-gguf at http://localhost:8080/v1 ...
-Answer (0.8 s): {
+Answer (0.7 s): {
   "total": "500.00"
 }
 It answers. (It did not read this total right on its own; that is the kind of mistake the guard is for.)

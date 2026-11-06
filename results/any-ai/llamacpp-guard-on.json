@@ -7,13 +7,14 @@
     "fixed_by_guard": 4,
     "receipts": 6,
     "total_posted": {
-      "INR": "65535.05"
+      "INR": "65516.00",
+      "RM": "19.05"
     },
-    "agent_calls": 25
+    "agent_calls": 24
   },
   "results": [
     {
-      "name": "examples/receipts/cafe-smudged.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/cafe-smudged.txt",
       "status": "halted",
       "halted_at": "extract",
       "fields": null,
@@ -30,7 +31,7 @@
             "currency": "MYR"
           },
           "passed": false,
-          "reason": "'31/0O/2018' is not a date; the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
+          "reason": "'31/0O/2018' is not a date"
         },
         {
           "step": "extract",
@@ -39,7 +40,7 @@
             "vendor": "SEDAP CAFE SDN BHD",
             "date": "31/0O/2018",
             "total": "12.00",
-            "currency": "INR"
+            "currency": "RM"
           },
           "passed": false,
           "reason": "'31/0O/2018' is not a date"
@@ -54,18 +55,18 @@
             "currency": "RM"
           },
           "passed": false,
-          "reason": "'31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)"
+          "reason": "'31/0O/2018' is not a date"
         }
       ],
       "agent_calls": 3,
-      "seconds": 14.991,
+      "seconds": 11.736,
       "caught": 3,
       "agents": "openai:local-gguf",
       "guarded": true,
-      "issue": "'31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)"
+      "issue": "'31/0O/2018' is not a date"
     },
     {
-      "name": "examples/receipts/fuel-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/fuel-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -125,14 +126,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 16.532,
+      "seconds": 14.819,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": true,
       "issue": ""
     },
     {
-      "name": "examples/receipts/kirana-kothrud.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kirana-kothrud.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -202,31 +203,31 @@
         }
       ],
       "agent_calls": 4,
-      "seconds": 22.886,
+      "seconds": 20.211,
       "caught": 1,
       "agents": "openai:local-gguf",
       "guarded": true,
       "issue": "fixed after: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject'"
     },
     {
-      "name": "examples/receipts/kopi-house-kl.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kopi-house-kl.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
         "vendor": "KOPI HOUSE RESTAURANT",
         "date": "03/01/2018",
         "total": "19.05",
-        "currency": "INR"
+        "currency": "MYR"
       },
       "decision": {
         "decision": "approve",
-        "reason": "The total is less than 5000.00."
+        "reason": "The total is within the approved threshold of 5000.00."
       },
       "entry": {
         "vendor": "KOPI HOUSE RESTAURANT",
         "date": "2018-01-03",
         "amount": "19.05",
-        "currency": "INR",
+        "currency": "RM",
         "category": "meals",
         "memo": ""
       },
@@ -239,18 +240,6 @@
             "date": "03/01/2018",
             "total": "19.05",
             "currency": "MYR"
-          },
-          "passed": false,
-          "reason": "the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
-        },
-        {
-          "step": "extract",
-          "attempt": 1,
-          "output": {
-            "vendor": "KOPI HOUSE RESTAURANT",
-            "date": "03/01/2018",
-            "total": "19.05",
-            "currency": "INR"
           },
           "passed": true,
           "reason": null
@@ -270,7 +259,7 @@
           "attempt": 1,
           "output": {
             "decision": "approve",
-            "reason": "The total is less than 5000.00."
+            "reason": "The total is within the approved threshold of 5000.00."
           },
           "passed": true,
           "reason": null
@@ -282,7 +271,7 @@
             "vendor": "KOPI HOUSE RESTAURANT",
             "date": "2018-03-01",
             "amount": "19.05",
-            "currency": "INR",
+            "currency": "MYR",
             "category": "meals",
             "memo": ""
           },
@@ -296,7 +285,7 @@
             "vendor": "KOPI HOUSE RESTAURANT",
             "date": "2018-01-03",
             "amount": "19.05",
-            "currency": "INR",
+            "currency": "MYR",
             "category": "meals",
             "memo": ""
           },
@@ -304,15 +293,15 @@
           "reason": null
         }
       ],
-      "agent_calls": 6,
-      "seconds": 32.483,
-      "caught": 3,
+      "agent_calls": 5,
+      "seconds": 25.304,
+      "caught": 2,
       "agents": "openai:local-gguf",
       "guarded": true,
-      "issue": "fixed after: the currency is INR, not MYR (the receipt prints none; the company's default is INR)"
+      "issue": "fixed after: under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject'"
     },
     {
-      "name": "examples/receipts/laptop-bengaluru.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/laptop-bengaluru.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -396,14 +385,14 @@
         }
       ],
       "agent_calls": 5,
-      "seconds": 30.273,
+      "seconds": 27.273,
       "caught": 2,
       "agents": "openai:local-gguf",
       "guarded": true,
       "issue": "fixed after: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject'"
     },
     {
-      "name": "examples/receipts/restaurant-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/restaurant-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -473,7 +462,7 @@
         }
       ],
       "agent_calls": 4,
-      "seconds": 26.449,
+      "seconds": 23.345,
       "caught": 1,
       "agents": "openai:local-gguf",
       "guarded": true,

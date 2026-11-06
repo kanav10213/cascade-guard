@@ -1,4 +1,4 @@
-## cascade-guard receipts run examples/receipts --ai 'llamacpp' --approval-limit 5000 --currency INR --no-guard
+## cascade-guard receipts run --samples --ai 'llamacpp' --approval-limit 5000 --currency INR --no-guard
 Checking 6 receipts with openai · local-gguf at http://localhost:8080/v1. Policy: above 5000.00 needs a manager.
   OK         cafe-smudged.txt      SEDAP CAFE SDN BHD           2018-03-31       12.00 RM  meals       approve
   OK         fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        reject

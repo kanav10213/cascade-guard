@@ -1,7 +1,7 @@
 file,status,vendor,date,amount,currency,category,decision,issue,run_id
-examples/receipts/cafe-smudged.txt,halted,,,,,,,"'31/0O/2018' is not a date; the currency is INR, not RM (the receipt prints none; the company's default is INR)",
-examples/receipts/fuel-pune.txt,posted,SAI AUTO FUELS,2026-11-02,2090.00,INR,fuel,approve,,
-examples/receipts/kirana-kothrud.txt,posted,SHRI BALAJI KIRANA STORES,2026-11-05,497.00,INR,groceries,approve,"fixed after: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject'",
-examples/receipts/kopi-house-kl.txt,posted,KOPI HOUSE RESTAURANT,2018-01-03,19.05,INR,meals,approve,"fixed after: the currency is INR, not MYR (the receipt prints none; the company's default is INR)",
-examples/receipts/laptop-bengaluru.txt,posted,DIGITAL WORLD ELECTRONICS PVT LTD,2026-10-28,62499.00,INR,electronics,needs_approval,"fixed after: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject'",
-examples/receipts/restaurant-pune.txt,posted,Shree Krishna Bhajanalaya,2026-11-04,430.00,INR,groceries,approve,"fixed after: under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject'",
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/cafe-smudged.txt,halted,,,,,,,'31/0O/2018' is not a date,
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/fuel-pune.txt,posted,SAI AUTO FUELS,2026-11-02,2090.00,INR,fuel,approve,,
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kirana-kothrud.txt,posted,SHRI BALAJI KIRANA STORES,2026-11-05,497.00,INR,groceries,approve,"fixed after: under the policy the decision for a total of 497.00 is 'approve' (within 5000.00), not 'reject'",
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kopi-house-kl.txt,posted,KOPI HOUSE RESTAURANT,2018-01-03,19.05,RM,meals,approve,"fixed after: under the policy the decision for a total of 19.05 is 'approve' (within 5000.00), not 'reject'",
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/laptop-bengaluru.txt,posted,DIGITAL WORLD ELECTRONICS PVT LTD,2026-10-28,62499.00,INR,electronics,needs_approval,"fixed after: under the policy the decision for a total of 62,499.00 is 'needs_approval' (above 5000.00), not 'reject'",
+/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/restaurant-pune.txt,posted,Shree Krishna Bhajanalaya,2026-11-04,430.00,INR,groceries,approve,"fixed after: under the policy the decision for a total of 430.00 is 'approve' (within 5000.00), not 'reject'",

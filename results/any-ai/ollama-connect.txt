@@ -29,24 +29,24 @@ CASCADE_AI is not set: the rule-based agents are used unless you pass --ai.
 
 ## cascade-guard ai test --ai 'ollama'
 Asking openai · qwen2.5:3b at http://localhost:11434/v1 ...
-Answer (5.1 s): {"total": "497.00"}
+Answer (4.2 s): {"total": "497.00"}
 It works, and it read the total right.
 Use it:  cascade-guard receipts run <folder> --ai ollama
 
 ## cascade-guard ai test --ai 'ollama:qwen2.5:3b'
 Asking openai · qwen2.5:3b at http://localhost:11434/v1 ...
-Answer (0.9 s): {"total": "497.00"}
+Answer (0.8 s): {"total": "497.00"}
 It works, and it read the total right.
 Use it:  cascade-guard receipts run <folder> --ai ollama:qwen2.5:3b
 
 ## cascade-guard ai test --ai 'http://localhost:11434/v1#qwen2.5:3b'
 Asking openai · qwen2.5:3b at http://localhost:11434/v1 ...
-Answer (0.9 s): {"total": "497.00"}
+Answer (0.8 s): {"total": "497.00"}
 It works, and it read the total right.
 Use it:  cascade-guard receipts run <folder> --ai http://localhost:11434/v1#qwen2.5:3b
 
 ## cascade-guard ai test --ai 'cmd:ollama run qwen2.5:3b'
 Asking command · ollama run qwen2.5:3b ...
-Answer (3.3 s): {"total": "497.00"}
+Answer (2.2 s): {"total": "497.00"}
 It works, and it read the total right.
 Use it:  cascade-guard receipts run <folder> --ai cmd:ollama run qwen2.5:3b

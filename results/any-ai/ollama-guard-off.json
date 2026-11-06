@@ -14,7 +14,7 @@
   },
   "results": [
     {
-      "name": "examples/receipts/cafe-smudged.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/cafe-smudged.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -24,16 +24,16 @@
         "currency": "USD"
       },
       "decision": {
-        "decision": "approve",
-        "reason": "Total is $12.00 which is below the threshold of 5000.00 and there are no duplicates."
+        "decision": "reject",
+        "reason": "no_positive_total"
       },
       "entry": {
         "vendor": "SEDAP CAFE SDN BHD",
         "date": "3I-O1-2O18",
         "amount": "12.00",
         "currency": "USD",
-        "category": "meals",
-        "memo": "Meal at SEDAP CAFE SDN BHD on 3I-O1-2O18"
+        "category": "other",
+        "memo": "Receipt for meals from SEDAP CAFE SDN BHD"
       },
       "trace": [
         {
@@ -52,8 +52,8 @@
           "step": "policy",
           "attempt": 0,
           "output": {
-            "decision": "approve",
-            "reason": "Total is $12.00 which is below the threshold of 5000.00 and there are no duplicates."
+            "decision": "reject",
+            "reason": "no_positive_total"
           },
           "passed": true,
           "reason": null
@@ -66,22 +66,22 @@
             "date": "3I-O1-2O18",
             "amount": "12.00",
             "currency": "USD",
-            "category": "meals",
-            "memo": "Meal at SEDAP CAFE SDN BHD on 3I-O1-2O18"
+            "category": "other",
+            "memo": "Receipt for meals from SEDAP CAFE SDN BHD"
           },
           "passed": true,
           "reason": null
         }
       ],
       "agent_calls": 3,
-      "seconds": 30.285,
+      "seconds": 17.875,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/fuel-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/fuel-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -92,15 +92,15 @@
       },
       "decision": {
         "decision": "approve",
-        "reason": "Total is 2090.00 which is below the threshold of 5000.00 and it's not a duplicate."
+        "reason": "Total is 2090.00 which is below 5000.00 and it's not a duplicate or requires manager's approval."
       },
       "entry": {
         "vendor": "SAI AUTO FUELS",
-        "date": "02-NOV-2026",
+        "date": "2026-11-02",
         "amount": "2090.00",
         "currency": "INR",
         "category": "fuel",
-        "memo": "Fuel purchase on 02-NOV-2026"
+        "memo": "Auto fuel purchase on 02-Nov-2026"
       },
       "trace": [
         {
@@ -120,7 +120,7 @@
           "attempt": 0,
           "output": {
             "decision": "approve",
-            "reason": "Total is 2090.00 which is below the threshold of 5000.00 and it's not a duplicate."
+            "reason": "Total is 2090.00 which is below 5000.00 and it's not a duplicate or requires manager's approval."
           },
           "passed": true,
           "reason": null
@@ -130,25 +130,25 @@
           "attempt": 0,
           "output": {
             "vendor": "SAI AUTO FUELS",
-            "date": "02-NOV-2026",
+            "date": "2026-11-02",
             "amount": "2090.00",
             "currency": "INR",
             "category": "fuel",
-            "memo": "Fuel purchase on 02-NOV-2026"
+            "memo": "Auto fuel purchase on 02-Nov-2026"
           },
           "passed": true,
           "reason": null
         }
       ],
       "agent_calls": 3,
-      "seconds": 21.598,
+      "seconds": 15.712,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/kirana-kothrud.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kirana-kothrud.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -208,14 +208,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 23.615,
+      "seconds": 16.726,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/kopi-house-kl.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kopi-house-kl.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -230,11 +230,11 @@
       },
       "entry": {
         "vendor": "KOPI HOUSE RESTAURANT",
-        "date": "2018-01-03",
+        "date": "2018-03-01",
         "amount": "19.05",
         "currency": "USD",
         "category": "meals",
-        "memo": "Meal at KOPI HOUSE RESTAURANT on 01/03/2018"
+        "memo": "Meal at KOPI HOUSE RESTAURANT"
       },
       "trace": [
         {
@@ -264,25 +264,25 @@
           "attempt": 0,
           "output": {
             "vendor": "KOPI HOUSE RESTAURANT",
-            "date": "2018-01-03",
+            "date": "2018-03-01",
             "amount": "19.05",
             "currency": "USD",
             "category": "meals",
-            "memo": "Meal at KOPI HOUSE RESTAURANT on 01/03/2018"
+            "memo": "Meal at KOPI HOUSE RESTAURANT"
           },
           "passed": true,
           "reason": null
         }
       ],
       "agent_calls": 3,
-      "seconds": 25.138,
+      "seconds": 16.386,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/laptop-bengaluru.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/laptop-bengaluru.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -342,14 +342,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 23.647,
+      "seconds": 16.307,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/restaurant-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/restaurant-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -360,15 +360,15 @@
       },
       "decision": {
         "decision": "approve",
-        "reason": "Total is 430.00 which is below the threshold of 5000.00 and it's not a duplicate or requires manager's approval."
+        "reason": "Total is below 5000 and not a duplicate."
       },
       "entry": {
         "vendor": "SHREE KRISHNA BHOJANALAYA",
         "date": "2026-04-11",
         "amount": "430.00",
         "currency": "INR",
-        "category": "meals",
-        "memo": "Bhajji and Sabzi from Shree Krishna Bhojanalaya"
+        "category": "other",
+        "memo": "Bhojanalaya food purchase"
       },
       "trace": [
         {
@@ -388,7 +388,7 @@
           "attempt": 0,
           "output": {
             "decision": "approve",
-            "reason": "Total is 430.00 which is below the threshold of 5000.00 and it's not a duplicate or requires manager's approval."
+            "reason": "Total is below 5000 and not a duplicate."
           },
           "passed": true,
           "reason": null
@@ -401,15 +401,15 @@
             "date": "2026-04-11",
             "amount": "430.00",
             "currency": "INR",
-            "category": "meals",
-            "memo": "Bhajji and Sabzi from Shree Krishna Bhojanalaya"
+            "category": "other",
+            "memo": "Bhojanalaya food purchase"
           },
           "passed": true,
           "reason": null
         }
       ],
       "agent_calls": 3,
-      "seconds": 31.373,
+      "seconds": 18.821,
       "caught": 0,
       "agents": "openai:qwen2.5:3b",
       "guarded": false,

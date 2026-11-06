@@ -14,7 +14,7 @@
   },
   "results": [
     {
-      "name": "examples/receipts/cafe-smudged.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/cafe-smudged.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -74,14 +74,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 17.969,
+      "seconds": 16.373,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/fuel-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/fuel-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -141,14 +141,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 19.129,
+      "seconds": 16.981,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/kirana-kothrud.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kirana-kothrud.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -208,14 +208,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 19.155,
+      "seconds": 17.466,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/kopi-house-kl.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/kopi-house-kl.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -275,14 +275,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 19.835,
+      "seconds": 18.524,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/laptop-bengaluru.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/laptop-bengaluru.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -342,14 +342,14 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 21.779,
+      "seconds": 19.829,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
       "issue": ""
     },
     {
-      "name": "examples/receipts/restaurant-pune.txt",
+      "name": "/home/runner/work/cascade-guard/cascade-guard/cascade_guard/samples/receipts/restaurant-pune.txt",
       "status": "posted",
       "halted_at": null,
       "fields": {
@@ -409,7 +409,7 @@
         }
       ],
       "agent_calls": 3,
-      "seconds": 23.687,
+      "seconds": 21.828,
       "caught": 0,
       "agents": "openai:local-gguf",
       "guarded": false,
