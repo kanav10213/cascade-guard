@@ -27,8 +27,10 @@ A wrong answer is never passed on silently.
   connector link for Claude on the web (claude.ai), so Claude itself checks bills and sums with Cascade Guard.
 - **Measurable:** fault injection and paired experiments that report what the guard actually buys (CRI, CRS, Wilson
   95% intervals), and a cost-gated evaluation on real models.
-- **Any model:** Anthropic Claude by default; any OpenAI-format API (OpenAI, Gemini, Groq, OpenRouter, a local model
-  through Ollama), or a free offline simulator.
+- **Any AI, one setting:** `--ai ollama:qwen2.5:7b` (or `CASCADE_AI=` in `.env`). It works with local AIs (Ollama,
+  LM Studio, llama.cpp, vLLM, Jan, LocalAI), cloud AIs (OpenAI, Claude, Gemini, Groq, OpenRouter, Mistral, DeepSeek,
+  Together), any OpenAI-format URL, any program on your computer, any Python function, or no AI at all (rule-based).
+  See [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts).
 
 > **Status: v1.4.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
 > three-agent expense workflow with rule-based agents and with open AI models as the agents (see
@@ -75,8 +77,64 @@ add-on) and see what each agent read, every check, what was fixed and what was s
 review queue, and the results download as CSV. API: `POST /receipts/process`. MCP and the Claude connector:
 `process_receipt`.
 
+## Use it with any AI: check your own receipts
+Point it at a folder of receipts (text, PDFs or photos) and pick the AI that reads them:
+
+```bash
+pip install cascade-guard-ai                     # add [ocr] to read photos
+cascade-guard receipts run my-receipts/                                   # no AI: rule-based agents, free, offline
+cascade-guard receipts run my-receipts/ --ai ollama:qwen2.5:7b            # a local AI on your computer, free
+cascade-guard receipts run my-receipts/ --ai gemini:gemini-2.5-flash      # a cloud AI (GEMINI_API_KEY in .env)
+cascade-guard receipts run my-receipts/ --approval-limit 5000 --currency INR --out checked.csv
+```
+```
+Checking 6 receipts with rule-based agents (no AI). Policy: above 5000.00 needs a manager.
+  STOPPED    cafe-smudged.txt      needs a person: '' is not a date
+  OK         fuel-pune.txt         SAI AUTO FUELS               2026-11-02    2090.00 INR  fuel        approve
+  OK         laptop-bengaluru.txt  DIGITAL WORLD ELECTRONICS PV 2026-10-28   62499.00 INR  electronics needs_approval
+  OK         restaurant-pune.txt   SHREE KRISHNA BHOJANALAYA    2026-11-04     430.00 INR  meals       approve
+  ...
+5 posted (0 of them fixed by the guard first), 1 stopped for a person, 0 unreadable. Posted total: 65535.05 INR.
+Look at: cafe-smudged.txt
+Wrote checked.csv.
+```
+Each receipt goes through three agents: read it, apply the expense policy, write the ledger entry. Cascade Guard
+checks every hand-off against the receipt itself. A wrong total, such as the cash paid, the tax or the amount before
+the round-off, goes back to the agent with the reason. If it is still wrong, it is stopped for a person. You get a
+CSV for your accounts and a short list of receipts to look at. It reads Indian bills (₹, Rs., lakhs, CGST/SGST/IGST,
+UPI, round-off) as well as Malaysian, US and European ones. Try it on the samples in
+[examples/receipts](examples/receipts).
+
+**Which AI:** `cascade-guard ai list` shows every choice and any local AI server running right now. `cascade-guard
+ai test --ai <choice>` sends one small request and shows the answer.
+
+| `--ai` | What it is | Needs |
+|---|---|---|
+| `rules` (default) | rule-based agents, no AI | nothing |
+| `ollama[:model]`, `lmstudio`, `llamacpp`, `vllm`, `jan`, `localai` | a local AI server on your computer; with no model named, its first model is used | nothing; free, and receipts stay on your computer |
+| `openai:<model>`, `claude[:model]`, `gemini:<model>`, `groq`, `openrouter:<model>`, `mistral:<model>`, `deepseek`, `together:<model>` | a cloud AI | its key in `.env`: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`, ... |
+| `http://host:port/v1#model` | any server that speaks the OpenAI format (on your network too) | `CASCADE_AI_KEY` if it asks for one |
+| `cmd:<program and arguments>` | any program: it gets the prompt on stdin and prints the answer | the program |
+| `auto` | a cloud key if one is set, else a local server that answers, else `rules` | |
+
+The same setting drives everything: `cascade-guard serve` (the `/receipts` and `/assistant` pages), the MCP tools
+in Claude and other assistants, `cascade-guard ask` and `chain run --real`. Put `CASCADE_AI=ollama:qwen2.5:7b`,
+`RECEIPTS_APPROVAL_LIMIT=5000` and `RECEIPTS_CURRENCY=INR` in `.env` once. In Python, any model you can call works:
+
+```python
+from cascade_guard.receipts import process_receipt
+from cascade_guard.llm.presets import client_from_ai, function_client
+
+result = process_receipt(text, client=client_from_ai("lmstudio"))                     # any --ai value
+result = process_receipt(text, client=function_client(lambda system, user: my_llm(system + "\n\n" + user)))
+print(result["status"], result["entry"], result["trace"])   # posted / halted, the ledger entry, every check
+```
+Reasoning models' `<think>` sections are removed before the answer is read. The
+[any-ai workflow](.github/workflows/any-ai.yml) runs these paths with real local AI servers (Ollama and a
+llama.cpp server) on GitHub's machines.
+
 ## Contents
-[Real-world results](#real-world-results) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
+[Real-world results](#real-world-results) · [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
 [Docker](#docker) · [Use it in your code](#use-it-in-your-code) ·
 [Use it from Claude (MCP)](#use-it-from-claude-and-other-ai-assistants-mcp) · [Models](#models-and-providers) ·
 [Configuration](#configuration) · [API](#api) · [Security](#security) · [Results](#results) ·
@@ -310,6 +368,9 @@ Deciding review items is deliberately **not** a tool: the queue holds outside te
 into approving things, so people decide on the dashboard or through the API with a reviewer key.
 
 ## Models and providers
+The short way is one line, `CASCADE_AI=...`, described in [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts).
+The longer settings below still work; `CASCADE_AI` wins when both are set.
+
 | Provider | In `.env` |
 |---|---|
 | Anthropic (default) | `ANTHROPIC_API_KEY=...` (model `claude-haiku-5-5` unless `LLM_MODEL` is set) |

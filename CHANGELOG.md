@@ -1,9 +1,29 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
-## [1.4.0] - 2026-10-31
+## [1.4.0] - 2026-11-06
 
 ### Added
+- Any AI in one setting: `--ai` on every command, or `CASCADE_AI` in `.env` (`cascade_guard.llm.presets`).
+  - Local servers: Ollama, LM Studio, llama.cpp, vLLM, Jan and LocalAI. The model is picked from the server when
+    none is named.
+  - Cloud: OpenAI, Claude, Gemini, Groq, OpenRouter, Mistral, DeepSeek and Together, with keys from the environment.
+  - Any OpenAI-format URL (`http://host:port/v1#model`), any program (`cmd:<program>`: prompt on stdin, answer on
+    stdout), any Python function (`function_client`), `auto`, and `rules` (no AI).
+  - `make_client` honours it, so the server, MCP tools, assistant and CLI all use the same AI. Reasoning models'
+    `<think>` sections are removed.
+- `cascade-guard ai list` shows every choice and the local AI servers running now. `cascade-guard ai test --ai X`
+  sends one small request.
+- `cascade-guard receipts run FILES-OR-FOLDER [--ai X]` checks your own receipts (text, PDF, photos). It writes a CSV
+  and lists the receipts a person should look at. Options: `--approval-limit`, `--currency`, `--json` and
+  `--no-guard` (to compare).
+- Indian receipts: ₹ / Rs. / INR, lakh grouping (1,25,000.00), CGST/SGST/IGST/cess as tax, taxable value as subtotal,
+  UPI/Paytm/PhonePe as payments, and a round-off up to a rupee ("NET PAYABLE" after "ROUND OFF"). Indian shop and
+  category words were added. The currency is read from the receipt; `RECEIPTS_CURRENCY` and
+  `RECEIPTS_APPROVAL_LIMIT` set the defaults. The SROIE results are unchanged.
+- `examples/receipts/`: made-up sample receipts (Indian and Malaysian) to try it on.
+- The `any-ai` GitHub workflow runs the real local AI servers (Ollama, and llama.cpp's server) through each kind of
+  `--ai` setting, plus a slice of the SROIE test receipts.
 - Expense receipts, a real three-agent workflow (`cascade_guard.receipts`): read the receipt (vendor, date, total),
   apply the expense policy (manager approval above 200, duplicates, no total), write the ledger entry. Agents are
   rule-based or an AI model. Every hand-off is checked against the receipt text: the total must be next to a total

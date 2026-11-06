@@ -16,6 +16,13 @@ apply the expense policy, write the ledger entry. Cascade Guard checks every han
 Wrong expense-policy decisions (e.g. a fine receipt called a "duplicate") went to **zero** in every run. Retries
 cost 3.2 to 4.4 agent calls per receipt instead of 3. The method and every limit are in `benchmarks/README.md`.
 
+- **Any AI, one setting:** `--ai ollama:qwen2.5:7b` (or `CASCADE_AI=` in `.env`). It works with local AIs (Ollama,
+  LM Studio, llama.cpp, vLLM, Jan, LocalAI), cloud AIs (OpenAI, Claude, Gemini, Groq, OpenRouter, Mistral, DeepSeek,
+  Together), any OpenAI-format URL, any program (`cmd:`), any Python function, or no AI. Run `cascade-guard ai list`
+  to see them all.
+- **Check your own receipts:** `cascade-guard receipts run my-receipts/ --ai <any AI> --approval-limit 5000
+  --currency INR` gives a checked CSV and a list of the receipts a person should look at. It reads Indian bills (₹,
+  lakhs, CGST/SGST, UPI, round-off).
 - **Expense desk:** open `/receipts` on your server. Drop receipts as text, PDF or photos and see what each agent read
   and every check. Stopped receipts go to the review queue, and you can download a CSV. API:
   `POST /receipts/process`. In MCP and the Claude connector: `process_receipt`.
