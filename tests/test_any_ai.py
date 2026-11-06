@@ -87,6 +87,13 @@ def local_server():
     srv.shutdown()
 
 
+@pytest.fixture()
+def rupees():
+    receipts.configure(currency="INR")
+    yield
+    receipts.configure(approval_limit="200", currency="RM")
+
+
 def test_parse_ai_reads_every_kind():
     assert parse_ai("ollama:qwen2.5:7b").model == "qwen2.5:7b"
     assert parse_ai("Claude").kind == "anthropic"
@@ -121,7 +128,7 @@ def test_cascade_ai_drives_make_client_everywhere(local_server, monkeypatch):
     assert make_client(fake=True).is_fake  # an explicit choice still wins
 
 
-def test_any_local_ai_reads_receipts_and_the_guard_fixes_its_mistake(local_server):
+def test_any_local_ai_reads_receipts_and_the_guard_fixes_its_mistake(local_server, rupees):
     client = client_from_ai(f"{local_server}#tiny-receipt-model", cache_path=None)
     res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(), client=client, today=TODAY)
     assert res["status"] == "posted" and res["entry"]["amount"] == "497.00"
@@ -130,7 +137,7 @@ def test_any_local_ai_reads_receipts_and_the_guard_fixes_its_mistake(local_serve
     assert res["caught"] == 1 and _Model.calls
 
 
-def test_a_python_function_or_a_program_can_be_the_ai(tmp_path):
+def test_a_python_function_or_a_program_can_be_the_ai(tmp_path, rupees):
     fn = function_client(_Model.answer)
     res = process_receipt((EXAMPLES / "kirana-kothrud.txt").read_text(), client=fn, today=TODAY)
     assert res["status"] == "posted" and res["entry"]["amount"] == "497.00"
@@ -158,6 +165,29 @@ def test_indian_receipts_rupees_lakhs_gst_and_round_off():
     assert not ok and "430.00" in why
     ok, why = check_extract({**fields, "total": "10.25"}, pune, TODAY)
     assert not ok and "tax" in why  # CGST is a tax
+
+
+def test_a_wrong_currency_is_caught(rupees):
+    kirana = (EXAMPLES / "kirana-kothrud.txt").read_text()   # prints no currency: the company default applies
+    fields = {"vendor": "SHRI BALAJI KIRANA STORES", "date": "05/11/2026", "total": "497.00"}
+    assert check_extract({**fields, "currency": "INR"}, kirana, TODAY)[0]
+    ok, why = check_extract({**fields, "currency": "USD"}, kirana, TODAY)
+    assert not ok and "INR" in why and "default" in why
+    pune = (EXAMPLES / "restaurant-pune.txt").read_text()   # prints ₹
+    ok, why = check_extract({"vendor": "SHREE KRISHNA BHOJANALAYA", "date": "04/11/2026", "total": "430.00",
+                             "currency": "MYR"}, pune, TODAY)
+    assert not ok and "the currency is INR" in why
+
+
+def test_posted_amounts_are_written_one_way():
+    def comma_ai(system, user):
+        out = json.loads(strip_thinking(_Model.answer(system, user)))
+        if "amount" in out:
+            out["amount"] = "2,090.00"
+        return json.dumps(out)
+    res = process_receipt((EXAMPLES / "fuel-pune.txt").read_text(), client=function_client(comma_ai), today=TODAY)
+    assert res["status"] == "posted" and res["entry"]["amount"] == "2090.00"
+    assert summary([{"name": "f", **res}])["total_posted"] == {"INR": "2090.00"}
 
 
 def test_receipts_run_on_a_folder(tmp_path, monkeypatch):

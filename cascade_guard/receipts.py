@@ -338,13 +338,27 @@ def rule_extract(text: str, avoid: list | None = None) -> dict:
             "currency": currency_of(text)}
 
 
-def currency_of(text: str) -> str:
-    """The currency the receipt prints (₹ / Rs. / INR, RM, $ ...), else RECEIPTS_CURRENCY (default RM)."""
-    head = text or ""
+def printed_currency(text: str) -> str | None:
+    """The currency the receipt prints (₹ / Rs. / INR, RM, $ ...), or None when it prints none."""
     for code, rx in CURRENCIES:
-        if rx.search(head):
+        if rx.search(text or ""):
             return code
-    return DEFAULT_CURRENCY
+    return None
+
+
+def currency_of(text: str) -> str:
+    """The receipt's currency: the one it prints, else RECEIPTS_CURRENCY (default RM)."""
+    return printed_currency(text) or DEFAULT_CURRENCY
+
+
+_CURRENCY_NAMES = {"MYR": "RM", "RINGGIT": "RM", "RS": "INR", "RS.": "INR", "₹": "INR", "RUPEE": "INR",
+                   "RUPEES": "INR", "$": "USD", "US$": "USD", "DOLLAR": "USD", "€": "EUR", "EURO": "EUR",
+                   "£": "GBP", "S$": "SGD"}
+
+
+def norm_currency(value) -> str:
+    v = str(value or "").strip().upper()
+    return _CURRENCY_NAMES.get(v, v)
 
 
 def configure(approval_limit=None, currency: str | None = None) -> None:
@@ -531,6 +545,13 @@ def check_extract(out: dict, text: str, today: dt.date | None = None) -> tuple[b
         problems.append(f"'{vendor}' is not a business name")
     elif NOT_VENDOR.search(vendor) and not VENDOR_HINTS.search(vendor):
         problems.append(f"'{vendor}' looks like an address or a label, not the vendor")
+    said = norm_currency(out.get("currency"))
+    if said:
+        on_receipt = printed_currency(text)
+        want = on_receipt or DEFAULT_CURRENCY
+        if said != norm_currency(want):
+            problems.append(f"the currency is {want}, not {out.get('currency')}" +
+                            ("" if on_receipt else f" (the receipt prints none; the company's default is {want})"))
     return (not problems), ("; ".join(problems) or None)
 
 
@@ -554,6 +575,10 @@ def check_ledger(out: dict, fields: dict) -> tuple[bool, str | None]:
         problems.append(f"the vendor must be '{fields.get('vendor')}'")
     if out.get("category") not in CATEGORIES:
         problems.append(f"the category must be one of {', '.join(CATEGORIES)}, not '{out.get('category')}'")
+    if norm_currency(out.get("currency") or DEFAULT_CURRENCY) != norm_currency(fields.get("currency") or
+                                                                                DEFAULT_CURRENCY):
+        problems.append(f"the currency must be {fields.get('currency') or DEFAULT_CURRENCY}, not "
+                        f"{out.get('currency')}")
     memo_amounts = amounts_in(str(out.get("memo") or ""))
     if any(a != money(fields.get("total")) for a in memo_amounts):
         problems.append("the memo mentions an amount that is not the total")
@@ -634,8 +659,11 @@ def process_receipt(text: str, *, client=None, guard: bool = True, max_retries: 
             entry = run("ledger", steps["ledger"], lambda o: check_ledger(o, fields))
             if entry is None:
                 halted_at = "ledger"
-            else:
-                state["entry"] = entry
+            else:  # checked equal; now written one way for the books
+                amount = money(entry.get("amount"))
+                state["entry"] = {**entry, "amount": None if amount is None else f"{amount:.2f}",
+                                  "currency": norm_currency(entry.get("currency") or fields.get("currency")
+                                                            or DEFAULT_CURRENCY)}
         batch.remember(fields)
     return {"status": "halted" if halted_at else "posted", "halted_at": halted_at,
             "fields": state.get("fields"), "decision": state.get("decision"), "entry": state.get("entry"),

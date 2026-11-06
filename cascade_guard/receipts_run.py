@@ -90,14 +90,17 @@ def run_files(files: list[Path], client=None, *, max_retries: int = 2, today: dt
 
 def summary(rows: list[dict]) -> dict:
     from decimal import Decimal
+
+    from cascade_guard.receipts import money
     s: dict = {k: sum(1 for r in rows if r["status"] == k) for k in ("posted", "halted", "unreadable")}
     s["fixed_by_guard"] = sum(1 for r in rows if r["status"] == "posted" and r.get("caught"))
     s["receipts"] = len(rows)
     by_cur: dict[str, Decimal] = {}
     for r in rows:
         e = r.get("entry") or {}
-        if r["status"] == "posted" and e.get("amount"):
-            by_cur[e.get("currency") or ""] = by_cur.get(e.get("currency") or "", Decimal(0)) + Decimal(e["amount"])
+        amount = money(e.get("amount")) if r["status"] == "posted" else None
+        if amount is not None:
+            by_cur[e.get("currency") or ""] = by_cur.get(e.get("currency") or "", Decimal(0)) + amount
     s["total_posted"] = {k: f"{v:.2f}" for k, v in by_cur.items()}
     s["agent_calls"] = sum(r.get("agent_calls", 0) for r in rows)
     return s
