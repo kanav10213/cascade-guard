@@ -88,8 +88,33 @@ your documents") and the passages it used.
   See [DEPLOY.md](DEPLOY.md) for your own server, a cloud AI, or selling it as a service.
 
 <!-- company-results -->
-Results with real local AIs are produced by the [company workflow](.github/workflows/company.yml) and saved on the
-[benchmark-results branch](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results/company).
+**Tested with real local AIs.** The [company workflow](.github/workflows/company.yml) runs this on GitHub's
+machines with Ollama. It asks 30 questions about the made-up sample company: 26 that the documents answer and 4
+that they don't. Each answer is shown two ways: the AI's own first answer (what a plain document chatbot shows), and
+what Cascade Guard shows after checking.
+
+| AI | Right: plain → checked | Wrong, shown as if right | Wrong, shown with a warning | Right, but with a warning | Made-up answers |
+|---|---|---|---|---|---|
+| Qwen 2.5 7B | 25 → 25 of 26 | 0 → 0 | 0 | 1 | 0 → 0 of 4 |
+| Qwen 2.5 3B | 22 → 22 of 26 | **3 → 0** | 3 | 15 | 0 → 0 of 4 |
+| Llama 3.2 3B | 25 → 25 of 26 | **1 → 0** | 1 | 20 | 0 → 0 of 4 |
+
+What this shows, honestly:
+
+- On clean, short documents with this prompt, these models are already mostly right, and none of them made up
+  answers to the questions the documents don't answer.
+- **Every wrong answer was marked with a warning**, instead of looking right.
+- With 3B models, the AI reading also warns about many right answers. Use a 7B or larger model, or a stronger AI
+  just for the reading (`CHAT_READER_AI`).
+- About 1.7 AI calls per question, and 7–20 seconds per answer on a CPU.
+- The first run of this test found that a small model's reading could turn right answers into wrong ones. Since
+  then, the reading can only warn. Only the exact checks of numbers, quotations and citations can send an answer
+  back.
+- These are 30 questions, so read them as a working demonstration. On messier real data, the receipts below, the
+  checks matter much more.
+- The same workflow also tests `docker compose up` (Ollama and Cascade Guard) with real requests.
+- Logs and every answer are on the
+  [benchmark-results branch](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results/company).
 <!-- /company-results -->
 
 ## Real-world results

@@ -329,6 +329,21 @@ def review(client, question: str, passages: list[dict], text: str) -> dict:
     return {"verdict": data["verdict"], "problems": problems}
 
 
+_reader: dict = {}
+
+
+def reader_client(client):
+    """The AI that does the independent reading: CHAT_READER_AI (any --ai value, e.g. a bigger local model or a
+    cloud one) if set, else the AI that wrote the answer. A small model's reading warns too often."""
+    spec = os.getenv("CHAT_READER_AI", "").strip()
+    if not spec:
+        return client
+    if spec not in _reader:
+        from cascade_guard.llm.presets import client_from_ai
+        _reader[spec] = client_from_ai(spec, cache_path=None)
+    return _reader[spec]
+
+
 def _checker_on() -> bool:
     return os.getenv("CHAT_SECOND_CHECK", "on").strip().lower() not in ("off", "0", "no", "false")
 
@@ -516,7 +531,7 @@ def _grounded(question: str, passages: list[dict], hist: str, client) -> dict:
     reviewed: dict = {"verdict": "off", "problems": []}
     if _checker_on():
         try:
-            reviewed = review(client, question, passages, text)
+            reviewed = review(reader_client(client), question, passages, text)
         except (LLMCallError, BudgetExceeded) as e:
             reviewed = {"verdict": "unavailable", "problems": [], "error": str(e)[:200]}
     soft = [p["text"] for p in final_problems if not p["hard"]]

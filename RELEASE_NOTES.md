@@ -1,33 +1,32 @@
-# Cascade Guard 1.4.0
+# Cascade Guard 1.5.0: the company assistant
 
-New: **a real workflow, tested on real data.** This is an expense-receipt pipeline of three agents: read the receipt,
-apply the expense policy, write the ledger entry. Cascade Guard checks every hand-off against the receipt itself.
+**An AI assistant for your company's own documents that checks every answer before anyone sees it.** Upload
+policies, handbooks, price lists and FAQs (PDF, Word, text, CSV, HTML) and ask questions. Answers cite the passages
+they used. Cascade Guard then checks every amount, number, date and quotation against the passage cited. A wrong
+one goes back to the AI with the reason, and what still fails is removed and listed. An independent AI reading
+flags anything else it doubts. If the documents don't say, the assistant says so instead of guessing.
 
-**Results on 326 real scanned receipts** (public ICDAR 2019 SROIE set, held out from tuning):
+- **Private:** `docker compose up` runs a local AI (Ollama) next to it, so nothing leaves your server. Any cloud AI
+  works too (`CASCADE_AI`).
+- **Use it anywhere:** the `/chat` page (desktop and phone), any OpenAI-compatible app (`/v1/chat/completions`,
+  streaming included; tested with the official `openai` package), or the command line (`cascade-guard chat`).
+- **Run it as a business:**
+  - workspaces, one per company, and keys per person (member, manager, owner);
+  - plans with monthly limits, usage, and the `/admin` page;
+  - Stripe and Razorpay payments that issue and revoke keys by themselves, and a `/pricing` page.
 
-| Agents | Wrong amount reaching the books: without → with the guard | Correct receipts stopped |
-|---|---|---|
-| Rule-based agents | 30% → **8%** | 8 |
-| Rule-based, read from the photos (free OCR) | 33% → **9%** | 3 |
-| Llama 3.2 3B (free open model) | 19% → **6%** | 6 |
-| Qwen 2.5 3B (free open model) | 18% → **5%** | 14 |
-| Qwen 2.5 7B (free open model) | 27% → **3%** | 20 |
+  See DEPLOY.md.
 
-Wrong expense-policy decisions (e.g. a fine receipt called a "duplicate") went to **zero** in every run. Retries
-cost 3.2 to 4.4 agent calls per receipt instead of 3. The method and every limit are in `benchmarks/README.md`.
+**Tested with real local AIs** (30 questions; GitHub's machines; Ollama):
 
-- **Any AI, one setting:** `--ai ollama:qwen2.5:7b` (or `CASCADE_AI=` in `.env`). It works with local AIs (Ollama,
-  LM Studio, llama.cpp, vLLM, Jan, LocalAI), cloud AIs (OpenAI, Claude, Gemini, Groq, OpenRouter, Mistral, DeepSeek,
-  Together), any OpenAI-format URL, any program (`cmd:`), any Python function, or no AI. Run `cascade-guard ai list`
-  to see them all.
-- **Check your own receipts:** `cascade-guard receipts run my-receipts/ --ai <any AI> --approval-limit 5000
-  --currency INR` gives a checked CSV and a list of the receipts a person should look at. It reads Indian bills (₹,
-  lakhs, CGST/SGST, UPI, round-off).
-- **Expense desk:** open `/receipts` on your server. Drop receipts as text, PDF or photos and see what each agent read
-  and every check. Stopped receipts go to the review queue, and you can download a CSV. API:
-  `POST /receipts/process`. In MCP and the Claude connector: `process_receipt`.
-- **Photos:** `pip install "cascade-guard-ai[ocr]"` reads receipt photos with free offline OCR.
-- **Run the benchmark yourself:** `cascade-guard receipts benchmark --data <SROIE>/data --split test`, or the
-  `receipts-benchmark` GitHub workflow, which runs open models free on GitHub's machines.
+| AI | Right: plain → checked | Wrong, shown as if right | Wrong, shown with a warning |
+|---|---|---|---|
+| Qwen 2.5 7B | 25 → 25 of 26 | 0 → 0 | 0 |
+| Qwen 2.5 3B | 22 → 22 of 26 | 3 → 0 | 3 |
+| Llama 3.2 3B | 25 → 25 of 26 | 1 → 0 | 1 |
 
-Get it: `pip install --upgrade cascade-guard-ai`. Full list: CHANGELOG.md
+None of them made up an answer to the 4 questions the documents don't answer. With 3B models, the AI reading also
+warns about many right answers: use 7B or larger, or set `CHAT_READER_AI` to a stronger AI. The full results are in
+the README.
+
+Get it: `pip install --upgrade cascade-guard-ai`, or `git clone` and `docker compose up -d`. Full list: CHANGELOG.md

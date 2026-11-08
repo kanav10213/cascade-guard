@@ -49,6 +49,16 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   (`python -m cascade_guard.company.bench`).
 - **The `company` GitHub workflow** runs the benchmark with real local AIs through Ollama, and tests the
   `docker compose` install with real requests.
+- **`CHAT_READER_AI`:** a stronger AI for the independent reading.
+
+### Changed (after the first real-AI run)
+- The independent AI reading can only warn (verdict "unconfirmed"); it never rewrites an answer. With 3B models
+  it had turned right answers into wrong ones, or into "not in the documents".
+- Only the exact checks send an answer back, and a retry that gives up or gets worse never replaces a better
+  earlier answer.
+- A citation slip ([2] when there is one passage) is corrected when the numbers fit one passage.
+- Results: wrong answers shown as if right went from 3 to 0 (Qwen 2.5 3B) and from 1 to 0 (Llama 3.2 3B); every
+  one of them now carries a warning. With 3B models the reading also warns about many right answers.
 - **DEPLOY.md:** your own server with a local or cloud AI, and selling it as a service (HTTPS, PostgreSQL,
   payments, a checklist).
 

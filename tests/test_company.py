@@ -152,6 +152,13 @@ def test_the_independent_reading_can_warn_but_never_rewrite(store):
     assert A.answer(q, client=scripted([right], [ACCEPT]), store=store)["verdict"] == "checked"
 
 
+def test_a_stronger_ai_can_do_the_reading(store, monkeypatch):
+    monkeypatch.setattr(A, "_reader", {"strong": function_client(lambda s, u: ACCEPT)})
+    monkeypatch.setenv("CHAT_READER_AI", "strong")
+    doubt = '{"verdict": "revise", "problems": ["doubt"]}'
+    assert A.answer(Q_LEAVE, client=scripted([GOOD], [doubt]), store=store)["verdict"] == "checked"
+
+
 def test_a_correction_never_replaces_a_better_answer(store):
     first = "Every permanent employee gets 24 days of paid annual leave [1]. Unused leave is paid at ₹2,000 a day [1]."
     r = A.answer(Q_LEAVE, client=scripted([first, "NOT IN THE DOCUMENTS"]), store=store)
