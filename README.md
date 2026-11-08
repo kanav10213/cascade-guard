@@ -10,6 +10,11 @@ confidently wrong. Cascade Guard checks every hand-off against the step's own in
 and tells the agent *what* was wrong. If the step still fails, it stops the job safely and sends it to a person.
 A wrong answer is never passed on silently.
 
+- **A company assistant that checks every answer (new in 1.5):** upload your company's documents and ask
+  questions in the browser (`/chat`), from any OpenAI-compatible app, or in code. Answers come with their sources,
+  and every number, date and quotation is checked against them before anyone sees it. It runs on a local AI on
+  your own server (`docker compose up`) or any cloud AI, with keys, workspaces, plans, usage and payments for
+  selling it. See [The company assistant](#the-company-assistant).
 - **An everyday assistant that checks itself:** open `/assistant` on the server (or run `cascade-guard ask`) and
   ask anything. Everyday sums are worked out exactly with the working shown, with no AI model and no key: bills and
   invoices (also PDFs, rupees and GST), discounts, splitting a bill and who owes whom, EMIs, interest, FDs and SIPs,
@@ -32,9 +37,60 @@ A wrong answer is never passed on silently.
   Together), any OpenAI-format URL, any program on your computer, any Python function, or no AI at all (rule-based).
   See [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts).
 
-> **Status: v1.4.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
+> **Status: v1.5.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
 > three-agent expense workflow with rule-based agents and with open AI models as the agents (see
-> [Real-world results](#real-world-results)). Software tested on Python 3.12 to 3.14, SQLite and PostgreSQL, Docker.
+> [Real-world results](#real-world-results)), and a company assistant answering questions with real local AIs (see
+> [The company assistant](#the-company-assistant)). Software tested on Python 3.12 to 3.14, SQLite and PostgreSQL,
+> Docker.
+
+## The company assistant
+An AI assistant for a company's own documents: policies, handbooks, price lists, manuals, FAQs. Every answer is
+checked before anyone sees it.
+
+```bash
+git clone https://github.com/kanav10213/cascade-guard && cd cascade-guard
+cp .env.example .env            # set COMPANY_NAME and API_KEY
+docker compose up -d            # a local AI (Ollama) + Cascade Guard; nothing leaves the server
+# open http://localhost:8000/chat, add your documents (or "Load the sample company"), and ask
+```
+
+How an answer is made and checked:
+
+1. The question is matched to the passages of your documents that answer it.
+2. The AI writes the answer from those passages only, citing them like [1].
+3. Cascade Guard checks it against the passages, without trusting the AI:
+   - every amount, number, date and percentage must be in the passage it cites, and arithmetic is allowed only
+     where the answer shows it;
+   - quotations must be word for word;
+   - citations must point to real passages.
+4. What fails goes back to the AI with the reason, and anything still wrong is removed and listed.
+5. A separate AI call then reads the answer again, looking for claims the passages don't support and for answers
+   that miss the question.
+6. If the documents don't say, it tells you instead of guessing.
+
+Every answer shows its verdict ("checked", "a mistake was caught and fixed", "unsupported parts removed", "not in
+your documents") and the passages it used.
+
+- **Use it anywhere:**
+  - the `/chat` page (desktop and phone);
+  - any app that speaks OpenAI's API (`base_url = https://<server>/v1`, model `cascade-guard`; streaming works),
+    such as Open WebUI, LibreChat, AnythingLLM, or the `openai` package in your code;
+  - the command line (`cascade-guard chat "question"`).
+- **Any AI:** a local one (Ollama, LM Studio, llama.cpp, vLLM, ...) or a cloud one (Gemini, Groq, OpenAI,
+  Claude, ...), chosen with `CASCADE_AI`. With no AI at all, it quotes the passages word for word.
+- **Run it as a business:**
+  - workspaces, one per company, each with its own documents;
+  - keys for each person, with roles (member, manager, owner);
+  - plans with monthly answer limits, and usage per workspace;
+  - the `/admin` page;
+  - Stripe and Razorpay payments that issue keys by themselves, and a `/pricing` page.
+
+  See [DEPLOY.md](DEPLOY.md) for your own server, a cloud AI, or selling it as a service.
+
+<!-- company-results -->
+Results with real local AIs are produced by the [company workflow](.github/workflows/company.yml) and saved on the
+[benchmark-results branch](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results/company).
+<!-- /company-results -->
 
 ## Real-world results
 An expense-receipt workflow of three agents: **read** the receipt (vendor, date, total), apply the **expense policy**,
@@ -149,7 +205,7 @@ receipts, so read the numbers as a working demonstration, not a benchmark. The 3
 [benchmark-results branch](https://github.com/kanav10213/cascade-guard/tree/benchmark-results/results/any-ai).
 
 ## Contents
-[Real-world results](#real-world-results) · [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
+[The company assistant](#the-company-assistant) · [Real-world results](#real-world-results) · [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts) · [Install](#install) · [Quick start](#quick-start) · [Ask in plain English](#ask-cascade-guard-in-plain-english) ·
 [Docker](#docker) · [Use it in your code](#use-it-in-your-code) ·
 [Use it from Claude (MCP)](#use-it-from-claude-and-other-ai-assistants-mcp) · [Models](#models-and-providers) ·
 [Configuration](#configuration) · [API](#api) · [Security](#security) · [Results](#results) ·

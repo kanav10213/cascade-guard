@@ -44,7 +44,7 @@ services:
         required: false
     environment:
       CASCADE_HOME: /data
-      CASCADE_AI: ollama:${MODEL:-qwen2.5:7b}
+      CASCADE_AI: ${CASCADE_AI:-ollama:${MODEL:-qwen2.5:7b}}   # set CASCADE_AI in .env to use another AI
       OLLAMA_HOST: http://ollama:11434
       LLM_TIMEOUT: "300"         # a CPU-only server can take a while per answer
       # Without access keys the server only answers its own computer. Inside Docker every request arrives from

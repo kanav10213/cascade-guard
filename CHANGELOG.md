@@ -1,6 +1,57 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-11-09
+
+### Added
+- **The company assistant.** Checked answers from a company's own documents, with any AI.
+  - **Documents** (`cascade_guard/company/kb.py`):
+    - PDF (with page numbers), Word .docx (headings and tables), text, Markdown, HTML, CSV/TSV (one readable
+      line per row) and JSON;
+    - cut into passages under their section headings;
+    - searched with BM25 per workspace, with no embedding model and no extra service.
+  - **Checked answers** (`cascade_guard/company/answer.py`): the AI answers only from the numbered passages, with
+    citations. Cascade Guard then checks the answer:
+    - every amount, number, date and percentage must be in the passage cited, or, with no citation, in the
+      passages the sentence matches;
+    - arithmetic is allowed only where the sentence shows it;
+    - quotations must be word for word, and citations must exist;
+    - sentences must match their passage.
+  - **When a check fails:** the reason goes back to the AI (up to 2 times), and anything that still fails is
+    removed and listed. An independent AI reading then looks for unsupported claims and for answers that miss the
+    question.
+  - **Verdicts:** checked, fixed, trimmed, unconfirmed, not_found, quoted (no AI), general (not from the
+    documents).
+  - **Other settings:** `CHAT_DOCS_ONLY` answers only from the documents. When the AI is down, the answer is the
+    exact passages.
+- **Workspaces and keys** (`cascade_guard/company/keys.py`):
+  - customer keys (`cg_...`, stored as SHA-256), sent as `X-API-Key` or `Authorization: Bearer`;
+  - roles member, manager and owner, plans with monthly answer limits (`PLANS`), and usage per key, workspace and
+    month;
+  - customer keys never open the older admin routes.
+- **Pages:** `/chat` (conversations, documents, sources and checks; desktop, phone, dark) and `/admin` (keys,
+  usage, connecting other apps).
+- **OpenAI-format API:** `GET /v1/models` and `POST /v1/chat/completions` (with streaming), with errors in
+  OpenAI's shape. The models are `cascade-guard`, `cascade-guard-docs` and `cascade-guard-general`. Tested with
+  the official `openai` Python package.
+- **Routes:** `/chat/info`, `/chat/ask`, `/kb/docs` (list, add, remove), `/kb/samples`, `/kb/search`, `/me`,
+  `/admin/keys`, `/admin/usage`.
+- **Payments** (`cascade_guard/company/billing.py`):
+  - Stripe and Razorpay webhooks, with signatures verified and idempotent;
+  - a paid checkout or payment link makes a manager key in a new workspace, shown once on `/welcome`;
+  - a cancelled subscription revokes the key;
+  - a `/pricing` page from `PLAN_PRICES` and `BILLING_LINKS`.
+- **`docker compose up`** runs a local AI (Ollama, the model is downloaded once) and Cascade Guard. Set `MODEL`
+  or `CASCADE_AI` to change the AI.
+- **CLI:** `cascade-guard kb add|list|remove|search`, `cascade-guard chat ["question"]` (one answer, or a
+  conversation) and `cascade-guard keys create|list|revoke|usage|plans`.
+- **A made-up sample company** (`cascade_guard/samples/company/`) and a 30-question benchmark
+  (`python -m cascade_guard.company.bench`).
+- **The `company` GitHub workflow** runs the benchmark with real local AIs through Ollama, and tests the
+  `docker compose` install with real requests.
+- **DEPLOY.md:** your own server with a local or cloud AI, and selling it as a service (HTTPS, PostgreSQL,
+  payments, a checklist).
+
 ## [1.4.0] - 2026-11-06
 
 ### Added
