@@ -5,7 +5,7 @@
 ## POST /chat/ask
 unconfirmed
 Every permanent employee gets 24 days of paid annual leave per calendar year, credited at 2 days per month. Up to 10 unused annual leave days can be carried forward to the next year; anything above that lapses on 31 March.
-caught: ['an independent reading found: Every permanent employee gets 24 days of paid annual leave per calendar year, credited at 2 days per month.']
+caught: []
 ## A customer key and the OpenAI-format API
 [1][2][3] The expense of 20,000 rupees falls within the range of ₹5,001 to ₹50,000, which requires the department head's approval.
 

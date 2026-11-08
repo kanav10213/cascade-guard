@@ -1,29 +1,29 @@
- 1/30    right -> right    (unconfirmed, 5 calls, 60 s)  How many days of paid annual leave does a permanent employee
- 2/30    right -> right    (unconfirmed, 4 calls, 28 s)  How many unused annual leave days can be carried forward to 
- 3/30    right -> right    (unconfirmed, 4 calls, 51 s)  How many sick days do we get per year?
- 4/30    right -> right    (unconfirmed, 4 calls, 19 s)  When do I need a doctor's certificate for sick leave?
- 5/30    right -> right    (checked, 2 calls, 12 s)  How long is maternity leave?
- 6/30    right -> right    (checked, 2 calls, 19 s)  How long is paternity leave, and by when must it be taken?
- 7/30    right -> right    (unconfirmed, 4 calls, 40 s)  How many days in advance must leave be requested?
- 8/30    right -> right    (unconfirmed, 4 calls, 23 s)  What is the notice period for a manager after confirmation?
- 9/30    right -> wrong    (fixed, 4 calls, 30 s)  How long is probation, and what is the notice period during 
-10/30    right -> right    (unconfirmed, 4 calls, 44 s)  How many days a week can I work from home?
-11/30    right -> wrong    (unconfirmed, 4 calls, 68 s)  Who approves an expense of 20,000 rupees?
-12/30    right -> wrong    (unconfirmed, 4 calls, 47 s)  Up to what amount can my manager approve an expense?
-13/30    right -> right    (unconfirmed, 5 calls, 52 s)  Within how many days must an expense claim be submitted?
-14/30    right -> right    (unconfirmed, 4 calls, 38 s)  Above what amount is an original receipt needed?
-15/30    wrong -> wrong    (unconfirmed, 4 calls, 19 s)  What is the daily allowance for travel in Pune?
-16/30    right -> said so  (not_found, 3 calls, 12 s)  What is the daily allowance for travel in Indore?
-17/30    right -> right    (unconfirmed, 4 calls, 23 s)  What is the hotel limit per night in a metro city for a mana
-18/30    right -> said so  (not_found, 3 calls, 11 s)  What is the hotel limit per night in a non-metro city?
-19/30    right -> right    (unconfirmed, 4 calls, 31 s)  What train class can employees book?
-20/30    right -> right    (checked, 2 calls, 12 s)  How long must passwords be?
-21/30    right -> right    (checked, 2 calls, 14 s)  How soon must a lost laptop be reported?
-22/30    right -> right    (checked, 2 calls, 34 s)  What is the warranty on the angle grinder?
-23/30    right -> right    (unconfirmed, 4 calls, 31 s)  What is the price of the cordless drill, excluding GST?
-24/30    right -> said so  (not_found, 4 calls, 16 s)  What is the GST rate on the vernier caliper?
-25/30    right -> right    (unconfirmed, 4 calls, 49 s)  Within how many days can an unused product be returned?
-26/30    right -> right    (unconfirmed, 4 calls, 38 s)  What are the phone support hours?
+ 1/30    right -> right    (unconfirmed, 2 calls, 15 s)  How many days of paid annual leave does a permanent employee
+ 2/30    right -> right    (unconfirmed, 2 calls, 5 s)  How many unused annual leave days can be carried forward to 
+ 3/30    right -> right    (unconfirmed, 2 calls, 14 s)  How many sick days do we get per year?
+ 4/30    right -> right    (unconfirmed, 2 calls, 4 s)  When do I need a doctor's certificate for sick leave?
+ 5/30    right -> right    (checked, 2 calls, 7 s)  How long is maternity leave?
+ 6/30    right -> right    (checked, 2 calls, 8 s)  How long is paternity leave, and by when must it be taken?
+ 7/30    right -> right    (unconfirmed, 2 calls, 6 s)  How many days in advance must leave be requested?
+ 8/30    right -> right    (unconfirmed, 2 calls, 5 s)  What is the notice period for a manager after confirmation?
+ 9/30    right -> right    (unconfirmed, 2 calls, 4 s)  How long is probation, and what is the notice period during 
+10/30    right -> right    (unconfirmed, 2 calls, 13 s)  How many days a week can I work from home?
+11/30    right -> right    (unconfirmed, 2 calls, 18 s)  Who approves an expense of 20,000 rupees?
+12/30    right -> right    (unconfirmed, 2 calls, 12 s)  Up to what amount can my manager approve an expense?
+13/30    right -> right    (unconfirmed, 2 calls, 10 s)  Within how many days must an expense claim be submitted?
+14/30    right -> right    (unconfirmed, 2 calls, 10 s)  Above what amount is an original receipt needed?
+15/30    wrong -> wrong, warned (unconfirmed, 2 calls, 4 s)  What is the daily allowance for travel in Pune?
+16/30    right -> right    (unconfirmed, 2 calls, 4 s)  What is the daily allowance for travel in Indore?
+17/30    right -> right    (unconfirmed, 2 calls, 6 s)  What is the hotel limit per night in a metro city for a mana
+18/30    right -> right    (unconfirmed, 2 calls, 3 s)  What is the hotel limit per night in a non-metro city?
+19/30    right -> right    (unconfirmed, 2 calls, 6 s)  What train class can employees book?
+20/30    right -> right    (checked, 2 calls, 5 s)  How long must passwords be?
+21/30    right -> right    (checked, 2 calls, 6 s)  How soon must a lost laptop be reported?
+22/30    right -> right    (checked, 2 calls, 14 s)  What is the warranty on the angle grinder?
+23/30    right -> right    (unconfirmed, 2 calls, 10 s)  What is the price of the cordless drill, excluding GST?
+24/30    right -> right    (unconfirmed, 2 calls, 3 s)  What is the GST rate on the vernier caliper?
+25/30    right -> right    (unconfirmed, 2 calls, 16 s)  Within how many days can an unused product be returned?
+26/30    right -> right    (unconfirmed, 2 calls, 10 s)  What are the phone support hours?
 27/30  said so -> said so  (not_found, 0 calls, 0 s)  What is the company's dress code?
 28/30  said so -> said so  (not_found, 0 calls, 0 s)  How much is the annual performance bonus?
 29/30  said so -> said so  (not_found, 0 calls, 0 s)  Is there a gym allowance, and how much is it?
@@ -40,18 +40,20 @@
     "said_not_found": 4
   },
   "final": {
-    "right": 19,
-    "wrong": 4,
-    "refused": 3,
+    "right": 25,
+    "wrong": 0,
+    "wrong_warned": 1,
+    "refused": 0,
     "made_up": 0,
-    "said_not_found": 4
+    "made_up_warned": 0,
+    "said_not_found": 4,
+    "right_warned": 20
   },
   "verdicts": {
     "checked": 5,
-    "fixed": 1,
-    "not_found": 7,
-    "unconfirmed": 17
+    "not_found": 4,
+    "unconfirmed": 21
   },
-  "ai_calls_per_question": 3.13,
-  "seconds_per_question": 27.4
+  "ai_calls_per_question": 1.73,
+  "seconds_per_question": 7.3
 }

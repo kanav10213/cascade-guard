@@ -11,13 +11,10 @@
       "final": "A permanent employee gets 24 days of paid annual leave per calendar year, credited at 2 days per month. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The number of days of paid annual leave per calendar year is stated as 24, but the passage also states that it is credited at 2 days per month, which implies that the total number of days is 24 * 2 = 48, not 24.",
-        "\"This answer is based on the passage that states the total number of days is 24, without specifying t\" does not match what the passages say"
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 5,
-      "seconds": 60.4
+      "ai_calls": 2,
+      "seconds": 15.4
     },
     {
       "q": "How many unused annual leave days can be carried forward to the next year?",
@@ -27,15 +24,13 @@
       ],
       "first": "Up to 10 unused annual leave days can be carried forward to the next year. [1]",
       "first_outcome": "right",
-      "final": "According to the employee handbook, up to 10 unused annual leave days can be carried forward to the next year. [1]",
+      "final": "Up to 10 unused annual leave days can be carried forward to the next year. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The number of unused annual leave days that can be carried forward to the next year is stated as 10, but the passage does not explicitly state that it is 'up to' 10, only that it is 10."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 27.7
+      "ai_calls": 2,
+      "seconds": 4.9
     },
     {
       "q": "How many sick days do we get per year?",
@@ -48,12 +43,10 @@
       "final": "According to the employee handbook, permanent employees get 8 days of paid sick leave per year. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The number of sick days is not specified as a fixed number, but rather as a range (more than 2 sick days in a row require a doctor's certificate), and the total amount of sick leave (8 days per year) is not explained."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 50.6
+      "ai_calls": 2,
+      "seconds": 14.3
     },
     {
       "q": "When do I need a doctor's certificate for sick leave?",
@@ -66,12 +59,10 @@
       "final": "You need a doctor's certificate for more than 2 sick days in a row. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The number of sick days for which a doctor's certificate is needed is not specified in the passage."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 18.9
+      "ai_calls": 2,
+      "seconds": 3.7
     },
     {
       "q": "How long is maternity leave?",
@@ -87,7 +78,7 @@
       "caught": [],
       "removed": [],
       "ai_calls": 2,
-      "seconds": 12.4
+      "seconds": 7.0
     },
     {
       "q": "How long is paternity leave, and by when must it be taken?",
@@ -104,7 +95,7 @@
       "caught": [],
       "removed": [],
       "ai_calls": 2,
-      "seconds": 18.9
+      "seconds": 7.7
     },
     {
       "q": "How many days in advance must leave be requested?",
@@ -112,17 +103,15 @@
       "expect": [
         "7"
       ],
-      "first": "For leave requests, the policy states that leave requests go through the HR portal at least 7 days in advance, except for sick leave. [1]\n\nNote that there is no specific mention of the advance notice period for sick leave, only that it should be reported to the IT helpdesk within 24 hours if lost or stolen. [2]",
+      "first": "For leave requests, the following applies:\n\n* Leave requests go through the HR portal at least 7 days in advance, except for sick leave.\n[1]",
       "first_outcome": "right",
-      "final": "According to the employee handbook, leave requests go through the HR portal at least 7 days in advance, except sick leave. [1]\n\nHowever, the passage does not specify the advance notice period for sick leave.",
+      "final": "For leave requests, the following applies:\n\n* Leave requests go through the HR portal at least 7 days in advance, except for sick leave.\n[1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The answer does not answer the question that was asked (while the passages do). The answer should state the number of days in advance that leave must be requested, not just mention that the policy states so."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 39.6
+      "ai_calls": 2,
+      "seconds": 6.0
     },
     {
       "q": "What is the notice period for a manager after confirmation?",
@@ -132,15 +121,13 @@
       ],
       "first": "According to the employee handbook, the notice period for managers and above after confirmation is 90 days. [1]",
       "first_outcome": "right",
-      "final": "The notice period for managers and above after confirmation is 90 days. [1]",
+      "final": "According to the employee handbook, the notice period for managers and above after confirmation is 90 days. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The notice period for managers and above after confirmation is 90 days, but the passage only states that it is 90 days for managers and above, without specifying the number of days."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 23.0
+      "ai_calls": 2,
+      "seconds": 5.5
     },
     {
       "q": "How long is probation, and what is the notice period during probation?",
@@ -151,15 +138,13 @@
       ],
       "first": "New employees are on probation for 6 months. [1]\nDuring probation, the notice period is 15 days. [1]",
       "first_outcome": "right",
-      "final": "Here is the corrected answer:\n\nNew employees are on probation for 6 months. [1]\nDuring probation, the notice period is 60 days for staff and 90 days for managers and above. [1]",
-      "verdict": "fixed",
-      "final_outcome": "wrong",
-      "caught": [
-        "an independent reading found: The notice period during probation is not 15 days, it is 60 days for staff and 90 days for managers and above."
-      ],
+      "final": "New employees are on probation for 6 months. [1]\nDuring probation, the notice period is 15 days. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 30.0
+      "ai_calls": 2,
+      "seconds": 4.2
     },
     {
       "q": "How many days a week can I work from home?",
@@ -172,12 +157,10 @@
       "final": "According to the employee handbook, employees may work from home up to 2 days a week with their manager's approval. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The number of days a week that can be worked from home is not clearly stated as 2, but rather 'up to 2 days a week' which implies flexibility."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 44.1
+      "ai_calls": 2,
+      "seconds": 13.2
     },
     {
       "q": "Who approves an expense of 20,000 rupees?",
@@ -187,15 +170,13 @@
       ],
       "first": "According to the travel-and-expense-policy.md, expenses from ₹5,001 to ₹50,000 need the department head's approval. Since ₹20,000 falls within this range, the department head's approval is required. [1]",
       "first_outcome": "right",
-      "final": "According to the travel-and-expense-policy.md, expenses above ₹50,000 need approval from the Director of Finance. Since ₹20,000 falls above ₹50,000, the Director of Finance's approval is required. [1][3]",
+      "final": "According to the travel-and-expense-policy.md, expenses from ₹5,001 to ₹50,000 need the department head's approval. Since ₹20,000 falls within this range, the department head's approval is required. [1]",
       "verdict": "unconfirmed",
-      "final_outcome": "wrong",
-      "caught": [
-        "an independent reading found: The department head's approval is required for expenses from ₹5,001 to ₹50,000, but the answer does not mention the Director of Finance's approval for expenses above ₹50,000."
-      ],
+      "final_outcome": "right",
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 68.4
+      "ai_calls": 2,
+      "seconds": 18.3
     },
     {
       "q": "Up to what amount can my manager approve an expense?",
@@ -205,15 +186,13 @@
       ],
       "first": "According to the travel and expense policy, expenses from ₹5,001 to ₹50,000 need the department head's approval, but the passage does not specify the exact amount that the department head can approve. However, it does state that expenses up to ₹5,000 are approved by the employee's manager, and expenses above ₹50,000 need approval from the Director of Finance.\n\nNOT IN THE DOCUMENTS",
       "first_outcome": "right",
-      "final": "According to the travel and expense policy, expenses from ₹5,001 to ₹50,000 need the department head's approval. However, the passage does not specify the exact amount that the department head can approve.",
+      "final": "According to the travel and expense policy, expenses from ₹5,001 to ₹50,000 need the department head's approval, but the passage does not specify the exact amount that the department head can approve. However, it does state that expenses up to ₹5,000 are approved by the employee's manager, and expenses above ₹50,000 need approval from the Director of Finance.\n\nNOT IN THE DOCUMENTS",
       "verdict": "unconfirmed",
-      "final_outcome": "wrong",
-      "caught": [
-        "an independent reading found: The answer does not answer the question that was asked (while the passages do). The department head's approval limit is not specified in the passages."
-      ],
+      "final_outcome": "right",
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 47.4
+      "ai_calls": 2,
+      "seconds": 12.4
     },
     {
       "q": "Within how many days must an expense claim be submitted?",
@@ -223,16 +202,13 @@
       ],
       "first": "According to passage [1], an expense claim must be submitted within 30 days of the expense.",
       "first_outcome": "right",
-      "final": "According to passage [1], an expense claim must be submitted within 30 days of the expense. [1]",
+      "final": "According to passage [1], an expense claim must be submitted within 30 days of the expense.",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The answer states 30 days, but the passage states 'within 30 days of the expense', which implies the submission deadline is after the expense date, not on the same day.",
-        "\"However, the passage does not explicitly state the submission deadline as a date, but rather a timef\" does not match what the passages say"
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 5,
-      "seconds": 52.0
+      "ai_calls": 2,
+      "seconds": 10.1
     },
     {
       "q": "Above what amount is an original receipt needed?",
@@ -242,15 +218,13 @@
       ],
       "first": "An original receipt is needed for every expense above ₹500. [1]",
       "first_outcome": "right",
-      "final": "According to passage [1], an original receipt is required for every expense above ₹500. [1]",
+      "final": "An original receipt is needed for every expense above ₹500. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The answer does not answer the QUESTION that was asked (while the passages do). The answer should be above ₹500, but the passage only mentions that an original receipt is needed for every expense above ₹500, not just above ₹500."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 37.8
+      "ai_calls": 2,
+      "seconds": 9.9
     },
     {
       "q": "What is the daily allowance for travel in Pune?",
@@ -262,13 +236,11 @@
       "first_outcome": "wrong",
       "final": "The daily allowance for travel in Pune is ₹1,000 per day. [1]",
       "verdict": "unconfirmed",
-      "final_outcome": "wrong",
-      "caught": [
-        "an independent reading found: The daily allowance for travel in Pune is ₹1,000 per day."
-      ],
+      "final_outcome": "wrong, warned",
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 18.9
+      "ai_calls": 2,
+      "seconds": 4.3
     },
     {
       "q": "What is the daily allowance for travel in Indore?",
@@ -278,13 +250,13 @@
       ],
       "first": "The daily allowance for travel in Indore is ₹1,000 per day. [1]",
       "first_outcome": "right",
-      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
-      "verdict": "not_found",
-      "final_outcome": "said so",
+      "final": "The daily allowance for travel in Indore is ₹1,000 per day. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
       "caught": [],
       "removed": [],
-      "ai_calls": 3,
-      "seconds": 12.3
+      "ai_calls": 2,
+      "seconds": 3.9
     },
     {
       "q": "What is the hotel limit per night in a metro city for a manager?",
@@ -297,12 +269,10 @@
       "final": "The hotel limit per night in a metro city for a manager is ₹9,000. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The hotel limit per night in a metro city for a manager is ₹9,000."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 23.0
+      "ai_calls": 2,
+      "seconds": 5.7
     },
     {
       "q": "What is the hotel limit per night in a non-metro city?",
@@ -312,13 +282,13 @@
       ],
       "first": "The hotel limit per night in a non-metro city is ₹4,500. [1]",
       "first_outcome": "right",
-      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
-      "verdict": "not_found",
-      "final_outcome": "said so",
+      "final": "The hotel limit per night in a non-metro city is ₹4,500. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
       "caught": [],
       "removed": [],
-      "ai_calls": 3,
-      "seconds": 11.1
+      "ai_calls": 2,
+      "seconds": 3.2
     },
     {
       "q": "What train class can employees book?",
@@ -328,15 +298,13 @@
       ],
       "first": "Employees can book AC 2-tier trains. [1]",
       "first_outcome": "right",
-      "final": "According to the travel and expense policy, employees can book AC 2-tier trains, but the passage does not explicitly state that it is the only option available. [1]\n\nThe passage only mentions that AC 2-tier is mentioned as an option for all employees, but it does not rule out other train classes.",
+      "final": "Employees can book AC 2-tier trains. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The train class employees can book is not specified as AC 2-tier for all employees, but only 'AC 2-tier for all employees' is mentioned, implying that other train classes may also be available."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 31.0
+      "ai_calls": 2,
+      "seconds": 5.6
     },
     {
       "q": "How long must passwords be?",
@@ -352,7 +320,7 @@
       "caught": [],
       "removed": [],
       "ai_calls": 2,
-      "seconds": 12.0
+      "seconds": 4.9
     },
     {
       "q": "How soon must a lost laptop be reported?",
@@ -360,15 +328,15 @@
       "expect": [
         "24"
       ],
-      "first": "According to the IT-security-policy.md, a lost or stolen laptop must be reported to the IT helpdesk within 24 hours. [1]",
+      "first": "According to the IT Security Policy, a lost or stolen laptop must be reported to the IT helpdesk within 24 hours. [1]",
       "first_outcome": "right",
-      "final": "According to the IT-security-policy.md, a lost or stolen laptop must be reported to the IT helpdesk within 24 hours. [1]",
+      "final": "According to the IT Security Policy, a lost or stolen laptop must be reported to the IT helpdesk within 24 hours. [1]",
       "verdict": "checked",
       "final_outcome": "right",
       "caught": [],
       "removed": [],
       "ai_calls": 2,
-      "seconds": 13.6
+      "seconds": 5.6
     },
     {
       "q": "What is the warranty on the angle grinder?",
@@ -384,7 +352,7 @@
       "caught": [],
       "removed": [],
       "ai_calls": 2,
-      "seconds": 34.1
+      "seconds": 14.2
     },
     {
       "q": "What is the price of the cordless drill, excluding GST?",
@@ -394,15 +362,13 @@
       ],
       "first": "The price of the cordless drill, excluding GST, is 6,499 INR. [1]",
       "first_outcome": "right",
-      "final": "The price of the cordless drill, excluding GST, is 6,499 INR [1].",
+      "final": "The price of the cordless drill, excluding GST, is 6,499 INR. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The price of the cordless drill, excluding GST, is 6,499 INR."
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 31.5
+      "ai_calls": 2,
+      "seconds": 9.5
     },
     {
       "q": "What is the GST rate on the vernier caliper?",
@@ -410,21 +376,15 @@
       "expect": [
         "12"
       ],
-      "first": "The GST rate on the vernier caliper is 12%. [2]",
+      "first": "The GST rate on the vernier caliper is 12%. [1]",
       "first_outcome": "right",
-      "final": "I couldn't give an answer I could check against your documents. The passages that come closest are listed below.",
-      "verdict": "not_found",
-      "final_outcome": "said so",
-      "caught": [
-        "[2] is not one of the passages (there are 1)",
-        "\"The GST rate on the vernier caliper is 12%. [2]\" does not match what passage [2] say",
-        "an independent reading found: The GST rate on the vernier caliper is 12%."
-      ],
-      "removed": [
-        "The GST rate on the vernier caliper is 12%. [2]"
-      ],
-      "ai_calls": 4,
-      "seconds": 15.9
+      "final": "The GST rate on the vernier caliper is 12%. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 2.9
     },
     {
       "q": "Within how many days can an unused product be returned?",
@@ -434,15 +394,13 @@
       ],
       "first": "Unused products in their original packaging can be returned within 15 days of delivery for a full refund. [1]\n\nRefunds reach the original payment method within 7 working days. [1]",
       "first_outcome": "right",
-      "final": "According to the passage [1], an unused product can be returned within 15 days of delivery for a full refund.",
+      "final": "Unused products in their original packaging can be returned within 15 days of delivery for a full refund. [1]\n\nRefunds reach the original payment method within 7 working days. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: The time frame for returning an unused product is not specified as a range (e.g. 15 days or less), but rather as a specific number of days (15 days)"
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 48.6
+      "ai_calls": 2,
+      "seconds": 16.3
     },
     {
       "q": "What are the phone support hours?",
@@ -456,13 +414,10 @@
       "final": "The phone support hours are Monday to Saturday, 9:00 AM to 7:00 PM. [1]",
       "verdict": "unconfirmed",
       "final_outcome": "right",
-      "caught": [
-        "an independent reading found: Incorrect day of the week for Saturday (should be 'Saturday' instead of 'Monday to Saturday')",
-        "an independent reading found: Incorrect end time for phone support hours (should be '7:00 PM' instead of '7:00 AM')"
-      ],
+      "caught": [],
       "removed": [],
-      "ai_calls": 4,
-      "seconds": 38.0
+      "ai_calls": 2,
+      "seconds": 10.0
     },
     {
       "q": "What is the company's dress code?",
@@ -533,20 +488,22 @@
       "said_not_found": 4
     },
     "final": {
-      "right": 19,
-      "wrong": 4,
-      "refused": 3,
+      "right": 25,
+      "wrong": 0,
+      "wrong_warned": 1,
+      "refused": 0,
       "made_up": 0,
-      "said_not_found": 4
+      "made_up_warned": 0,
+      "said_not_found": 4,
+      "right_warned": 20
     },
     "verdicts": {
       "checked": 5,
-      "fixed": 1,
-      "not_found": 7,
-      "unconfirmed": 17
+      "not_found": 4,
+      "unconfirmed": 21
     },
-    "ai_calls_per_question": 3.13,
-    "seconds_per_question": 27.4
+    "ai_calls_per_question": 1.73,
+    "seconds_per_question": 7.3
   },
   "ai": {
     "provider": "openai",
