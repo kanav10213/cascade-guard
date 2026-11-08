@@ -1,0 +1,56 @@
+ 1/30    right -> right    (checked, 2 calls, 30 s)  How many days of paid annual leave does a permanent employee
+ 2/30    right -> right    (unconfirmed, 4 calls, 13 s)  How many unused annual leave days can be carried forward to 
+ 3/30    right -> right    (unconfirmed, 4 calls, 39 s)  How many sick days do we get per year?
+ 4/30    right -> said so  (not_found, 4 calls, 17 s)  When do I need a doctor's certificate for sick leave?
+ 5/30    right -> right    (checked, 2 calls, 12 s)  How long is maternity leave?
+ 6/30    right -> right    (unconfirmed, 4 calls, 24 s)  How long is paternity leave, and by when must it be taken?
+ 7/30    right -> right    (checked, 2 calls, 11 s)  How many days in advance must leave be requested?
+ 8/30    right -> said so  (not_found, 2 calls, 5 s)  What is the notice period for a manager after confirmation?
+ 9/30    right -> right    (unconfirmed, 4 calls, 15 s)  How long is probation, and what is the notice period during 
+10/30    right -> right    (unconfirmed, 4 calls, 41 s)  How many days a week can I work from home?
+11/30    wrong -> wrong    (unconfirmed, 4 calls, 77 s)  Who approves an expense of 20,000 rupees?
+12/30    right -> right    (checked, 2 calls, 19 s)  Up to what amount can my manager approve an expense?
+13/30    right -> right    (checked, 2 calls, 21 s)  Within how many days must an expense claim be submitted?
+14/30    right -> right    (unconfirmed, 4 calls, 27 s)  Above what amount is an original receipt needed?
+15/30    wrong -> wrong    (unconfirmed, 4 calls, 17 s)  What is the daily allowance for travel in Pune?
+16/30  said so -> said so  (not_found, 1 calls, 2 s)  What is the daily allowance for travel in Indore?
+17/30    right -> right    (unconfirmed, 4 calls, 25 s)  What is the hotel limit per night in a metro city for a mana
+18/30    right -> said so  (not_found, 3 calls, 17 s)  What is the hotel limit per night in a non-metro city?
+19/30    right -> right    (unconfirmed, 4 calls, 17 s)  What train class can employees book?
+20/30    right -> right    (checked, 2 calls, 10 s)  How long must passwords be?
+21/30    right -> said so  (not_found, 3 calls, 10 s)  How soon must a lost laptop be reported?
+22/30    right -> right    (unconfirmed, 4 calls, 40 s)  What is the warranty on the angle grinder?
+23/30    right -> right    (unconfirmed, 4 calls, 29 s)  What is the price of the cordless drill, excluding GST?
+24/30    right -> right    (unconfirmed, 4 calls, 18 s)  What is the GST rate on the vernier caliper?
+25/30    right -> right    (checked, 2 calls, 36 s)  Within how many days can an unused product be returned?
+26/30    right -> right    (unconfirmed, 4 calls, 29 s)  What are the phone support hours?
+27/30  said so -> said so  (not_found, 0 calls, 0 s)  What is the company's dress code?
+28/30  said so -> said so  (not_found, 0 calls, 0 s)  How much is the annual performance bonus?
+29/30  said so -> said so  (not_found, 0 calls, 0 s)  Is there a gym allowance, and how much is it?
+30/30  said so -> said so  (not_found, 0 calls, 0 s)  What is the price of the KPT-CS-200 circular saw?
+{
+  "questions": 30,
+  "answerable": 26,
+  "not_in_documents": 4,
+  "first": {
+    "right": 23,
+    "wrong": 2,
+    "refused": 1,
+    "made_up": 0,
+    "said_not_found": 4
+  },
+  "final": {
+    "right": 19,
+    "wrong": 2,
+    "refused": 5,
+    "made_up": 0,
+    "said_not_found": 4
+  },
+  "verdicts": {
+    "checked": 7,
+    "not_found": 9,
+    "unconfirmed": 14
+  },
+  "ai_calls_per_question": 2.77,
+  "seconds_per_question": 20.1
+}

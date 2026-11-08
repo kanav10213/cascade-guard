@@ -1,0 +1,540 @@
+{
+  "rows": [
+    {
+      "q": "How many days of paid annual leave does a permanent employee get each year?",
+      "absent": false,
+      "expect": [
+        "24"
+      ],
+      "first": "24 days [1]",
+      "first_outcome": "right",
+      "final": "24 days [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 30.1
+    },
+    {
+      "q": "How many unused annual leave days can be carried forward to the next year?",
+      "absent": false,
+      "expect": [
+        "10"
+      ],
+      "first": "10 unused annual leave days can be carried forward to the next year. [1]",
+      "first_outcome": "right",
+      "final": "Up to 10 unused annual leave days can be carried forward to the next year. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: a wrong or changed number"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 13.5
+    },
+    {
+      "q": "How many sick days do we get per year?",
+      "absent": false,
+      "expect": [
+        "8"
+      ],
+      "first": "8 sick days per year. [1]",
+      "first_outcome": "right",
+      "final": "8 sick days per year. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: 8 sick days per year. [1]"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 39.3
+    },
+    {
+      "q": "When do I need a doctor's certificate for sick leave?",
+      "absent": false,
+      "expect": [
+        "2"
+      ],
+      "first": "You need a doctor's certificate for sick leave if you have more than 2 consecutive sick days. [2]",
+      "first_outcome": "right",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 17.3
+    },
+    {
+      "q": "How long is maternity leave?",
+      "absent": false,
+      "expect": [
+        "26"
+      ],
+      "first": "Maternity leave is 26 weeks with full pay. [1]",
+      "first_outcome": "right",
+      "final": "Maternity leave is 26 weeks with full pay. [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 11.6
+    },
+    {
+      "q": "How long is paternity leave, and by when must it be taken?",
+      "absent": false,
+      "expect": [
+        "10",
+        "3"
+      ],
+      "first": "Paternity leave is 10 working days with full pay, to be taken within 3 months of the child's birth. [1]",
+      "first_outcome": "right",
+      "final": "Paternity leave is 10 working days with full pay, to be taken within 3 months of the child's birth. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the passages do not state by when must it be taken"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 23.5
+    },
+    {
+      "q": "How many days in advance must leave be requested?",
+      "absent": false,
+      "expect": [
+        "7"
+      ],
+      "first": "Every leave request goes through the HR portal at least 7 days in advance, except sick leave. [1]",
+      "first_outcome": "right",
+      "final": "Every leave request goes through the HR portal at least 7 days in advance, except sick leave. [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 11.0
+    },
+    {
+      "q": "What is the notice period for a manager after confirmation?",
+      "absent": false,
+      "expect": [
+        "90"
+      ],
+      "first": "90 days [2]",
+      "first_outcome": "right",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 5.1
+    },
+    {
+      "q": "How long is probation, and what is the notice period during probation?",
+      "absent": false,
+      "expect": [
+        "6",
+        "15"
+      ],
+      "first": "Probation is 6 months. During probation, the notice period is 15 days. [1]",
+      "first_outcome": "right",
+      "final": "Probation is 6 months. [1] During probation, the notice period is 15 days. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the passages do not specify the notice period during probation"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 14.8
+    },
+    {
+      "q": "How many days a week can I work from home?",
+      "absent": false,
+      "expect": [
+        "2"
+      ],
+      "first": "2 days a week [1]",
+      "first_outcome": "right",
+      "final": "Up to 2 days a week [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: The passages state that employees may work from home up to 2 days a week with their manager's approval, but do not specify a limit of exactly 2 days."
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 41.2
+    },
+    {
+      "q": "Who approves an expense of 20,000 rupees?",
+      "absent": false,
+      "expect": [
+        "department head"
+      ],
+      "first": "The expense of 20,000 rupees needs approval from the Director of Finance. [1]",
+      "first_outcome": "wrong",
+      "final": "The expense of 20,000 rupees needs approval from the Director of Finance. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "wrong",
+      "caught": [
+        "an independent reading found: The expense of 20,000 rupees needs approval from the Director of Finance. [1]",
+        "an independent reading found: The expense of 20,000 rupees needs approval from the Director of Finance. According to the passages, expenses from ₹5,001 to ₹50,000 need the department head's approval, and anything above ₹50,000 needs approval from the Director of Finance. The answer incorrectly states that only the Director of Fi"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 76.9
+    },
+    {
+      "q": "Up to what amount can my manager approve an expense?",
+      "absent": false,
+      "expect": [
+        "5,000"
+      ],
+      "first": "[1] Expenses up to ₹5,000 are approved by the employee's manager.",
+      "first_outcome": "right",
+      "final": "[1] Expenses up to ₹5,000 are approved by the employee's manager.",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 18.9
+    },
+    {
+      "q": "Within how many days must an expense claim be submitted?",
+      "absent": false,
+      "expect": [
+        "30"
+      ],
+      "first": "30 days [1]",
+      "first_outcome": "right",
+      "final": "30 days [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 20.6
+    },
+    {
+      "q": "Above what amount is an original receipt needed?",
+      "absent": false,
+      "expect": [
+        "500"
+      ],
+      "first": "Above ₹500 an original receipt is needed. [1]",
+      "first_outcome": "right",
+      "final": "Above ₹500 an original receipt is needed. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: [1] travel-and-expense-policy.md does not support the claim that an original receipt is needed above ₹500"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 27.3
+    },
+    {
+      "q": "What is the daily allowance for travel in Pune?",
+      "absent": false,
+      "expect": [
+        "1,500"
+      ],
+      "first": "[1] Pune is categorized as \"elsewhere\", so the daily allowance is ₹1,000.",
+      "first_outcome": "wrong",
+      "final": "[1] Pune is categorized as \"elsewhere\", so the daily allowance is ₹1,000.",
+      "verdict": "unconfirmed",
+      "final_outcome": "wrong",
+      "caught": [
+        "an independent reading found: The answer does not correctly reflect the daily allowance for Pune based on the provided information."
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 17.2
+    },
+    {
+      "q": "What is the daily allowance for travel in Indore?",
+      "absent": false,
+      "expect": [
+        "1,000"
+      ],
+      "first": "NOT IN THE DOCUMENTS",
+      "first_outcome": "said so",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 1,
+      "seconds": 2.2
+    },
+    {
+      "q": "What is the hotel limit per night in a metro city for a manager?",
+      "absent": false,
+      "expect": [
+        "9,000"
+      ],
+      "first": "[1] Manager and above may book up to ₹9,000 per night in metro cities.",
+      "first_outcome": "right",
+      "final": "[1] The hotel limit per night for managers in metro cities is ₹9,000.",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: The answer does not directly state the exact amount of ₹9,000 per night for managers in metro cities, only that they may book up to this amount."
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 24.6
+    },
+    {
+      "q": "What is the hotel limit per night in a non-metro city?",
+      "absent": false,
+      "expect": [
+        "4,500"
+      ],
+      "first": "The hotel limit per night in a non-metro city is ₹4,500. [1]",
+      "first_outcome": "right",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 3,
+      "seconds": 17.2
+    },
+    {
+      "q": "What train class can employees book?",
+      "absent": false,
+      "expect": [
+        "2-tier"
+      ],
+      "first": "Trains: AC 2-tier for all employees. [1]",
+      "first_outcome": "right",
+      "final": "Trains: AC 2-tier for all employees. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the answer does not fully address the question",
+        "an independent reading found: the answer includes a citation to a passage that does not say it"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 17.5
+    },
+    {
+      "q": "How long must passwords be?",
+      "absent": false,
+      "expect": [
+        "12"
+      ],
+      "first": "Passwords must be at least 12 characters long. [1]",
+      "first_outcome": "right",
+      "final": "Passwords must be at least 12 characters long. [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 9.8
+    },
+    {
+      "q": "How soon must a lost laptop be reported?",
+      "absent": false,
+      "expect": [
+        "24"
+      ],
+      "first": "24 hours [1]",
+      "first_outcome": "right",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 3,
+      "seconds": 9.8
+    },
+    {
+      "q": "What is the warranty on the angle grinder?",
+      "absent": false,
+      "expect": [
+        "1 year"
+      ],
+      "first": "The warranty on the angle grinder (KPT-AG-100) is 1 year. [2][3]",
+      "first_outcome": "right",
+      "final": "The warranty on the angle grinder (KPT-AG-100) is 1 year. [1][2]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the warranty on the angle grinder (KPT-AG-100) is 1 year"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 40.3
+    },
+    {
+      "q": "What is the price of the cordless drill, excluding GST?",
+      "absent": false,
+      "expect": [
+        "6,499"
+      ],
+      "first": "6499 [1]",
+      "first_outcome": "right",
+      "final": "6499 [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the answer does not match the information provided in the passages"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 28.8
+    },
+    {
+      "q": "What is the GST rate on the vernier caliper?",
+      "absent": false,
+      "expect": [
+        "12"
+      ],
+      "first": "[1] The GST rate on the vernier caliper 150 mm (Product code: KPT-VC-5) is 12%.",
+      "first_outcome": "right",
+      "final": "[1] The GST rate on the vernier caliper 150 mm (Product code: KPT-VC-5) is 12%.",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: the GST rate on the vernier caliper 150 mm (Product code: KPT-VC-5) is 12%"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 18.4
+    },
+    {
+      "q": "Within how many days can an unused product be returned?",
+      "absent": false,
+      "expect": [
+        "15"
+      ],
+      "first": "15 days [1]",
+      "first_outcome": "right",
+      "final": "15 days [1]",
+      "verdict": "checked",
+      "final_outcome": "right",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 2,
+      "seconds": 36.2
+    },
+    {
+      "q": "What are the phone support hours?",
+      "absent": false,
+      "expect": [
+        "9",
+        "7"
+      ],
+      "first": "Phone support is available Monday to Saturday, 9:00 AM to 7:00 PM. [1]",
+      "first_outcome": "right",
+      "final": "Phone support is available Monday to Saturday, 9:00 AM to 7:00 PM. [1]",
+      "verdict": "unconfirmed",
+      "final_outcome": "right",
+      "caught": [
+        "an independent reading found: wrong number of hours",
+        "an independent reading found: wrong day of week"
+      ],
+      "removed": [],
+      "ai_calls": 4,
+      "seconds": 28.6
+    },
+    {
+      "q": "What is the company's dress code?",
+      "absent": true,
+      "expect": [],
+      "first": "NOT IN THE DOCUMENTS",
+      "first_outcome": "said so",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 0,
+      "seconds": 0.0
+    },
+    {
+      "q": "How much is the annual performance bonus?",
+      "absent": true,
+      "expect": [],
+      "first": "NOT IN THE DOCUMENTS",
+      "first_outcome": "said so",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 0,
+      "seconds": 0.0
+    },
+    {
+      "q": "Is there a gym allowance, and how much is it?",
+      "absent": true,
+      "expect": [],
+      "first": "NOT IN THE DOCUMENTS",
+      "first_outcome": "said so",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 0,
+      "seconds": 0.0
+    },
+    {
+      "q": "What is the price of the KPT-CS-200 circular saw?",
+      "absent": true,
+      "expect": [],
+      "first": "NOT IN THE DOCUMENTS",
+      "first_outcome": "said so",
+      "final": "I couldn't find this in your company's documents. The closest passages are listed below; they may not answer it.",
+      "verdict": "not_found",
+      "final_outcome": "said so",
+      "caught": [],
+      "removed": [],
+      "ai_calls": 0,
+      "seconds": 0.0
+    }
+  ],
+  "summary": {
+    "questions": 30,
+    "answerable": 26,
+    "not_in_documents": 4,
+    "first": {
+      "right": 23,
+      "wrong": 2,
+      "refused": 1,
+      "made_up": 0,
+      "said_not_found": 4
+    },
+    "final": {
+      "right": 19,
+      "wrong": 2,
+      "refused": 5,
+      "made_up": 0,
+      "said_not_found": 4
+    },
+    "verdicts": {
+      "checked": 7,
+      "not_found": 9,
+      "unconfirmed": 14
+    },
+    "ai_calls_per_question": 2.77,
+    "seconds_per_question": 20.1
+  },
+  "ai": {
+    "provider": "openai",
+    "model": "qwen2.5:3b"
+  }
+}

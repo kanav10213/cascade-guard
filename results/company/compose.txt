@@ -1,0 +1,15 @@
+## GET /chat/info
+{"you":{"workspace":"default","role":"owner","name":"owner","plan":"unlimited","monthly_limit":0},"ai":{"provider":"openai","model":"qwen2.5:1.5b"},"documents":0,"passages":0,"used_this_month":0,"company":"Kestrel Precision Tools","docs_only":false,"can_manage_documents":true,"can_manage_keys":true,"is_owner":true,"sample_questions":[]}
+## POST /kb/samples
+{"added":[{"id":1,"name":"customer-support-faq.md","passages":5,"chars":897,"pages":null},{"id":2,"name":"employee-handbook.md","passages":6,"chars":1779,"pages":null},{"id":3,"name":"it-security-policy.md","passages":5,"chars":826,"pages":null},{"id":4,"name":"product-price-list.csv","passages":1,"chars":672,"pages":null},{"id":5,"name":"travel-and-expense-policy.md","passages":7,"chars":1356,"pa
+## POST /chat/ask
+unconfirmed
+Every permanent employee gets 24 days of paid annual leave per calendar year, credited at 2 days per month. Up to 10 unused annual leave days can be carried forward to the next year; anything above that lapses on 31 March.
+caught: ['an independent reading found: Every permanent employee gets 24 days of paid annual leave per calendar year, credited at 2 days per month.']
+## A customer key and the OpenAI-format API
+[1][2][3] The expense of 20,000 rupees falls within the range of ₹5,001 to ₹50,000, which requires the department head's approval.
+
+Sources: [1] travel-and-expense-policy.md; [2] travel-and-expense-policy.md; [3] travel-and-expense-policy.md; [4] travel-and-expense-policy.md; [5] product-price-list.csv
+✓ Checked against your documents by Cascade Guard
+## GET /me
+{"workspace":"default","role":"member","name":"CI","plan":"free","monthly_limit":50,"used_this_month":1,"month":"2026-11","left_this_month":49}
