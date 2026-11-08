@@ -59,7 +59,7 @@ version = { attr = "cascade_guard.__version__" }
 include = ["cascade_guard*"]
 
 [tool.setuptools.package-data]
-cascade_guard = ["static/*", "templates/*.json", "env.example", "py.typed", "samples/receipts/*"]
+cascade_guard = ["static/*", "templates/*.json", "env.example", "py.typed", "samples/receipts/*", "samples/company/*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -80,6 +80,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S", "E501", "SIM117"]
+"cascade_guard/company/api.py" = ["B008"]   # FastAPI's Depends() in defaults
 
 [tool.mypy]
 python_version = "3.12"

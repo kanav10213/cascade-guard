@@ -11,6 +11,9 @@
     cascade-guard chain run support-triage --input "..."   run your own agent chain
     cascade-guard receipts run my-receipts/ --ai ollama:qwen2.5:7b   check your own receipts with any AI
     cascade-guard ai list              every AI it can use (local, cloud, any URL or program)
+    cascade-guard kb add my-docs/      add your company's documents (PDF, Word, text, CSV)
+    cascade-guard chat "question"      a checked answer from them (or open /chat after `serve`)
+    cascade-guard keys create "Acme" --workspace acme --plan starter   a key for a customer or a person
     cascade-guard --version
 
 Any command that uses an AI takes --ai (or CASCADE_AI in .env): ollama[:model], lmstudio, llamacpp, vllm, jan,
@@ -370,6 +373,21 @@ def cmd_receipts(args) -> int:
     return main(args.rest)
 
 
+def cmd_kb(args) -> int:
+    from cascade_guard.company.cli import kb_main
+    return kb_main(args.rest + (["--home", args.home] if args.home else []))
+
+
+def cmd_chat(args) -> int:
+    from cascade_guard.company.cli import chat_main
+    return chat_main(args.rest + (["--home", args.home] if args.home else []))
+
+
+def cmd_keys(args) -> int:
+    from cascade_guard.company.cli import keys_main
+    return keys_main(args.rest + (["--home", args.home] if args.home else []))
+
+
 def cmd_ai(args) -> int:
     from cascade_guard.ai_cli import main as ai_main
     from cascade_guard.config import load_env, use_home
@@ -443,6 +461,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("rest", nargs=argparse.REMAINDER,
                    help="run FILES-OR-FOLDER [--ai X] [--out file.csv] | benchmark --data DIR [--ai X] | merge FILES")
 
+    s = add("chat", cmd_chat, "ask your company's documents; every answer is checked first")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help='"question" [--workspace W] [--mode auto|documents|general]')
+
+    s = add("kb", cmd_kb, "your company's documents: add, list, remove, search")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="add FILES|--samples · list · remove ID · search QUESTION")
+
+    s = add("keys", cmd_keys, "access keys for people and customers: create, list, revoke, usage, plans")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="create NAME --workspace W [--role] [--plan] [--limit]")
+
     s = add("ai", cmd_ai, "which AIs Cascade Guard can use (list), and check that one answers (test)")
     s.add_argument("rest", nargs=argparse.REMAINDER, help="list | test [--ai X]")
 
@@ -482,8 +509,8 @@ def main(argv=None) -> int:
     ai = getattr(args, "ai", None) or args.top_ai
     if ai:  # one setting for every command, the server and the MCP tools
         os.environ["CASCADE_AI"] = ai
-        if args.command in ("receipts", "ai") and args.rest[:1] in (["run"], ["test"], ["benchmark"]) \
-                and "--ai" not in args.rest:
+        if (args.command in ("receipts", "ai") and args.rest[:1] in (["run"], ["test"], ["benchmark"])
+                or args.command == "chat") and "--ai" not in args.rest:
             args.rest += ["--ai", ai]
     return args.func(args)
 

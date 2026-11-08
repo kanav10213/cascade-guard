@@ -1,26 +1,61 @@
-# docker compose up -d   ->  http://localhost:8000
+# The company assistant, all on your own server: a local AI (Ollama) and Cascade Guard.
+#
+#   docker compose up -d                 then open http://localhost:8000/chat
+#   MODEL=qwen2.5:14b docker compose up -d   a bigger model (needs more memory; see DEPLOY.md)
+#
+# The first start downloads the model (qwen2.5:7b is about 4.7 GB). Your documents and questions never leave this
+# machine. Settings go in .env (copy .env.example): COMPANY_NAME, API_KEY, RECEIPTS_CURRENCY, ...
 services:
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama:/root/.ollama            # downloaded models survive restarts
+    environment:
+      OLLAMA_CONTEXT_LENGTH: "8192"
+      OLLAMA_KEEP_ALIVE: "24h"
+    restart: unless-stopped
+    # With an NVIDIA GPU (and the NVIDIA container toolkit), uncomment for much faster answers:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+
+  ollama-pull:                          # downloads the model once, then exits
+    image: ollama/ollama:latest
+    depends_on: [ollama]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["/bin/sh", "-c", "for i in $$(seq 1 30); do ollama list >/dev/null 2>&1 && break; sleep 2; done; ollama pull ${MODEL:-qwen2.5:7b}"]
+    restart: "no"
+
   cascade-guard:
     build:
       context: .
       args:
         BASE_IMAGE: ${BASE_IMAGE:-python:3.12-slim}
-    image: cascade-guard:1.0.0
+    image: cascade-guard:1.5.0
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
     ports:
-      - "127.0.0.1:8000:8000"   # only this computer; remove 127.0.0.1: to share (set API_KEY first)
+      - "127.0.0.1:8000:8000"   # only this computer; remove 127.0.0.1: to share (set API_KEY in .env first)
     env_file:
-      - path: .env               # your model key and settings (cascade-guard init, or copy .env.example)
+      - path: .env               # COMPANY_NAME, API_KEY, ... (cascade-guard init, or copy .env.example)
         required: false
     environment:
       CASCADE_HOME: /data
-      # Without access keys the server only answers its own computer. Inside Docker every request
-      # arrives from the container network, so that check is done by the 127.0.0.1 port binding
-      # above plus the Host-header check (only "localhost" is accepted while no keys are set).
-      # To share the server: set API_KEY in .env, then remove "127.0.0.1:" and the next line.
+      CASCADE_AI: ollama:${MODEL:-qwen2.5:7b}
+      OLLAMA_HOST: http://ollama:11434
+      LLM_TIMEOUT: "300"         # a CPU-only server can take a while per answer
+      # Without access keys the server only answers its own computer. Inside Docker every request arrives from
+      # the container network, so that check is done by the 127.0.0.1 port binding above plus the Host-header
+      # check (only "localhost" is accepted while no keys are set). To share the server with your team: set
+      # API_KEY in .env, then remove "127.0.0.1:" above and the next line.
       ALLOW_OPEN_NETWORK: "1"
     volumes:
-      - cascade-data:/data       # database and cache survive restarts and upgrades
+      - cascade-data:/data       # documents, keys, usage and the database survive restarts and upgrades
     restart: unless-stopped
 
 volumes:
+  ollama:
   cascade-data:

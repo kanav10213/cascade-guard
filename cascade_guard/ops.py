@@ -32,8 +32,10 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 
 from cascade_guard.auth import auth_enabled, require, role_for_key
 
-EXEMPT = {"/", "/assistant", "/receipts", "/health", "/health/ready", "/favicon.ico"}
-LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check")  # chain runs on a real model use the same limit
+EXEMPT = {"/", "/assistant", "/receipts", "/chat", "/admin", "/welcome", "/pricing", "/health", "/health/ready",
+          "/favicon.ico"}
+# Routes that call the model; chain runs on a real model use the same limit.
+LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions")
 
 
 def _limit(name, default):
@@ -92,8 +94,18 @@ metrics = Metrics()
 
 
 def _role_of(key: str):
-    """The role a key maps to, or None (no exception: used for logging and limits)."""
-    return role_for_key(key)
+    """The role a key maps to, or None (no exception: used for logging and limits). Customer keys (cg_...)
+    count as "customer": they open only the company product."""
+    role = role_for_key(key)
+    if role is None and key.startswith("cg_"):
+        from cascade_guard.company.keys import principal_for
+        try:
+            p = principal_for(key)
+        except Exception:  # a database problem must not break logging or limits
+            p = None
+        if p is not None and p.key_id:
+            return "customer"
+    return role
 
 
 def _is_local(host: str) -> bool:
@@ -191,7 +203,8 @@ def install(app):
     @app.middleware("http")
     async def ops_middleware(request: Request, call_next):
         path = request.url.path
-        key = request.headers.get("x-api-key", "")
+        from cascade_guard.company.keys import key_from
+        key = key_from(request.headers.get("x-api-key"), request.headers.get("authorization"))
         client = request.client.host if request.client else "?"
         why = keyless_refusal(request, client)
         if why:

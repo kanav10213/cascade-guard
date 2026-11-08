@@ -1,0 +1,125 @@
+# The company assistant with real local AIs, free on GitHub's machines:
+#   chat-bench  30 questions about the sample company, answered by an open model through Ollama: the AI's first
+#               answer (a plain document chatbot) against what Cascade Guard shows after checking.
+#   compose     the one-command install (docker compose up: Ollama + Cascade Guard), then real requests to it.
+# Results are committed to the benchmark-results branch under results/company/.
+name: company
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Ollama models, comma separated"
+        default: "qwen2.5:3b,qwen2.5:7b,llama3.2:3b"
+permissions:
+  contents: write
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.m.outputs.models }}
+    steps:
+      - id: m
+        run: echo "models=$(echo '${{ inputs.models }}' | jq -Rc 'split(",") | map(gsub("^\\s+|\\s+$";""))')" >> "$GITHUB_OUTPUT"
+
+  chat-bench:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJson(needs.plan.outputs.models) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install -c constraints.txt .
+      - name: Start Ollama
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          sudo systemctl stop ollama 2>/dev/null || true
+          OLLAMA_CONTEXT_LENGTH=8192 nohup ollama serve > ollama.log 2>&1 &
+          for i in $(seq 1 30); do curl -s localhost:11434/api/version && break; sleep 2; done
+          ollama pull "${{ matrix.model }}"
+      - name: Ask the 30 questions
+        env:
+          LLM_TIMEOUT: "600"
+          CASCADE_DB: ":memory:"
+          COMPANY_NAME: "Kestrel Precision Tools"
+        run: |
+          mkdir -p out
+          name=$(echo "${{ matrix.model }}" | tr ':/' '--')
+          python -m cascade_guard.company.bench --ai "ollama:${{ matrix.model }}" \
+            --out "out/chat-$name.json" --md "out/chat-$name.md" 2>&1 | tee "out/chat-$name.log"
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-chat-${{ strategy.job-index }}
+          path: out
+
+  compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - name: docker compose up (Ollama + Cascade Guard)
+        run: |
+          printf 'API_KEY=ci-owner-key\nCOMPANY_NAME=Kestrel Precision Tools\n' > .env
+          MODEL=qwen2.5:1.5b docker compose up -d --build
+          for i in $(seq 1 180); do curl -fs localhost:8000/health && break; sleep 5; done
+          docker compose ps
+      - name: Use it like a company would
+        run: |
+          mkdir -p out
+          H='-H X-API-Key:ci-owner-key -H Content-Type:application/json'
+          {
+            echo "## GET /chat/info"; curl -s localhost:8000/chat/info $H; echo
+            echo "## POST /kb/samples"; curl -s -X POST localhost:8000/kb/samples $H | head -c 400; echo
+            echo "## POST /chat/ask"
+            curl -s -X POST localhost:8000/chat/ask $H --max-time 900 \
+              -d '{"question": "How many days of paid annual leave do we get, and how many carry forward?"}' \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['verdict']); print(d['answer']); print('caught:', d['caught'])"
+            echo "## A customer key and the OpenAI-format API"
+            KEY=$(curl -s -X POST localhost:8000/admin/keys $H -d '{"name":"CI","workspace":"default","plan":"free"}' \
+              | python3 -c "import json,sys; print(json.load(sys.stdin)['key'])")
+            curl -s localhost:8000/v1/chat/completions --max-time 900 -H "Authorization: Bearer $KEY" \
+              -H Content-Type:application/json \
+              -d '{"model":"cascade-guard","messages":[{"role":"user","content":"Who approves an expense of 20,000 rupees?"}]}' \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'])"
+            echo "## GET /me"; curl -s localhost:8000/me -H "Authorization: Bearer $KEY"; echo
+          } 2>&1 | tee out/compose.txt
+          grep -q '"documents"' out/compose.txt
+      - if: always()
+        run: docker compose logs --no-color > out/compose-logs.txt 2>&1 || true
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: company-compose
+          path: out
+
+  commit:
+    needs: [chat-bench, compose]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+      - name: Commit to the benchmark-results branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code origin benchmark-results >/dev/null; then
+            git fetch -q origin benchmark-results && git checkout -q -B benchmark-results origin/benchmark-results
+          else
+            git checkout -q --orphan benchmark-results && git rm -rq --cached . && git clean -fdq -e parts
+          fi
+          mkdir -p results/company && cp parts/*/* results/company/ 2>/dev/null || true
+          git add results
+          git commit -qm "company: chat benchmark and compose install (run ${{ github.run_id }})" || echo "nothing to commit"
+          git push -q origin benchmark-results

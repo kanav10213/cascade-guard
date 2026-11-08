@@ -146,6 +146,16 @@ from cascade_guard.receipts_api import router as receipts_router  # noqa: E402
 app.include_router(receipts_router)
 
 
+from cascade_guard.company.api import install as install_company  # noqa: E402
+from cascade_guard.company.api import router as company_router  # noqa: E402
+
+app.include_router(company_router)
+install_company(app)
+
+from cascade_guard.company.billing import router as billing_router  # noqa: E402
+
+app.include_router(billing_router)
+
 from cascade_guard import ops  # noqa: E402
 
 ops.install(app)

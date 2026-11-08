@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Assistant Admin</title>
+<style>
+:root{
+  --paper:#f2f5f1;--sheet:#ffffff;--ink:#1d2528;--muted:#5d6b6f;--rule:#d3dddf;--rule2:#e6ecec;
+  --pen:#c62f28;--pen-soft:#fbe9e7;--ok:#1d7a50;--ok-soft:#e3f2ea;--amber:#8a5a00;--amber-soft:#fff2d6;
+  --blue:#23527c;--blue-soft:#e4edf6;--focus:#23527c;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#13181a;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;--rule2:#252e31;
+  --pen:#ff7b70;--pen-soft:#3b1f1c;--ok:#5ccf96;--ok-soft:#163326;--amber:#f0c25a;--amber-soft:#3a2e12;
+  --blue:#8db8e8;--blue-soft:#1f2d3c;--focus:#8db8e8;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans)}
+a{color:var(--blue)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1000px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+header h1{font-size:21px;margin:0;flex:1;font-weight:650}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:16px 18px;margin:16px 0}
+.card h2{margin:0 0 4px;font-size:16.5px}
+.card > p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
+label.f input,label.f select{border:1px solid var(--rule);border-radius:8px;padding:7px 9px;background:var(--paper);color:var(--ink)}
+.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600}
+@media (prefers-color-scheme:dark){.btn{color:#0f1720}}
+.btn.ghost{background:none;color:var(--blue)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--rule2);white-space:nowrap}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.tag{font-size:12px;border-radius:99px;padding:1px 8px}
+.on{background:var(--ok-soft);color:var(--ok)}.off{background:var(--pen-soft);color:var(--pen)}
+.x{background:none;border:1px solid var(--rule);color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:6px;font-size:12.5px}
+.x:hover{color:var(--pen);border-color:var(--pen)}
+.newkey{background:var(--ok-soft);border:1px solid var(--ok);border-radius:10px;padding:10px 12px;margin-top:12px}
+.newkey code{font:13px var(--mono);word-break:break-all}
+pre{background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padding:10px 12px;overflow:auto;font:12.5px/1.5 var(--mono);margin:8px 0}
+.err{color:var(--pen)}
+.small{font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><h1 id="h">Assistant admin</h1><a href="/chat">Back to the chat</a></header>
+  <p class="small" id="who"></p>
+  <div id="needkey" class="card" hidden>
+    <h2>Enter an owner or manager key</h2>
+    <form id="keyform" class="grid"><label class="f">Access key<input id="keyin" type="password" autocomplete="off"></label><button class="btn" type="submit">Continue</button></form>
+  </div>
+
+  <section class="card" id="keys" hidden>
+    <h2>Access keys</h2>
+    <p id="keyshelp">Give each person or customer their own key. A key belongs to one workspace: its documents and its monthly answer limit.</p>
+    <form id="create" class="grid">
+      <label class="f">Name<input id="kname" required maxlength="100" placeholder="Priya (HR) or Acme Pvt Ltd"></label>
+      <label class="f owner">Workspace<input id="kws" maxlength="63" placeholder="default" value="default"></label>
+      <label class="f owner">Role<select id="krole"><option value="member">member: chat</option><option value="manager">manager: chat, documents, keys</option></select></label>
+      <label class="f owner">Plan<select id="kplan"></select></label>
+      <label class="f owner">Answers a month<input id="klimit" type="number" min="0" placeholder="plan default"></label>
+      <button class="btn" type="submit">Create key</button>
+    </form>
+    <div id="newkey"></div>
+    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Name</th><th>Workspace</th><th>Role</th><th>Plan</th><th style="text-align:right">Used this month</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody id="keyrows"></tbody></table></div>
+  </section>
+
+  <section class="card" id="usage" hidden>
+    <h2>Usage</h2>
+    <p>Answers, AI calls and tokens by workspace and month.</p>
+    <div class="tablewrap"><table><thead><tr><th>Month</th><th>Workspace</th><th style="text-align:right">Answers</th><th style="text-align:right">AI calls</th><th style="text-align:right">Tokens</th></tr></thead><tbody id="userows"></tbody></table></div>
+  </section>
+
+  <section class="card" id="apps" hidden>
+    <h2>Connect other apps</h2>
+    <p>Any app that works with OpenAI can use this assistant: Open WebUI, LibreChat, AnythingLLM, your own code. Its answers are checked against your documents in the same way.</p>
+    <p class="small">Base URL: <code id="base"></code> · API key: a key from above · Model: <code>cascade-guard</code> (documents first), <code>cascade-guard-docs</code> (documents only) or <code>cascade-guard-general</code></p>
+    <pre id="curl"></pre>
+    <pre id="py"></pre>
+  </section>
+</div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+let apiKey = '';
+try{ apiKey = sessionStorage.getItem('cg_key') || localStorage.getItem('cg_key') || ''; }catch(e){}
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for(const [k, v] of Object.entries(attrs || {})){
+    if(v === null || v === undefined || v === false) continue;
+    if(k === 'class') e.className = v; else if(k === 'text') e.textContent = v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v);
+  }
+  for(const c of kids.flat()){ if(c === null || c === undefined || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+async function call(path, body, method){
+  const headers = {'Content-Type': 'application/json'}; if(apiKey) headers['X-API-Key'] = apiKey;
+  const r = await fetch(path, {method: method || (body === undefined ? 'GET' : 'POST'), headers, body: body === undefined ? undefined : JSON.stringify(body)});
+  if(r.status === 401 || r.status === 403){ const j = await r.json().catch(() => ({})); throw {kind: 'key', detail: j.detail || 'This needs an owner or manager key.'}; }
+  if(!r.ok){ const j = await r.json().catch(() => ({})); throw {detail: (Array.isArray(j.detail) ? j.detail.map(x => x.msg).join('; ') : j.detail) || ('Error ' + r.status)}; }
+  return r.json();
+}
+let me = null;
+async function load(){
+  try{
+    const info = await call('/chat/info'); me = info.you;
+    if(!info.can_manage_keys) throw {kind: 'key', detail: 'Your key is a member key: ask your manager for keys and usage.'};
+    $('#needkey').hidden = true;
+    $('#who').textContent = `Signed in as ${me.name} (${me.role}) · workspace ${me.workspace}` + (info.ai ? ` · AI: ${info.ai.provider} ${info.ai.model}` : ' · no AI connected (answers quote documents)');
+    document.querySelectorAll('.owner').forEach(el => el.hidden = me.role !== 'owner');
+    if(me.role !== 'owner') $('#keyshelp').textContent = `Add member keys for people in ${me.workspace}. They share your plan (${me.plan}).`;
+    $('#keys').hidden = false; $('#usage').hidden = false; $('#apps').hidden = false;
+    await Promise.all([keys(), usage()]);
+    const base = location.origin + '/v1';
+    $('#base').textContent = base;
+    $('#curl').textContent = `curl ${base}/chat/completions \\\n  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \\\n  -d '{"model": "cascade-guard", "messages": [{"role": "user", "content": "How many days of leave do we get?"}]}'`;
+    $('#py').textContent = `from openai import OpenAI\nclient = OpenAI(base_url="${base}", api_key="YOUR_KEY")\nr = client.chat.completions.create(model="cascade-guard",\n    messages=[{"role": "user", "content": "How many days of leave do we get?"}])\nprint(r.choices[0].message.content)`;
+  }catch(e){
+    $('#needkey').hidden = false; $('#keys').hidden = true; $('#usage').hidden = true; $('#apps').hidden = true;
+    $('#who').textContent = e.detail || '';
+  }
+}
+async function keys(){
+  const r = await call('/admin/keys');
+  const sel = $('#kplan'); if(!sel.options.length) for(const [name, lim] of Object.entries(r.plans)) sel.append(h('option', {value: name, text: `${name} (${lim ? lim.toLocaleString() + ' a month' : 'no limit'})`}));
+  const rows = $('#keyrows'); rows.replaceChildren();
+  for(const k of r.keys){
+    const x = k.active ? h('button', {class: 'x', type: 'button', text: 'Revoke'}) : null;
+    if(x) x.addEventListener('click', async () => { if(x.dataset.sure !== '1'){ x.dataset.sure = '1'; x.textContent = 'Sure?'; return; } try{ await call('/admin/keys/' + k.id, undefined, 'DELETE'); keys(); }catch(e){ x.textContent = e.detail; } });
+    rows.append(h('tr', {}, h('td', {text: k.name}), h('td', {text: k.workspace}), h('td', {text: k.role}), h('td', {text: k.plan}),
+      h('td', {class: 'num', text: `${k.used_this_month}${k.monthly_limit ? ' / ' + k.monthly_limit.toLocaleString() : ''}`}),
+      h('td', {text: k.last_used_at ? k.last_used_at.slice(0, 16).replace('T', ' ') : '–'}),
+      h('td', {}, h('span', {class: 'tag ' + (k.active ? 'on' : 'off'), text: k.active ? 'active' : 'revoked'})), h('td', {}, x)));
+  }
+  if(!r.keys.length) rows.append(h('tr', {}, h('td', {colspan: '8', class: 'small', text: 'No keys yet.'})));
+}
+async function usage(){
+  const r = await call('/admin/usage'); const rows = $('#userows'); rows.replaceChildren();
+  for(const u of r.usage) rows.append(h('tr', {}, h('td', {text: u.month}), h('td', {text: u.workspace}), h('td', {class: 'num', text: u.answers}), h('td', {class: 'num', text: u.ai_calls}), h('td', {class: 'num', text: Number(u.tokens).toLocaleString()})));
+  if(!r.usage.length) rows.append(h('tr', {}, h('td', {colspan: '5', class: 'small', text: 'No answers yet.'})));
+}
+$('#create').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const body = {name: $('#kname').value.trim()};
+  if(me.role === 'owner'){ body.workspace = $('#kws').value.trim() || 'default'; body.role = $('#krole').value; body.plan = $('#kplan').value; if($('#klimit').value !== '') body.monthly_limit = parseInt($('#klimit').value, 10); }
+  try{
+    const r = await call('/admin/keys', body);
+    const code = h('code', {text: r.key});
+    const copy = h('button', {class: 'btn ghost', type: 'button', text: 'Copy', onclick: async () => { try{ await navigator.clipboard.writeText(r.key); copy.textContent = 'Copied'; }catch(e){ copy.textContent = 'Select and copy it'; } }});
+    $('#newkey').replaceChildren(h('div', {class: 'newkey'}, h('p', {style: 'margin:0 0 6px', text: `Key for ${r.record.name} (${r.record.workspace}, ${r.record.role}). Copy it now: it is shown only once.`}), code, ' ', copy));
+    $('#kname').value = ''; keys();
+  }catch(e){ $('#newkey').replaceChildren(h('p', {class: 'err', text: e.detail})); }
+});
+$('#keyform').addEventListener('submit', ev => { ev.preventDefault(); apiKey = $('#keyin').value.trim(); try{ sessionStorage.setItem('cg_key', apiKey); }catch(e){} load(); });
+load();
+</script>
+</body>
+</html>

@@ -1,10 +1,11 @@
-"""Storage: runs, steps, verdicts, review_queue, usage, audit, chains, agents. SQLite or PostgreSQL.
+"""Storage: runs, steps, verdicts, review_queue, usage, audit, chains, agents, and the company product's api_keys,
+key_usage, kb_docs and kb_chunks. SQLite or PostgreSQL.
 
     CASCADE_DB=data/cascade.db                          SQLite file (default; built into Python)
     CASCADE_DB=postgresql://user:pass@host:5432/dbname  PostgreSQL (needs the psycopg package)
     CASCADE_DB=off                                      no storage
 
-The same eight tables and the same queries run on both; only placeholders,
+The same tables and the same queries run on both; only placeholders,
 the id column type and a few start-up commands differ.
 
     store = get_store()
@@ -109,6 +110,53 @@ CREATE TABLE IF NOT EXISTS agents (
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS api_keys (
+    id            {ID},
+    key_hash      TEXT NOT NULL UNIQUE,    -- sha256 of the key (the key itself is never stored)
+    prefix        TEXT NOT NULL,           -- the first characters, to recognise it in lists
+    name          TEXT NOT NULL,
+    workspace     TEXT NOT NULL,           -- whose documents and usage this key sees
+    role          TEXT NOT NULL,           -- member | manager
+    plan          TEXT NOT NULL,
+    monthly_limit INTEGER NOT NULL DEFAULT 0,   -- answers a month, 0 = no limit
+    email         TEXT,
+    ref           TEXT,                    -- payment reference (checkout session, payment id)
+    customer      TEXT,                    -- payment provider's customer or subscription id
+    reveal        TEXT,                    -- the key, kept only until its owner has seen it once after paying
+    created_at    TEXT NOT NULL,
+    revoked_at    TEXT,
+    last_used_at  TEXT
+);
+CREATE TABLE IF NOT EXISTS key_usage (
+    key_id    INTEGER NOT NULL,            -- 0 for the server's own keys (API_KEY, ...)
+    workspace TEXT NOT NULL,
+    month     TEXT NOT NULL,               -- 2026-11
+    requests  INTEGER NOT NULL DEFAULT 0,
+    ai_calls  INTEGER NOT NULL DEFAULT 0,
+    tokens    INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (key_id, workspace, month)
+);
+CREATE TABLE IF NOT EXISTS kb_docs (
+    id         {ID},
+    workspace  TEXT NOT NULL,
+    name       TEXT NOT NULL,
+    kind       TEXT,
+    chars      INTEGER NOT NULL,
+    chunks     INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    created_by TEXT
+);
+CREATE TABLE IF NOT EXISTS kb_chunks (
+    id        {ID},
+    doc_id    INTEGER NOT NULL REFERENCES kb_docs(id) ON DELETE CASCADE,
+    workspace TEXT NOT NULL,
+    ord       INTEGER NOT NULL,
+    page      INTEGER,
+    text      TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_kb_chunks_ws ON kb_chunks(workspace);
+CREATE INDEX IF NOT EXISTS idx_kb_docs_ws ON kb_docs(workspace);
+CREATE INDEX IF NOT EXISTS idx_api_keys_ws ON api_keys(workspace);
 CREATE INDEX IF NOT EXISTS idx_audit_at ON audit(at);
 CREATE INDEX IF NOT EXISTS idx_steps_run ON steps(run_id);
 CREATE INDEX IF NOT EXISTS idx_verdicts_run ON verdicts(run_id);
@@ -351,7 +399,8 @@ class Store:
     def clear(self):
         """Delete everything (tests only)."""
         with self._tx() as c:
-            for t in ("agents", "chains", "audit", "usage", "review_queue", "verdicts", "steps", "runs"):
+            for t in ("kb_chunks", "kb_docs", "key_usage", "api_keys", "agents", "chains", "audit", "usage",
+                      "review_queue", "verdicts", "steps", "runs"):
                 c.execute(f"DELETE FROM {t}")  # noqa: S608 - fixed table names, no user input
 
     # ------------------------------------------------------------ reads

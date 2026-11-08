@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Company Assistant</title>
+<style>
+:root{
+  --paper:#f2f5f1;--sheet:#ffffff;--ink:#1d2528;--muted:#5d6b6f;--rule:#d3dddf;--rule2:#e6ecec;
+  --pen:#c62f28;--pen-soft:#fbe9e7;--ok:#1d7a50;--ok-soft:#e3f2ea;--amber:#8a5a00;--amber-soft:#fff2d6;
+  --blue:#23527c;--blue-soft:#e4edf6;--focus:#23527c;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code","SF Mono",ui-monospace,Menlo,Consolas,"Liberation Mono",monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#13181a;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;--rule2:#252e31;
+  --pen:#ff7b70;--pen-soft:#3b1f1c;--ok:#5ccf96;--ok-soft:#163326;--amber:#f0c25a;--amber-soft:#3a2e12;
+  --blue:#8db8e8;--blue-soft:#1f2d3c;--focus:#8db8e8;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15.5px/1.55 var(--sans)}
+a{color:var(--blue)}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.app{display:grid;grid-template-columns:280px 1fr;height:100vh;height:100dvh}
+@media(max-width:860px){.app{grid-template-columns:1fr}}
+
+/* side */
+.side{border-right:1px solid var(--rule);background:var(--sheet);display:flex;flex-direction:column;min-height:0}
+@media(max-width:860px){.side{position:fixed;inset:0 auto 0 0;width:min(320px,88vw);z-index:20;transform:translateX(-102%);transition:transform .18s ease;box-shadow:0 0 40px rgba(0,0,0,.25)}
+  .side.open{transform:none}}
+.scrim{display:none}
+@media(max-width:860px){.scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:15}}
+.side .head{padding:14px 14px 10px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--rule2)}
+.mark{width:28px;height:28px;flex:none}
+.side .head b{font-size:15px;line-height:1.2;display:block}
+.side .head small{color:var(--muted);font-size:12.5px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+.newchat{margin:12px 14px 4px;padding:9px 12px;border:1px solid var(--rule);border-radius:9px;background:var(--paper);cursor:pointer;text-align:left;font-weight:600}
+.newchat:hover{border-color:var(--blue)}
+.sec{padding:10px 14px 4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.list{overflow:auto;flex:1;min-height:60px;padding:0 6px}
+.list button.conv{display:block;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 8px;cursor:pointer;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.list button.conv:hover{background:var(--paper)}
+.list button.conv[aria-current="true"]{background:var(--blue-soft)}
+.docs{max-height:42%;overflow:auto;padding:0 14px 6px;border-top:1px solid var(--rule2)}
+.doc{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--rule2);font-size:13.5px}
+.doc .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc .m{color:var(--muted);font-size:12px;flex:none}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;font-size:12.5px}
+.x:hover{color:var(--pen);background:var(--pen-soft)}
+.side .foot{border-top:1px solid var(--rule2);padding:10px 14px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);cursor:pointer;font-size:12.5px;text-decoration:underline;text-underline-offset:2px;text-align:left}
+.upload{display:flex;gap:8px;align-items:center;margin:6px 0 4px;flex-wrap:wrap}
+.upload label{border:1px dashed var(--rule);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px}
+.upload label:hover{border-color:var(--blue)}
+.small{font-size:12.5px;color:var(--muted)}
+
+/* main */
+.main{display:flex;flex-direction:column;min-height:0;min-width:0}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--rule)}
+.menu{display:none;background:none;border:1px solid var(--rule);border-radius:8px;padding:5px 9px;cursor:pointer}
+@media(max-width:860px){.menu{display:inline-block}}
+.bar h1{font-size:16px;margin:0;font-weight:650;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{font-size:12.5px;color:var(--muted);border:1px solid var(--rule);border-radius:99px;padding:2px 10px;white-space:nowrap}
+@media(max-width:560px){.pill.ai{display:none}}
+.log{flex:1;overflow:auto}
+.inner{max-width:760px;margin:0 auto;padding:22px 16px 30px}
+.intro h2{font-size:27px;line-height:1.15;font-weight:650;letter-spacing:-.02em;margin:14px 0 6px}
+.intro p{margin:0 0 16px;color:var(--muted);max-width:62ch}
+.tries{list-style:none;margin:0 0 12px;padding:0;border-top:1px solid var(--rule)}
+.tries li{border-bottom:1px solid var(--rule)}
+.tries button{width:100%;text-align:left;background:none;border:0;padding:10px 4px;cursor:pointer}
+.tries button:hover{background:var(--sheet)}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:14px 16px;margin:14px 0}
+.card h3{margin:0 0 6px;font-size:15.5px}
+.card p{margin:0 0 10px;color:var(--muted);font-size:14px}
+.btn{border:1px solid var(--blue);background:var(--blue);color:#fff;border-radius:9px;padding:8px 14px;cursor:pointer;font-weight:600}
+@media (prefers-color-scheme:dark){.btn{color:#0f1720}}
+.btn.ghost{background:none;color:var(--blue)}
+.btn:disabled{opacity:.6;cursor:default}
+input.text{width:100%;border:1px solid var(--rule);border-radius:8px;padding:8px 10px;background:var(--paper)}
+
+.msg{margin:20px 0}
+.me{display:flex;justify-content:flex-end}
+.me .bubble{background:var(--blue-soft);border-radius:14px 14px 4px 14px;padding:9px 14px;max-width:85%;white-space:pre-wrap;word-break:break-word}
+.bot .reply{margin:0 0 8px;max-width:70ch;word-break:break-word}
+.bot .reply p{margin:0 0 8px}
+.bot .reply ul{margin:0 0 8px;padding-left:22px}
+.bot .reply blockquote{margin:0 0 8px;padding:6px 12px;border-left:3px solid var(--rule);color:var(--ink);background:var(--sheet);border-radius:0 8px 8px 0}
+.cite{display:inline-block;min-width:1.5em;padding:0 5px;margin:0 1px;border-radius:6px;background:var(--blue-soft);color:var(--blue);font-size:12px;font-weight:650;line-height:1.6;cursor:pointer;border:0;vertical-align:1px}
+.cite:hover{outline:1px solid var(--blue)}
+.verdict{display:inline-flex;gap:6px;align-items:center;font-size:13px;font-weight:600;border-radius:99px;padding:3px 10px 3px 8px;margin:2px 0 6px}
+.v-ok{background:var(--ok-soft);color:var(--ok)}
+.v-warn{background:var(--amber-soft);color:var(--amber)}
+.v-info{background:var(--blue-soft);color:var(--blue)}
+.notice{font-size:13.5px;background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:7px 12px;margin:0 0 8px;max-width:70ch}
+details.work{font-size:13.5px;max-width:70ch}
+details.work summary{cursor:pointer;color:var(--muted)}
+details.work ul{margin:6px 0;padding-left:20px}
+.src{border:1px solid var(--rule);border-radius:9px;padding:8px 11px;margin:6px 0;background:var(--sheet);font-size:13.5px}
+.src b{font-size:12.5px}
+.src .t{white-space:pre-wrap;color:var(--muted);margin-top:3px;max-height:11em;overflow:auto}
+.src.hl{border-color:var(--blue);box-shadow:0 0 0 2px var(--blue-soft)}
+.strike{text-decoration:line-through;color:var(--pen)}
+.thinking{color:var(--muted);font-size:14px;display:flex;gap:8px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:b 1s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dot{animation:none}}
+.err{color:var(--pen);font-size:14px}
+
+/* composer */
+.composer{border-top:1px solid var(--rule);background:var(--paper)}
+.composer form{max-width:760px;margin:0 auto;padding:10px 16px 6px;display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;border:1px solid var(--rule);border-radius:12px;padding:10px 12px;background:var(--sheet);max-height:200px;min-height:44px}
+.composer .send{height:44px}
+.composer .opts{max-width:760px;margin:0 auto;padding:0 16px 10px;display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.composer select{border:1px solid var(--rule);border-radius:6px;background:var(--sheet);padding:1px 4px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="scrim" id="scrim"></div>
+  <aside class="side" id="side" aria-label="Conversations and documents">
+    <div class="head">
+      <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="var(--blue)"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div><b id="brand">Company Assistant</b><small id="who">Checked answers from your documents</small></div>
+    </div>
+    <button class="newchat" id="newchat" type="button">+ New chat</button>
+    <div class="sec">Chats</div>
+    <div class="list" id="convs"></div>
+    <div class="sec"><span>Documents</span><span id="doccount"></span></div>
+    <div class="docs" id="docs">
+      <div class="upload" id="uploadbox" hidden>
+        <label>Add documents<input type="file" id="file" multiple accept=".pdf,.docx,.txt,.md,.csv,.tsv,.html,.htm,.json" hidden></label>
+        <span class="small">PDF, Word, text, CSV, HTML</span>
+      </div>
+      <div id="doclist"></div>
+      <p class="small" id="upmsg" role="status"></p>
+    </div>
+    <div class="foot">
+      <span id="usage"></span>
+      <span><a href="/admin" id="adminlink" hidden>Keys, usage and apps</a></span>
+      <button class="linkbtn" id="changekey" type="button">Change access key</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="bar">
+      <button class="menu" id="menu" type="button" aria-label="Open chats and documents">☰</button>
+      <h1 id="title">New chat</h1>
+      <span class="pill ai" id="aipill">…</span>
+    </div>
+    <div class="log" id="log"><div class="inner" id="inner"></div></div>
+    <div class="composer">
+      <form id="form">
+        <textarea id="q" rows="1" placeholder="Ask about your company's documents…" maxlength="4000" aria-label="Your question"></textarea>
+        <button class="btn send" id="send" type="submit">Ask</button>
+      </form>
+      <div class="opts">
+        <label>Answer from <select id="mode"><option value="auto">documents, else general</option><option value="documents">documents only</option><option value="general">general (no documents)</option></select></label>
+        <span>Every answer is checked against your documents before you see it.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const ls = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} },
+};
+const ss = {
+  get(k){ try{ return sessionStorage.getItem(k) || ''; }catch(e){ return ''; } },
+  set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} },
+};
+const rawKey = {  // the same plain-text key the other pages keep
+  get(){ try{ return sessionStorage.getItem('cg_key') || localStorage.getItem('cg_key') || ''; }catch(e){ return ''; } },
+  set(v, remember){ try{ sessionStorage.setItem('cg_key', v); if(remember) localStorage.setItem('cg_key', v); else localStorage.removeItem('cg_key'); }catch(e){} },
+};
+let apiKey = rawKey.get();
+let info = null, busy = false;
+let convs = ls.get('cg_chats', []);          // [{id, title, turns:[{role, content, result?}]}]
+let current = null;
+
+function h(tag, attrs, ...kids){
+  const e = document.createElement(tag);
+  for(const [k, v] of Object.entries(attrs || {})){
+    if(v === null || v === undefined || v === false) continue;
+    if(k === 'class') e.className = v; else if(k === 'text') e.textContent = v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v === true ? '' : v);
+  }
+  for(const c of kids.flat()){ if(c === null || c === undefined || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+
+async function call(path, body, method){
+  const headers = {'Content-Type': 'application/json'};
+  if(apiKey) headers['X-API-Key'] = apiKey;
+  let r;
+  try{ r = await fetch(path, {method: method || (body === undefined ? 'GET' : 'POST'), headers, body: body === undefined ? undefined : JSON.stringify(body)}); }
+  catch(e){ throw {kind: 'network', detail: 'The server could not be reached.'}; }
+  if(r.status === 401){ throw {kind: 'key', detail: 'This needs an access key.'}; }
+  if(!r.ok){
+    const j = await r.json().catch(() => ({}));
+    let d = j.detail; if(Array.isArray(d)) d = d.map(x => x.msg || JSON.stringify(x)).join('; ');
+    throw {kind: 'http', status: r.status, detail: d || ('The server answered ' + r.status + '.')};
+  }
+  return r.json();
+}
+
+/* ------------------------------------------------------------ setup */
+async function load(){
+  try{
+    info = await call('/chat/info');
+  }catch(e){
+    if(e.kind === 'key'){ askKey(); return; }
+    $('#inner').replaceChildren(h('p', {class: 'err', text: e.detail}));
+    return;
+  }
+  const you = info.you;
+  $('#brand').textContent = (info.company ? info.company + ' ' : '') + 'Assistant';
+  document.title = $('#brand').textContent;
+  $('#who').textContent = `${you.name} · ${you.workspace}`;
+  $('#aipill').textContent = info.ai ? `AI: ${info.ai.model}` : 'No AI: exact quotes';
+  $('#aipill').title = info.ai ? `${info.ai.provider} · ${info.ai.model}` : 'No AI is connected, so answers quote your documents word for word.';
+  $('#uploadbox').hidden = !info.can_manage_documents;
+  $('#adminlink').hidden = !info.can_manage_keys;
+  if(info.docs_only){ $('#mode').value = 'documents'; }
+  usageLine();
+  await loadDocs();
+  renderConvs();
+  if(!current) openConv(convs[0] ? convs[0].id : null);
+}
+function usageLine(){
+  const you = info.you;
+  const lim = you.monthly_limit;
+  $('#usage').textContent = lim ? `${info.used_this_month} of ${lim.toLocaleString()} answers this month · plan ${you.plan}` : `${info.used_this_month} answers this month`;
+}
+function askKey(){
+  $('#inner').replaceChildren(h('div', {class: 'card'},
+    h('h3', {text: 'Enter your access key'}),
+    h('p', {text: 'Your company gave you a key (it starts with cg_). It stays in this browser.'}),
+    h('form', {onsubmit: ev => { ev.preventDefault(); const v = $('#keyin').value.trim(); apiKey = v; rawKey.set(v, $('#keyrem').checked); load(); }},
+      h('input', {class: 'text', id: 'keyin', type: 'password', autocomplete: 'off', placeholder: 'cg_…', 'aria-label': 'Access key'}),
+      h('p', {class: 'small', style: 'margin:8px 0'}, h('label', {}, h('input', {type: 'checkbox', id: 'keyrem'}), ' Remember on this device')),
+      h('button', {class: 'btn', type: 'submit', text: 'Continue'}))));
+  setTimeout(() => $('#keyin') && $('#keyin').focus(), 50);
+}
+
+/* ------------------------------------------------------------ documents */
+async function loadDocs(){
+  try{
+    const r = await call('/kb/docs');
+    const list = $('#doclist'); list.replaceChildren();
+    $('#doccount').textContent = r.documents.length ? r.documents.length : '';
+    for(const d of r.documents){
+      const row = h('div', {class: 'doc'}, h('span', {class: 'n', title: d.name, text: d.name}), h('span', {class: 'm', text: d.passages + ' parts'}));
+      if(info.can_manage_documents){
+        const x = h('button', {class: 'x', type: 'button', text: 'Remove', 'aria-label': 'Remove ' + d.name});
+        x.addEventListener('click', async () => {
+          if(x.dataset.sure !== '1'){ x.dataset.sure = '1'; x.textContent = 'Sure?'; setTimeout(() => { x.dataset.sure = ''; x.textContent = 'Remove'; }, 3000); return; }
+          try{ await call('/kb/docs/' + d.id, undefined, 'DELETE'); await loadDocs(); refreshInfo(); }catch(e){ $('#upmsg').textContent = e.detail; }
+        });
+        row.append(x);
+      }
+      list.append(row);
+    }
+    if(!r.documents.length){
+      list.append(h('p', {class: 'small', text: info.can_manage_documents ? 'No documents yet. Add your policies, manuals, price lists and FAQs.' : 'No documents yet: ask your manager to add them.'}));
+    }
+    info.documents = r.documents.length;
+  }catch(e){ $('#doclist').replaceChildren(h('p', {class: 'small', text: e.detail})); }
+}
+async function refreshInfo(){ try{ info = await call('/chat/info'); usageLine(); }catch(e){} }
+$('#file').addEventListener('change', async ev => {
+  const files = [...ev.target.files]; ev.target.value = '';
+  for(const f of files){
+    $('#upmsg').textContent = `Reading ${f.name}…`;
+    try{
+      if(f.size > 20 * 1024 * 1024) throw {detail: `${f.name} is larger than 20 MB.`};
+      const b64 = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1] || ''); r.onerror = () => rej({detail: 'could not read the file'}); r.readAsDataURL(f); });
+      const out = await call('/kb/docs', {name: f.name, file_base64: b64});
+      $('#upmsg').textContent = `Added ${out.name}: ${out.passages} parts${out.pages ? ', ' + out.pages + ' pages' : ''}.`;
+    }catch(e){ $('#upmsg').textContent = `${f.name}: ${e.detail || 'could not be added'}`; }
+  }
+  await loadDocs(); refreshInfo(); if(current && !current.turns.length) renderLog();
+});
+
+/* ------------------------------------------------------------ conversations */
+function saveConvs(){ convs = convs.slice(0, 50); ls.set('cg_chats', convs.map(c => ({...c, turns: c.turns.slice(-40)}))); }
+function renderConvs(){
+  const box = $('#convs'); box.replaceChildren();
+  for(const c of convs){
+    box.append(h('button', {class: 'conv', type: 'button', 'aria-current': current && current.id === c.id ? 'true' : 'false', title: c.title, text: c.title || 'New chat', onclick: () => { openConv(c.id); closeSide(); }}));
+  }
+  if(!convs.length) box.append(h('p', {class: 'small', style: 'padding:4px 8px', text: 'Your chats stay in this browser.'}));
+}
+function openConv(id){
+  current = convs.find(c => c.id === id) || {id: 'c' + Date.now().toString(36), title: '', turns: []};
+  $('#title').textContent = current.title || 'New chat';
+  renderConvs(); renderLog();
+}
+$('#newchat').addEventListener('click', () => { openConv(null); closeSide(); $('#q').focus(); });
+
+/* ------------------------------------------------------------ rendering */
+const VERDICT = {
+  checked: ['v-ok', '✓', 'Checked against your documents'],
+  fixed: ['v-ok', '✓', 'A mistake was caught and fixed'],
+  trimmed: ['v-warn', '!', 'Unsupported parts were removed'],
+  unconfirmed: ['v-warn', '!', 'Not fully confirmed: check before relying on it'],
+  not_found: ['v-info', 'i', 'Not in your documents'],
+  quoted: ['v-ok', '✓', 'Quoted word for word from your documents'],
+  general: ['v-info', 'i', 'General answer, not from your documents'],
+};
+function inline(text, sources, onCite){
+  const out = []; const re = /\*\*([^*]+)\*\*|\[(\d+(?:\s*[,–-]\s*\d+)*)\]/g; let last = 0, m;
+  while((m = re.exec(text))){
+    if(m.index > last) out.push(text.slice(last, m.index));
+    if(m[1] !== undefined) out.push(h('b', {text: m[1]}));
+    else for(const n of m[2].split(/\s*,\s*/)){
+      const k = parseInt(n, 10); const s = sources.find(x => x.n === k);
+      out.push(s ? h('button', {class: 'cite', type: 'button', title: s.doc + (s.page ? ', page ' + s.page : ''), text: String(k), onclick: () => onCite(k)}) : h('sup', {text: '[' + n + ']'}));
+    }
+    last = re.lastIndex;
+  }
+  if(last < text.length) out.push(text.slice(last));
+  return out;
+}
+function rich(text, sources, onCite){
+  const box = h('div', {class: 'reply'}); let ul = null;
+  for(const line of String(text || '').split('\n')){
+    const t = line.trim();
+    if(!t){ ul = null; continue; }
+    const li = t.match(/^(?:[-*•]|\d+[.)])\s+(.*)$/);
+    if(li){ if(!ul){ ul = h('ul'); box.append(ul); } ul.append(h('li', {}, inline(li[1], sources, onCite))); continue; }
+    ul = null;
+    if(t.startsWith('>')) box.append(h('blockquote', {}, inline(t.replace(/^>\s?/, ''), sources, onCite)));
+    else box.append(h('p', {}, inline(t, sources, onCite)));
+  }
+  return box;
+}
+function botView(res){
+  const sources = res.sources || [];
+  const srcBox = h('div', {class: 'srcs'});
+  const work = h('details', {class: 'work'});
+  const showSource = k => {
+    work.open = true;
+    srcBox.querySelectorAll('.src').forEach(el => el.classList.toggle('hl', el.dataset.n === String(k)));
+    const el = srcBox.querySelector(`.src[data-n="${k}"]`); if(el) el.scrollIntoView({block: 'nearest', behavior: 'smooth'});
+  };
+  const v = VERDICT[res.verdict] || ['v-info', 'i', res.verdict || ''];
+  const node = h('div', {class: 'msg bot'},
+    h('span', {class: 'verdict ' + v[0]}, h('span', {'aria-hidden': 'true', text: v[1]}), v[2]),
+    rich(res.answer, sources, showSource),
+    res.notice ? h('p', {class: 'notice', text: res.notice}) : null);
+  const items = [];
+  for(const c of res.checks || []) items.push(h('li', {text: c}));
+  for(const c of res.caught || []) items.push(h('li', {}, 'Caught and sent back: ', h('span', {class: 'strike', text: c})));
+  for(const r of res.removed || []) items.push(h('li', {}, 'Removed: ', h('span', {class: 'strike', text: r})));
+  if(res.ai) items.push(h('li', {class: 'small', text: `Written by ${res.ai.model}${res.usage && res.usage.ai_calls ? ` in ${res.usage.ai_calls} AI call${res.usage.ai_calls === 1 ? '' : 's'}` : ''}.`}));
+  for(const s of sources) srcBox.append(h('div', {class: 'src', 'data-n': String(s.n)}, h('b', {text: `[${s.n}] ${s.doc}${s.page ? ', page ' + s.page : ''}`}), h('div', {class: 't', text: s.text})));
+  if(items.length || sources.length){
+    work.append(h('summary', {text: sources.length ? `Sources (${sources.length}) and checks` : 'What was checked'}), items.length ? h('ul', {}, items) : null, srcBox);
+    node.append(work);
+  }
+  return node;
+}
+function renderLog(){
+  const box = $('#inner'); box.replaceChildren();
+  if(!current.turns.length) box.append(intro());
+  for(const t of current.turns){
+    if(t.role === 'user') box.append(h('div', {class: 'msg me'}, h('div', {class: 'bubble', text: t.content})));
+    else if(t.result) box.append(botView(t.result));
+  }
+  $('#log').scrollTop = $('#log').scrollHeight;
+}
+function intro(){
+  const name = info && info.company ? info.company : 'your company';
+  const box = h('div', {class: 'intro'}, h('h2', {text: 'Ask about ' + name}),
+    h('p', {text: 'Answers come from your own documents, with the passages they used. Before you see an answer, Cascade Guard checks every number, date and quotation against those passages and has it read again for claims they do not support. If the documents do not say, it tells you instead of guessing.'}));
+  if(info && !info.documents){
+    const card = h('div', {class: 'card'}, h('h3', {text: 'No documents yet'}),
+      h('p', {text: info.can_manage_documents ? 'Add your policies, manuals, price lists and FAQs in the panel on the left, or try it with a made-up sample company.' : 'Ask your manager to add the company documents. Until then, general questions still work.'}));
+    if(info.can_manage_documents){
+      const b = h('button', {class: 'btn ghost', type: 'button', text: 'Load the sample company'});
+      b.addEventListener('click', async () => { b.disabled = true; b.textContent = 'Loading…'; try{ await call('/kb/samples', {}); await loadDocs(); await refreshInfo(); renderLog(); }catch(e){ b.textContent = e.detail; } });
+      card.append(b);
+    }
+    box.append(card);
+  } else if(info){
+    const tries = info.sample_questions && info.sample_questions.length ? info.sample_questions : [];
+    if(tries.length){
+      box.append(h('ul', {class: 'tries'}, tries.map(q => h('li', {}, h('button', {type: 'button', text: q, onclick: () => send(q)})))));
+    }
+  }
+  return box;
+}
+
+/* ------------------------------------------------------------ asking */
+async function send(text){
+  text = (text || '').trim();
+  if(!text || busy) return;
+  busy = true; $('#send').disabled = true;
+  if(!current.turns.length){ current.title = text.slice(0, 60); $('#title').textContent = current.title; convs = [current, ...convs.filter(c => c.id !== current.id)]; }
+  const history = current.turns.map(t => ({role: t.role, content: t.content}));
+  current.turns.push({role: 'user', content: text});
+  saveConvs(); renderConvs(); renderLog();
+  const wait = h('div', {class: 'msg bot thinking', role: 'status'}, h('span', {class: 'dot'}), h('span', {class: 'dot'}), h('span', {class: 'dot'}), h('span', {text: ' Reading your documents and checking the answer…'}));
+  $('#inner').append(wait); $('#log').scrollTop = $('#log').scrollHeight;
+  try{
+    const res = await call('/chat/ask', {question: text, history, mode: $('#mode').value});
+    current.turns.push({role: 'assistant', content: res.answer, result: res});
+    saveConvs(); renderLog(); refreshInfo();
+  }catch(e){
+    wait.remove();
+    if(e.kind === 'key'){ askKey(); }
+    else $('#inner').append(h('p', {class: 'msg err', text: e.detail}));
+    current.turns.pop(); saveConvs();
+    $('#q').value = text;
+  }finally{ busy = false; $('#send').disabled = false; }
+}
+$('#form').addEventListener('submit', ev => { ev.preventDefault(); const t = $('#q').value; $('#q').value = ''; grow(); send(t); });
+$('#q').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); $('#form').requestSubmit(); } });
+function grow(){ const t = $('#q'); t.style.height = 'auto'; t.style.height = Math.min(200, t.scrollHeight) + 'px'; }
+$('#q').addEventListener('input', grow);
+$('#changekey').addEventListener('click', () => { apiKey = ''; rawKey.set('', false); askKey(); closeSide(); });
+function closeSide(){ $('#side').classList.remove('open'); $('#scrim').classList.remove('open'); }
+$('#menu').addEventListener('click', () => { $('#side').classList.add('open'); $('#scrim').classList.add('open'); });
+$('#scrim').addEventListener('click', closeSide);
+load();
+</script>
+</body>
+</html>
