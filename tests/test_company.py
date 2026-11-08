@@ -6,17 +6,16 @@ import io
 import json
 import time
 import zipfile
-from pathlib import Path
 
 import pytest
 
 from cascade_guard.company import answer as A
 from cascade_guard.company import kb
 from cascade_guard.company import keys as K
+from cascade_guard.company.api import SAMPLES  # noqa: E402  (shipped in the package)
 from cascade_guard.llm.presets import function_client
 from cascade_guard.storage.db import Store
 
-SAMPLES = Path(__file__).resolve().parent.parent / "cascade_guard" / "samples" / "company"
 Q_LEAVE = "How many days of paid leave do we get, and how many can be carried forward?"
 GOOD = "Every permanent employee gets 24 days of paid annual leave per year [1]. Up to 10 unused days can be " \
        "carried forward; the rest lapse on 31 March [1]."
@@ -143,14 +142,29 @@ def test_what_cannot_be_fixed_is_removed(store):
     assert r["verdict"] == "not_found" and "couldn't give an answer I could check" in r["answer"]
 
 
-def test_the_independent_reading(store):
-    doubt = '{"verdict": "revise", "problems": ["it leaves out that extra days lapse on 31 March"]}'
-    r = A.answer(Q_LEAVE, client=scripted(["You get 24 days [1] and 10 carry forward [1].", GOOD], [doubt, ACCEPT]),
-                 store=store)
-    assert r["verdict"] == "fixed" and "independent reading" in r["caught"][0]
-    r = A.answer(Q_LEAVE, client=scripted(["You get 24 days [1] and 10 carry forward [1]."] * 2, [doubt, doubt]),
-                 store=store)
-    assert r["verdict"] == "unconfirmed" and "31 March" in r["notice"]
+def test_the_independent_reading_can_warn_but_never_rewrite(store):
+    doubt = '{"verdict": "revise", "problems": ["the notice period during probation is not 15 days"]}'
+    right = "New employees are on probation for 6 months [1]. During probation the notice period is 15 days [1]."
+    q = "How long is probation, and what is the notice period during probation?"
+    r = A.answer(q, client=scripted([right], [doubt]), store=store)
+    assert r["answer"] == right and r["verdict"] == "unconfirmed" and "not 15 days" in r["notice"]
+    assert r["usage"]["ai_calls"] == 2  # a small model's mistaken doubt cannot turn a right answer into a wrong one
+    assert A.answer(q, client=scripted([right], [ACCEPT]), store=store)["verdict"] == "checked"
+
+
+def test_a_correction_never_replaces_a_better_answer(store):
+    first = "Every permanent employee gets 24 days of paid annual leave [1]. Unused leave is paid at ₹2,000 a day [1]."
+    r = A.answer(Q_LEAVE, client=scripted([first, "NOT IN THE DOCUMENTS"]), store=store)
+    assert r["verdict"] == "trimmed" and "24 days" in r["answer"] and "₹2,000" not in r["answer"]
+    worse = "It is 30 days [1], paid at ₹2,000 a day [1], and 12 carry forward [1]."
+    r = A.answer(Q_LEAVE, client=scripted([first, worse, worse]), store=store)
+    assert "24 days" in r["answer"] and "30 days" not in r["answer"]
+
+
+def test_an_obvious_citation_slip_is_repaired(store):
+    q = "What is the GST rate on the vernier caliper?"
+    r = A.answer(q, client=scripted(["The GST rate on the vernier caliper is 12%. [4]"]), store=store)
+    assert r["verdict"] == "checked" and r["repaired"] and "[4]" not in r["answer"] and r["usage"]["ai_calls"] == 2
 
 
 def test_not_in_the_documents_and_general_questions(store, monkeypatch):

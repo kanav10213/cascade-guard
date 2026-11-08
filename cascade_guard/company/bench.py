@@ -104,10 +104,12 @@ def run(client, workspace: str = "bench", progress=print) -> dict:
             hits = search(workspace, item["q"], k=A.K)
             first = A._ask(client, item["q"], hits, "", 0) if hits else A.NOT_FOUND
         first_text, first_shown = first, not is_not_found(first)
+        final_outcome = judge(item, res["answer"], res["verdict"] in SHOWN)
+        if final_outcome in ("wrong", "made up") and res["verdict"] == "unconfirmed":
+            final_outcome += ", warned"   # shown, but marked "check before relying on it"
         row = {"q": item["q"], "absent": bool(item.get("absent")), "expect": item.get("expect", []),
                "first": first_text, "first_outcome": judge(item, first_text, first_shown),
-               "final": res["answer"], "verdict": res["verdict"],
-               "final_outcome": judge(item, res["answer"], res["verdict"] in SHOWN),
+               "final": res["answer"], "verdict": res["verdict"], "final_outcome": final_outcome,
                "caught": res.get("caught", []), "removed": res.get("removed", []),
                "ai_calls": res.get("usage", {}).get("ai_calls", 0), "seconds": round(secs, 1)}
         rows.append(row)
@@ -127,8 +129,11 @@ def summarize(rows: list[dict]) -> dict:
                   "refused": count("first_outcome", "said so", False), "made_up": count("first_outcome", "made up"),
                   "said_not_found": count("first_outcome", "said so", True)},
         "final": {"right": count("final_outcome", "right"), "wrong": count("final_outcome", "wrong"),
+                  "wrong_warned": count("final_outcome", "wrong, warned"),
                   "refused": count("final_outcome", "said so", False), "made_up": count("final_outcome", "made up"),
-                  "said_not_found": count("final_outcome", "said so", True)},
+                  "made_up_warned": count("final_outcome", "made up, warned"),
+                  "said_not_found": count("final_outcome", "said so", True),
+                  "right_warned": sum(1 for r in rows if r["final_outcome"] == "right" and r["verdict"] == "unconfirmed")},
         "verdicts": {v: sum(1 for r in rows if r["verdict"] == v) for v in sorted({r["verdict"] for r in rows})},
         "ai_calls_per_question": round(sum(r["ai_calls"] for r in rows) / max(1, len(rows)), 2),
         "seconds_per_question": round(sum(r["seconds"] for r in rows) / max(1, len(rows)), 1),
@@ -142,17 +147,20 @@ def to_markdown(result: dict, title: str) -> str:
              f"{s['questions']} questions about the sample company: {s['answerable']} the documents answer, "
              f"{s['not_in_documents']} they don't.", "",
              "| | The AI's first answer (no guard) | What Cascade Guard shows |", "|---|---:|---:|",
-             f"| Right (all expected facts) | {f['right']} of {s['answerable']} | {g['right']} of {s['answerable']} |",
-             f"| **Wrong answer shown** | **{f['wrong']}** | **{g['wrong']}** |",
+             f"| Right (all expected facts) | {f['right']} of {s['answerable']} | {g['right']} of {s['answerable']}"
+             f" ({g['right_warned']} of them with a warning) |",
+             f"| **Wrong answer shown as if right** | **{f['wrong']}** | **{g['wrong']}** |",
+             f"| Wrong answer shown with a warning | – | {g['wrong_warned']} |",
              f"| Said \"not in the documents\" although they answer it | {f['refused']} | {g['refused']} |",
              f"| **Made-up answer** (the documents don't say) | **{f['made_up']}** of {s['not_in_documents']} | "
-             f"**{g['made_up']}** of {s['not_in_documents']} |",
+             f"**{g['made_up']}** of {s['not_in_documents']}" + (f" (+{g['made_up_warned']} with a warning)"
+                                                                 if g['made_up_warned'] else "") + " |",
              f"| Said \"not in the documents\" (right) | {f['said_not_found']} | {g['said_not_found']} |", "",
              f"AI calls per question: {s['ai_calls_per_question']} · seconds per question: "
              f"{s['seconds_per_question']} · verdicts: " + ", ".join(f"{k} {v}" for k, v in s["verdicts"].items()),
              "", "## Answers that changed", ""]
     for r in result["rows"]:
-        if r["first_outcome"] != r["final_outcome"] or r["caught"]:
+        if r["first_outcome"] != r["final_outcome"] or r["caught"] or r["verdict"] == "unconfirmed":
             lines += [f"**{r['q']}** ({r['first_outcome']} → {r['final_outcome']}, {r['verdict']})", "",
                       f"- first: {r['first'][:300]}", f"- shown: {r['final'][:300]}"]
             lines += [f"- caught: {c}" for c in r["caught"][:3]]

@@ -9,8 +9,11 @@
      every amount, number, date and percentage must be in the passages (or simple arithmetic on them), every
      quotation must be word for word, every citation must point to a real passage, and each sentence must
      match what its passage says.
-   A failed check goes back to the AI with the reason (up to 2 times). What still fails is removed and listed.
-   Then an independent reading by a fresh AI call looks for claims the passages do not support.
+   A failed check goes back to the AI with the reason (up to 2 times); a correction never replaces a better earlier
+   answer, and an obvious citation slip ([2] when there is one passage) is fixed without asking. What still fails
+   is removed and listed. Then an independent reading by a fresh AI call looks for claims the passages do not
+   support; it can only warn (the answer is marked unconfirmed), never rewrite, because an AI's reading is not
+   reliable enough to overrule an answer that passed the exact checks.
 4. If the documents do not hold the answer: with CHAT_DOCS_ONLY=1 it says so; otherwise the general assistant
    answers (its numbers are checked by exact tools) and the answer is marked as not from the documents.
 Without an AI (rules), it quotes the best passages word for word.
@@ -233,7 +236,7 @@ def check_answer(text: str, passages: list[dict], question: str, history_text: s
         if HEDGE.search(s):
             continue
         sw = [w for w in kb.words(plain) if not w.isdigit()]
-        if len(set(sw)) >= 4:
+        if len(set(sw)) >= 4 and not (refs and not good):
             pool = set().union(*(passage_words[r - 1] for r in refs if 1 <= r <= n)) if refs else all_words
             share = len(set(sw) & pool) / len(set(sw))
             if share < 0.34:
@@ -420,45 +423,86 @@ def _general(question: str, history, client) -> dict:
             "answered_by": res.get("answered_by")}
 
 
+def repair_citations(text: str, passages: list[dict]) -> tuple[str, list[str]]:
+    """Fix a citation that points to no passage ("[2]" when there is one passage), when the sentence's numbers and
+    words plainly come from one passage. Returns (text, what was fixed). A slip like this is not a wrong fact."""
+    n = len(passages)
+    if not n:
+        return text, []
+    fixed: list[str] = []
+    words_of = [set(kb.words(p["text"])) for p in passages]
+    nums_of = [exact_numbers([p["text"]]) for p in passages]
+
+    def best_for(sentence: str) -> int | None:
+        plain = CITE.sub(" ", sentence)
+        strict = {_q(v) for v, _, st in numbers_in(plain) if st}
+        sw = set(kb.words(plain))
+        fits = [i for i in range(n) if strict <= nums_of[i]]
+        if not fits:
+            return None
+        ranked = sorted(fits, key=lambda i: -len(sw & words_of[i]))
+        if len(ranked) > 1 and len(sw & words_of[ranked[0]]) == len(sw & words_of[ranked[1]]):
+            return None  # two passages fit equally well: don't guess
+        return ranked[0] + 1
+
+    out_lines = []
+    for line in (text or "").splitlines():
+        parts = _split_line(line.strip()) if line.strip() else []
+        new_parts = []
+        for sent in parts:
+            bad = [r for r in cited(sent) if r < 1 or r > n]
+            if bad:
+                good = best_for(sent)
+                if good is not None:
+                    for b in bad:
+                        sent = re.sub(rf"\[{b}\]", f"[{good}]", sent)
+                    fixed.append(f"citation [{bad[0]}] corrected to [{good}]")
+            new_parts.append(sent)
+        out_lines.append(" ".join(new_parts) if parts else line)
+    return "\n".join(out_lines), fixed
+
+
+def _hard(problems: list[dict]) -> int:
+    return sum(1 for p in problems if p["hard"])
+
+
 def _grounded(question: str, passages: list[dict], hist: str, client) -> dict:
+    """Write, check, correct. Only the exact checks (numbers, quotations, citations) can send an answer back: they
+    are reliable. The independent AI reading can only warn, because a small model's reading is not reliable enough to
+    rewrite an answer on its own say-so. A correction never replaces a better earlier answer."""
     from cascade_guard.llm.client import BudgetExceeded, LLMCallError
     attempts: list[dict] = []
     caught: list[str] = []
+    repaired: list[str] = []
+    best: dict | None = None          # the attempt with the fewest hard problems so far
     n = 0
     text = _ask(client, question, passages, hist, n)
-    reviewed: dict | None = None
-    reads = 0  # independent readings: one may send the answer back, a second one only confirms or flags it
     while True:
         if is_not_found(text):
-            attempts.append({"answer": text, "problems": []})
-            res = _not_found(passages)
-            res["attempts"] = attempts
-            res["checks"] = ["the AI found no answer in the passages, and said so instead of guessing"]
-            return res
+            attempts.append({"answer": text, "problems": ["the AI said the passages don't answer it"]})
+            if best is None:  # it said so straight away: an honest "not in the documents"
+                res = _not_found(passages)
+                res["attempts"] = attempts
+                res["checks"] = ["the AI found no answer in the passages, and said so instead of guessing"]
+                return res
+            break  # it gave up while correcting: keep the earlier answer
+        text, fixes = repair_citations(text, passages)
+        repaired += fixes
         problems = check_answer(text, passages, question, hist)
-        reasons = [p["text"] for p in problems]
-        if not problems and _checker_on() and reads < 2 and (reviewed is None or reviewed["verdict"] == "revise"):
-            reads += 1
-            try:
-                reviewed = review(client, question, passages, text)
-            except (LLMCallError, BudgetExceeded) as e:
-                reviewed = {"verdict": "unavailable", "problems": [], "error": str(e)[:200]}
-            if reviewed["verdict"] == "revise":
-                if reads >= 2:  # it was already sent back once for the reader: show it, marked unconfirmed
-                    attempts.append({"answer": text, "problems": ["an independent reading still found: " + p
-                                                                  for p in reviewed["problems"]]})
-                    break
-                reasons = ["an independent reading found: " + p for p in reviewed["problems"]]
-        attempts.append({"answer": text, "problems": reasons})
-        if not reasons or n >= MAX_REPAIRS:
+        hard = [p for p in problems if p["hard"]]
+        attempts.append({"answer": text, "problems": [p["text"] for p in problems]})
+        if best is None or _hard(problems) < _hard(best["problems"]):
+            best = {"text": text, "problems": problems, "n": len(attempts)}
+        if not hard or n >= MAX_REPAIRS:
             break
-        caught += [r for r in reasons if r not in caught]
+        caught += [p["text"] for p in hard if p["text"] not in caught]
         n += 1
-        text = _ask(client, question, passages, hist, n, previous=text, problems=reasons)
-    final_problems = check_answer(text, passages, question, hist)
+        text = _ask(client, question, passages, hist, n, previous=text, problems=[p["text"] for p in hard])
+    assert best is not None
+    text, final_problems = best["text"], best["problems"]
     removed: list[str] = []
-    verdict = "checked" if len(attempts) == 1 else "fixed"
-    if any(p["hard"] for p in final_problems):
+    verdict = "checked" if best["n"] == 1 and not caught else "fixed"
+    if _hard(final_problems):
         text, removed = trim(text, final_problems)
         verdict = "trimmed"
         if not CITE.search(text):
@@ -469,24 +513,31 @@ def _grounded(question: str, passages: list[dict], hist: str, client) -> dict:
                         "checks": ["every sentence the AI wrote had a claim the passages don't support, so none "
                                    "was shown"]})
             return res
-    elif any(not p["hard"] for p in final_problems) or (reviewed and reviewed["verdict"] == "revise"):
+    reviewed: dict = {"verdict": "off", "problems": []}
+    if _checker_on():
+        try:
+            reviewed = review(client, question, passages, text)
+        except (LLMCallError, BudgetExceeded) as e:
+            reviewed = {"verdict": "unavailable", "problems": [], "error": str(e)[:200]}
+    soft = [p["text"] for p in final_problems if not p["hard"]]
+    doubts = soft + (reviewed["problems"] if reviewed["verdict"] == "revise" else [])
+    if doubts and verdict != "trimmed":
         verdict = "unconfirmed"
     checks = ["every amount, number, date and quotation was compared with the passages",
               "every citation points to a passage that exists"]
-    if reviewed is None or reviewed["verdict"] in ("accept", "revise"):
-        checks.append("read again by an independent AI call looking for unsupported claims"
-                      if _checker_on() else "the independent reading is turned off (CHAT_SECOND_CHECK=off)")
-    elif reviewed["verdict"] == "unavailable":
-        checks.append("the independent reading could not run (the AI was busy)")
+    checks.append({"accept": "read again by an independent AI call: no unsupported claims found",
+                   "revise": "read again by an independent AI call: it has doubts (shown above)",
+                   "unclear": "read again by an independent AI call: no clear verdict",
+                   "unavailable": "the independent reading could not run (the AI was busy)",
+                   "off": "the independent reading is turned off (CHAT_SECOND_CHECK=off)"}[reviewed["verdict"]])
     out = {"answer": text, "verdict": verdict, "mode": "documents", "sources": _source_list(passages),
-           "checks": checks, "caught": caught, "removed": removed, "attempts": attempts}
-    if verdict == "unconfirmed":
-        doubts = [p["text"] for p in final_problems if not p["hard"]] + \
-            (reviewed["problems"] if reviewed and reviewed["verdict"] == "revise" else [])
-        out["notice"] = "Not fully confirmed against the documents: " + "; ".join(doubts[:3])
+           "checks": checks, "caught": caught, "removed": removed, "attempts": attempts, "repaired": repaired,
+           "review": reviewed}
+    if doubts:
+        out["notice"] = "Check before relying on it: " + "; ".join(doubts[:3])
     if removed:
-        out["notice"] = f"{len(removed)} sentence{'s' * (len(removed) != 1)} with claims the documents don't " \
-                        "support were removed."
+        out["notice"] = (f"{len(removed)} sentence{'s' * (len(removed) != 1)} with claims the documents don't "
+                         "support were removed." + (" Also: " + "; ".join(doubts[:2]) if doubts else ""))
     return out
 
 
