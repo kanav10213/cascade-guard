@@ -300,7 +300,43 @@ def test_stripe_payment_makes_a_key_shown_once_and_cancel_revokes(app_client, mo
     assert c.get("/me", headers={"X-API-Key": key}).json()["plan"] == "team"
     cancel = json.dumps({"type": "customer.subscription.deleted", "data": {"object": {"id": "sub_9"}}}).encode()
     c.post("/billing/stripe", content=cancel, headers={"Stripe-Signature": _stripe_sig(cancel, "whsec_test")})
-    assert c.get("/me", headers={"X-API-Key": key}).status_code == 401
+    assert c.get("/me", headers={"X-API-Key": key}).json()["plan"] == "free"  # cancelled: back to free, data kept
+
+
+def test_public_service_signup_widget_and_upgrade(app_client, monkeypatch):
+    c = app_client
+    assert c.post("/signup", json={"company": "Asha Classes", "email": "a@asha.example", "agree": True}).status_code == 404
+    monkeypatch.setenv("PUBLIC_SIGNUP", "1")
+    monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "whsec_test")
+    assert "doesn't make things up" in c.get("/").text and "Runs" in c.get("/dashboard").text
+    assert c.post("/signup", json={"company": "Asha Classes", "email": "a@asha.example"}).status_code == 422
+    made = c.post("/signup", json={"company": "Asha Classes", "email": "A@asha.example", "agree": True}).json()
+    assert made["workspace"] == "asha-classes" and made["monthly_limit"] == 50
+    assert c.post("/signup", json={"company": "Again", "email": "a@asha.example", "agree": True}).status_code == 409
+    mgr = {"X-API-Key": made["key"]}
+    c.post("/kb/docs", headers=mgr, json={"name": "fees.txt", "text": "The fee for the JEE batch is ₹45,000 per year."})
+    w = c.get("/widget/key", headers=mgr).json()
+    assert w["key"].startswith("pk_") and w["key"] in w["snippet"] and c.get("/widget/key", headers=mgr).json() == w
+    assert c.options("/widget/ask").headers["access-control-allow-origin"] == "*"
+    r = c.post("/widget/ask", json={"key": w["key"], "question": "What is the fee for the JEE batch?"})
+    assert r.headers["access-control-allow-origin"] == "*" and r.json()["sources"][0]["doc"] == "fees.txt"
+    assert "text" not in r.json()["sources"][0]
+    assert c.post("/widget/ask", json={"key": made["key"], "question": "hi there"}).status_code == 401
+    assert c.get("/kb/docs", headers={"X-API-Key": w["key"]}).status_code == 403  # a site key can only ask
+    assert c.get("/me", headers=mgr).json()["used_this_month"] == 1               # the plan is per workspace
+    assert "widget.js" in c.get("/widget.js").text[:200] or c.get("/widget.js").status_code == 200
+    for page in ("/terms", "/privacy", "/refunds", "/contact"):
+        assert c.get(page).status_code == 200
+    ev = {"type": "checkout.session.completed", "data": {"object": {
+        "id": "cs_test_upgrade1", "payment_status": "paid", "subscription": "sub_77",
+        "customer_details": {"email": "a@asha.example"}, "metadata": {"plan": "team"}}}}
+    body = json.dumps(ev).encode()
+    up = c.post("/billing/stripe", content=body, headers={"Stripe-Signature": _stripe_sig(body, "whsec_test")}).json()
+    assert up == {"status": "upgraded", "workspace": "asha-classes", "plan": "team"}
+    assert c.get("/me", headers=mgr).json()["monthly_limit"] == 10000
+    assert "team" in c.get("/welcome?ref=cs_test_upgrade1").text
+    demo = c.get("/widget/demo").json()["key"]
+    assert c.post("/widget/ask", json={"key": demo, "question": "What is the warranty on the angle grinder?"}).status_code == 200
 
 
 def test_razorpay_payment_link_and_pricing_page(app_client, monkeypatch):

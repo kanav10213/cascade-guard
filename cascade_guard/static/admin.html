@@ -81,6 +81,14 @@ pre{background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padd
     <div class="tablewrap"><table><thead><tr><th>Month</th><th>Workspace</th><th style="text-align:right">Answers</th><th style="text-align:right">AI calls</th><th style="text-align:right">Tokens</th></tr></thead><tbody id="userows"></tbody></table></div>
   </section>
 
+  <section class="card" id="widget" hidden>
+    <h2>Chat on your website</h2>
+    <p>Paste this one line just before <code>&lt;/body&gt;</code> on your website (in WordPress: a "Custom HTML" block or your theme's footer). A chat bubble appears, and it answers from this workspace's documents. Each answer counts towards your plan.</p>
+    <pre id="snippet"></pre>
+    <button class="btn ghost" id="copysnip" type="button">Copy the code</button>
+    <p class="small" style="margin-top:10px">Optional settings inside the tag: <code>data-title="Ask us"</code>, <code>data-color="#0a7d55"</code>, <code>data-greeting="Hi! Ask about our courses."</code>, <code>data-contact="Call us on 98xxxxxxxx"</code> (shown when the answer isn't in your documents).</p>
+  </section>
+
   <section class="card" id="apps" hidden>
     <h2>Connect other apps</h2>
     <p>Any app that works with OpenAI can use this assistant: Open WebUI, LibreChat, AnythingLLM, your own code. Its answers are checked against your documents in the same way.</p>
@@ -122,6 +130,7 @@ async function load(){
     if(me.role !== 'owner') $('#keyshelp').textContent = `Add member keys for people in ${me.workspace}. They share your plan (${me.plan}).`;
     $('#keys').hidden = false; $('#usage').hidden = false; $('#apps').hidden = false;
     await Promise.all([keys(), usage()]);
+    call('/widget/key').then(w => { $('#widget').hidden = false; $('#snippet').textContent = w.snippet; $('#copysnip').onclick = async () => { try{ await navigator.clipboard.writeText(w.snippet); $('#copysnip').textContent = 'Copied'; }catch(e){ $('#copysnip').textContent = 'Select the code and copy it'; } }; }).catch(() => {});
     const base = location.origin + '/v1';
     $('#base').textContent = base;
     $('#curl').textContent = `curl ${base}/chat/completions \\\n  -H "Authorization: Bearer YOUR_KEY" -H "Content-Type: application/json" \\\n  -d '{"model": "cascade-guard", "messages": [{"role": "user", "content": "How many days of leave do we get?"}]}'`;

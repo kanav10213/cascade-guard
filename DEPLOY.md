@@ -10,6 +10,42 @@ There are three ways to run it. Pick the one that fits.
 
 Every answer is checked against the company's documents, whichever AI writes it.
 
+**Want to start earning from it?** Go to [Go live as a paid service](#go-live-as-a-paid-service).
+
+---
+
+## Go live as a paid service
+
+The public service is a home page with free sign-up, a chat widget your customers paste into their websites, and
+paid plans. It is built in. These steps turn it on for real customers. Do them in order.
+
+| Step | What you do | Time | Cost |
+|---|---|---|---|
+| 1 | **A database that keeps data.** Create a free PostgreSQL database at [neon.tech](https://neon.tech). Copy its connection string and add it on Render as `CASCADE_DB`. Without this, the free Render disk forgets every customer when the server restarts. | 5 min | free |
+| 2 | **An AI.** Add a free Groq key on Render as `OPENAI_API_KEY`. Without an AI the chat still works, but it quotes the matching lines instead of writing an answer. | 3 min | free |
+| 3 | **Your details.** On Render set `CONTACT_EMAIL`, `BUSINESS_NAME` (your name or firm) and `BUSINESS_ADDRESS`. They appear on `/contact`, `/terms`, `/privacy` and `/refunds`. | 2 min | free |
+| 4 | **Read the policy pages.** `/terms`, `/privacy` and `/refunds` are starting drafts, not legal advice. Read them and change what doesn't fit you (`cascade_guard/company/saas.py`). | 15 min | free |
+| 5 | **Razorpay.** Open an account at razorpay.com and finish KYC (PAN and a bank account; an individual can register). Razorpay reviews your website, which is why steps 3 and 4 come first. | 1–3 days | free; about 2% per payment |
+| 6 | **Payment links.** In Razorpay create one Payment Link (or subscription) per plan. Add the note `plan` = `starter` or `team`. Set the callback URL to `https://<your-site>/welcome`. Put the links on Render as `BILLING_LINKS={"starter": "https://rzp.io/...", "team": "https://rzp.io/..."}`. | 10 min | |
+| 7 | **Webhook.** In Razorpay, Settings, Webhooks: add `https://<your-site>/billing/razorpay` with the events `payment_link.paid`, `subscription.charged` and `subscription.cancelled`. Put its secret on Render as `RAZORPAY_WEBHOOK_SECRET`. | 5 min | |
+| 8 | **Test it.** Sign up on your own site with a second email, add a document, paste the widget into a test page, and pay for the cheapest plan yourself. Your workspace should move to that plan. | 15 min | one small payment |
+
+Useful to know:
+
+- **Prices** are `PLAN_PRICES` and **limits** are `PLANS`. Change them on Render at any time.
+- **Upgrades are matched by email.** A customer who pays with the email they signed up with is upgraded
+  automatically. If they cancel, their workspace goes back to the free plan and keeps its documents.
+- **A plan is per workspace.** The website widget, staff keys and API calls all count towards the same monthly
+  answers.
+- **Sign-up has no email verification yet**, and it is limited to 3 per address per day and `SIGNUPS_PER_DAY` in
+  total.
+- **The free Render server sleeps** after 15 minutes without visitors, and the first visit then takes about a
+  minute. Move to a paid Render plan (about $7 a month) once you have paying customers. A custom domain can be added
+  on Render too.
+- **Income is not automatic.** The site takes sign-ups and payments by itself, but customers have to hear about it.
+  The quickest first customers are usually local businesses you can show it to in person: coaching classes,
+  clinics, shops with a website. Set it up for them with their own documents.
+
 ---
 
 ## A. Your own server with a local AI

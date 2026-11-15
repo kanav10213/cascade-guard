@@ -33,9 +33,9 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from cascade_guard.auth import auth_enabled, require, role_for_key
 
 EXEMPT = {"/", "/assistant", "/receipts", "/chat", "/admin", "/welcome", "/pricing", "/health", "/health/ready",
-          "/favicon.ico"}
+          "/favicon.ico", "/dashboard", "/widget.js", "/terms", "/privacy", "/refunds", "/contact", "/start"}
 # Routes that call the model; chain runs on a real model use the same limit.
-LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions")
+LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions", "/widget/ask")
 
 
 def _limit(name, default):
@@ -97,7 +97,7 @@ def _role_of(key: str):
     """The role a key maps to, or None (no exception: used for logging and limits). Customer keys (cg_...)
     count as "customer": they open only the company product."""
     role = role_for_key(key)
-    if role is None and key.startswith("cg_"):
+    if role is None and key.startswith(("cg_", "pk_")):
         from cascade_guard.company.keys import principal_for
         try:
             p = principal_for(key)

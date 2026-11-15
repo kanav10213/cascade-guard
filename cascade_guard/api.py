@@ -80,7 +80,8 @@ STATIC = Path(__file__).parent / "static"
 
 @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
 def dashboard():
-    return FileResponse(STATIC / "index.html")
+    from cascade_guard.company.saas import public
+    return FileResponse(STATIC / ("landing.html" if public() else "index.html"))
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -155,6 +156,10 @@ install_company(app)
 from cascade_guard.company.billing import router as billing_router  # noqa: E402
 
 app.include_router(billing_router)
+
+from cascade_guard.company.saas import router as saas_router  # noqa: E402
+
+app.include_router(saas_router)
 
 from cascade_guard import ops  # noqa: E402
 

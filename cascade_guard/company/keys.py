@@ -31,8 +31,8 @@ from datetime import UTC, datetime
 from fastapi import Header, HTTPException
 
 DEFAULT_PLANS = {"free": 50, "starter": 1000, "team": 10000, "unlimited": 0}
-ROLES = ("member", "manager")
-RANK = {"member": 1, "manager": 2, "owner": 3}
+ROLES = ("member", "manager", "widget")   # widget: a public site key (pk_...) that can only ask through /widget/ask
+RANK = {"widget": 0, "member": 1, "manager": 2, "owner": 3}
 WORKSPACE_RX = re.compile(r"^[a-z0-9][a-z0-9._-]{0,62}$")
 
 
@@ -114,7 +114,7 @@ def create_key(name: str, workspace: str, *, role: str = "member", plan: str = "
         raise ValueError(f"unknown plan {plan!r}; plans: {', '.join(all_plans)}")
     ws = norm_workspace(workspace)
     limit = all_plans[plan] if monthly_limit is None else max(0, int(monthly_limit))
-    key = "cg_" + secrets.token_urlsafe(30)
+    key = ("pk_" if role == "widget" else "cg_") + secrets.token_urlsafe(30)
     store = store or _store()
     with store._tx() as c:
         kid = c.insert("INSERT INTO api_keys (key_hash, prefix, name, workspace, role, plan, monthly_limit, email, ref,"
@@ -198,7 +198,7 @@ def principal_for(key: str, store=None) -> Principal | None:
         k = os.getenv(env)
         if k and given and secrets.compare_digest(given, k.encode("utf-8", "surrogateescape")):
             return Principal("default", role, 0, {"owner": "owner", "manager": "manager", "member": "member"}[role])
-    if key and key.startswith("cg_"):
+    if key and key.startswith(("cg_", "pk_")):
         from cascade_guard.storage.db import get_store
         store = store or get_store()
         if store is not None:
@@ -219,6 +219,8 @@ def caller(x_api_key: str | None = Header(default=None),
     p = principal_for(key_from(x_api_key, authorization))
     if p is None:
         raise HTTPException(status_code=401, detail="invalid or missing key (send X-API-Key or Authorization: Bearer)")
+    if p.role == "widget":
+        raise HTTPException(status_code=403, detail="a website widget key only works in the website widget")
     return p
 
 
@@ -230,9 +232,42 @@ def need(p: Principal, role: str) -> None:
 # ---------------------------------------------------------------- limits and usage
 
 def used(p: Principal, store=None) -> int:
-    rows = (store or _store())._read("SELECT requests FROM key_usage WHERE key_id = ? AND workspace = ? AND month = ?",
-                                     (p.key_id, p.workspace, month()))
-    return int(rows[0]["requests"]) if rows else 0
+    """Answers this month: the whole workspace's for a customer key (a plan is per company, whichever key or
+    website widget asked); the key's own for the server's keys."""
+    if p.key_id:
+        rows = (store or _store())._read("SELECT SUM(requests) AS requests FROM key_usage WHERE key_id <> 0 AND"
+                                         " workspace = ? AND month = ?", (p.workspace, month()))
+    else:
+        rows = (store or _store())._read("SELECT requests FROM key_usage WHERE key_id = 0 AND workspace = ? AND"
+                                         " month = ?", (p.workspace, month()))
+    return int(rows[0]["requests"] or 0) if rows else 0
+
+
+def set_plan(workspace: str, plan: str, customer: str | None = None, ref: str | None = None, store=None) -> int:
+    """Move every key of a workspace to a plan (an upgrade after paying, or back to free after cancelling)."""
+    store = store or _store()
+    limit = plans().get(plan, 0)
+    with store._tx() as c:
+        n = c.execute("UPDATE api_keys SET plan = ?, monthly_limit = ? WHERE workspace = ? AND revoked_at IS NULL",
+                      (plan, limit, workspace)).rowcount
+        if customer or ref:
+            c.execute("UPDATE api_keys SET customer = COALESCE(?, customer), ref = COALESCE(?, ref) WHERE id ="
+                      " (SELECT MIN(id) FROM api_keys WHERE workspace = ? AND role = 'manager' AND revoked_at IS NULL)",
+                      (customer, ref, workspace))
+    return n
+
+
+def workspace_of_email(email: str, store=None) -> str | None:
+    rows = (store or _store())._read("SELECT workspace FROM api_keys WHERE LOWER(email) = ? AND role = 'manager' AND"
+                                     " revoked_at IS NULL ORDER BY id LIMIT 1", ((email or "").strip().lower(),))
+    return rows[0]["workspace"] if rows else None
+
+
+def downgrade_by_customer(customer: str, store=None) -> int:
+    """A cancelled subscription: the customer's workspace goes back to the free plan (their documents stay)."""
+    store = store or _store()
+    rows = store._read("SELECT DISTINCT workspace FROM api_keys WHERE customer = ? AND revoked_at IS NULL", (customer,))
+    return sum(set_plan(r["workspace"], "free", store=store) for r in rows) if customer else 0
 
 
 def check_quota(p: Principal, store=None) -> None:
@@ -241,7 +276,7 @@ def check_quota(p: Principal, store=None) -> None:
         return
     n = used(p, store)
     if n >= p.monthly_limit:
-        raise HTTPException(status_code=429, detail=f"This key has used its {p.monthly_limit} answers for {month()} "
+        raise HTTPException(status_code=429, detail=f"This workspace has used its {p.monthly_limit} answers for {month()} "
                                                     f"(plan {p.plan}). It starts again next month, or upgrade the plan.")
 
 

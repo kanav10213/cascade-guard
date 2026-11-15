@@ -1,6 +1,25 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-11-16
+
+### Added
+- **The public service** (`cascade_guard/company/saas.py`, on with `PUBLIC_SIGNUP=1`):
+  - a home page with a live demo, and free sign-up (`POST /signup`) that makes a workspace and its manager key;
+  - **a chat widget for the customer's own website**: one `<script src=".../widget.js" data-key="pk_...">` line.
+    It answers only from that workspace's documents through `POST /widget/ask`, with a public site key that can
+    do nothing else;
+  - policy pages `/terms`, `/privacy`, `/refunds` and `/contact` (drafts to review), and `GET /plans`;
+  - the widget code in `/admin`.
+- A payment from the email that signed up **upgrades that workspace** instead of making a new one.
+- A plan's document limit (`PLAN_PASSAGES`, free: 300 passages).
+
+### Changed
+- A plan's monthly answers are counted **per workspace**, not per key.
+- A cancelled subscription moves the workspace **back to the free plan** and keeps its data, instead of revoking
+  the keys.
+- With no AI connected, answers quote only the lines that match the question, not the whole passage.
+
 ## [1.5.0] - 2026-11-09
 
 ### Added

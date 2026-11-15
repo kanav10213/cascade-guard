@@ -226,7 +226,7 @@ def add_document(workspace: str, name: str, data: bytes, *, by: str = "", store=
     limit = max_chunks if max_chunks is not None else int(os.getenv("KB_MAX_PASSAGES", "50000"))
     have = store._read("SELECT COUNT(*) AS n FROM kb_chunks WHERE workspace = ?", (workspace,))[0]["n"]
     if int(have) + len(passages) > limit:
-        raise DocumentError(f"the workspace would have more than {limit} passages; remove old documents first")
+        raise DocumentError(f"this would go over your plan's document limit ({limit} passages); remove old documents or upgrade")
     chars = sum(len(t) for _, t in parts)
     with store._tx() as c:
         c.execute("DELETE FROM kb_docs WHERE workspace = ? AND name = ?", (workspace, name))  # re-upload replaces

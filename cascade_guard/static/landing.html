@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI chat for your website that doesn't make things up</title>
+<meta name="description" content="Put an AI chat on your website that answers customers from your own documents. Every answer is checked against them before it is shown.">
+<style>
+:root{
+  --paper:#f2f5f1;--sheet:#ffffff;--ink:#1d2528;--muted:#56646a;--rule:#d3dddf;
+  --blue:#23527c;--blue-soft:#e4edf6;--ok:#1d7a50;--ok-soft:#e3f2ea;--pen:#c62f28;--pen-soft:#fbe9e7;--onblue:#fff;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:"Cascadia Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#13181a;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;
+  --blue:#8db8e8;--blue-soft:#1f2d3c;--ok:#5ccf96;--ok-soft:#163326;--pen:#ff7b70;--pen-soft:#3b1f1c;--onblue:#0f1720;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:16.5px/1.6 var(--sans)}
+a{color:var(--blue)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+.w{max-width:1040px;margin:0 auto;padding:0 20px}
+nav{display:flex;align-items:center;gap:18px;padding:16px 0;font-size:15px}
+nav b{font-size:17px;margin-right:auto;display:flex;gap:9px;align-items:center}
+nav a{text-decoration:none}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:44px;align-items:start;padding:34px 0 46px}
+@media(max-width:860px){.hero{grid-template-columns:1fr;gap:26px;padding-top:14px}}
+h1{font-size:clamp(31px,5vw,47px);line-height:1.08;letter-spacing:-.025em;margin:0 0 16px;font-weight:680;text-wrap:balance}
+.lead{font-size:18.5px;color:var(--muted);margin:0 0 20px;max-width:54ch}
+.ticks{list-style:none;padding:0;margin:0;display:grid;gap:7px;font-size:15.5px}
+.ticks li{padding-left:26px;position:relative}
+.ticks li::before{content:"✓";position:absolute;left:0;color:var(--ok);font-weight:700}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:22px}
+.card h2{margin:0 0 4px;font-size:19px}
+.card p.s{margin:0 0 14px;color:var(--muted);font-size:14.5px}
+label.f{display:block;font-size:13.5px;color:var(--muted);margin:0 0 10px}
+label.f input[type=text],label.f input[type=email]{display:block;width:100%;margin-top:4px;border:1px solid var(--rule);border-radius:9px;padding:10px 12px;background:var(--paper);color:var(--ink);font:inherit}
+.agree{font-size:13.5px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;margin:4px 0 14px}
+.btn{display:inline-block;border:0;background:var(--blue);color:var(--onblue);border-radius:10px;padding:11px 18px;font:inherit;font-weight:650;cursor:pointer;text-decoration:none}
+.btn.wide{width:100%}
+.btn.ghost{background:none;border:1px solid var(--blue);color:var(--blue)}
+.btn:disabled{opacity:.6}
+.err{color:var(--pen);font-size:14px;margin:10px 0 0}
+.key{background:var(--ok-soft);border:1px solid var(--ok);border-radius:10px;padding:11px 12px;font:13.5px var(--mono);word-break:break-all;margin:8px 0}
+ol.next{padding-left:20px;margin:10px 0 14px;font-size:15px}
+section{padding:42px 0;border-top:1px solid var(--rule)}
+section h2.t{font-size:27px;letter-spacing:-.015em;margin:0 0 8px;line-height:1.2}
+section p.sub{color:var(--muted);margin:0 0 24px;max-width:62ch}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:760px){.steps{grid-template-columns:1fr}}
+.step b{display:block;font-size:17px;margin:6px 0 4px}
+.step span.n{font:600 13px var(--mono);color:var(--blue)}
+.step p{margin:0;color:var(--muted);font-size:15px}
+.proof{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.proof{grid-template-columns:1fr}}
+.say{border-radius:12px;padding:16px 18px;border:1px solid var(--rule);background:var(--sheet)}
+.say small{display:block;font:600 12.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+.say.bad small{color:var(--pen)}.say.good small{color:var(--ok)}
+.say p{margin:0 0 8px;font-size:15.5px}
+.say .q{color:var(--muted)}
+.strike{text-decoration:line-through;color:var(--pen)}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px}
+.plan h3{margin:0;font-size:17px;text-transform:capitalize}
+.plan .price{font-size:25px;font-weight:680;margin:6px 0 2px}
+.plan ul{padding-left:18px;color:var(--muted);font-size:14.5px;margin:10px 0 16px}
+pre{background:var(--paper);border:1px solid var(--rule);border-radius:9px;padding:11px 12px;overflow:auto;font:12.5px/1.5 var(--mono);margin:8px 0}
+details{border-bottom:1px solid var(--rule);padding:12px 0}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin:8px 0 0;max-width:70ch}
+footer{padding:26px 0 80px;font-size:14px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+footer span{margin-right:auto}
+.try{display:inline-flex;gap:8px;align-items:center;background:var(--blue-soft);color:var(--blue);border-radius:99px;padding:5px 13px;font-size:14px;font-weight:600;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="w">
+  <nav>
+    <b><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="var(--blue)"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="var(--onblue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="brand">Cascade Guard</span></b>
+    <a href="#pricing">Pricing</a><a href="/chat">Sign in</a>
+  </nav>
+
+  <div class="hero">
+    <div>
+      <span class="try">Try it now: the chat bubble at the bottom right is live</span>
+      <h1>An AI chat for your website that doesn't make things up</h1>
+      <p class="lead">Upload your price list, policies and FAQs. Your customers ask questions on your website and get answers from your own documents. Every answer is checked against them before it is shown.</p>
+      <ul class="ticks">
+        <li>Every price, date and number is compared with your documents</li>
+        <li>If your documents don't say, it says so instead of guessing</li>
+        <li>One line of code to add it to any website</li>
+        <li>Free to start: 50 answers a month, no card needed</li>
+      </ul>
+    </div>
+    <div class="card" id="signupcard">
+      <div id="formbox">
+        <h2>Start free</h2>
+        <p class="s">Your own private workspace in under a minute.</p>
+        <form id="signup">
+          <label class="f">Business name<input type="text" id="company" required minlength="2" maxlength="80" autocomplete="organization"></label>
+          <label class="f">Email<input type="email" id="email" required maxlength="255" autocomplete="email"></label>
+          <label class="agree"><input type="checkbox" id="agree" required><span>I agree to the <a href="/terms" target="_blank" rel="noopener">terms</a> and the <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.</span></label>
+          <button class="btn wide" id="go" type="submit">Create my workspace</button>
+          <p class="err" id="err" role="alert" hidden></p>
+        </form>
+      </div>
+      <div id="donebox" hidden>
+        <h2>Your workspace is ready</h2>
+        <p class="s">This is your access key. Copy it and keep it safe: it is shown only once.</p>
+        <div class="key" id="key"></div>
+        <button class="btn ghost" id="copy" type="button">Copy key</button>
+        <ol class="next"><li>Open your dashboard and add your documents.</li><li>Ask a few questions to test it.</li><li>Copy the one-line code from "Keys, usage and apps" into your website.</li></ol>
+        <a class="btn wide" href="/chat" style="text-align:center">Open my dashboard</a>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <h2 class="t">How it works</h2>
+    <p class="sub">No training, no setup call. If you can upload a file, you can run it.</p>
+    <div class="steps">
+      <div class="card step"><span class="n">STEP 1</span><b>Upload your documents</b><p>PDF, Word, text or spreadsheets (CSV): price lists, timings, policies, FAQs, product details.</p></div>
+      <div class="card step"><span class="n">STEP 2</span><b>Paste one line into your website</b><p>A chat bubble appears on your site. It works with WordPress, Shopify, Wix, Blogger or plain HTML.</p></div>
+      <div class="card step"><span class="n">STEP 3</span><b>Customers get checked answers</b><p>Day and night, from your own information, with the source shown. Update a document and the answers update.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="t">Why "checked" matters</h2>
+    <p class="sub">An ordinary AI chatbot can state a wrong price or invent a policy, and your customer will hold you to it. This one checks its own answer against your document first.</p>
+    <div class="proof">
+      <div class="say bad"><small>An ordinary AI chatbot can say</small><p class="q">"What's the warranty on the angle grinder?"</p><p>"All our power tools come with a <span class="strike">2-year warranty</span>."</p><p class="q">Wrong: the document says 1 year for that product.</p></div>
+      <div class="say good"><small>With checking, the customer sees</small><p class="q">"What's the warranty on the angle grinder?"</p><p>"The angle grinder (KPT-AG-100) carries a 1-year warranty."</p><p class="q">✓ Checked against: customer-support-faq</p></div>
+    </div>
+    <p class="sub" style="margin-top:18px">How it checks: every amount, number, date and quotation in the answer must appear in the passage it came from. A wrong one is sent back to be corrected, and anything that still can't be confirmed is removed or marked. The checks reduce mistakes a lot; no AI system is perfect, so answers that could not be fully confirmed are shown with a warning.</p>
+  </section>
+
+  <section id="pricing">
+    <h2 class="t">Pricing</h2>
+    <p class="sub">One plan covers your whole business: your website chat, your staff, and any app you connect.</p>
+    <div class="plans" id="plans"></div>
+  </section>
+
+  <section>
+    <h2 class="t">Questions</h2>
+    <details><summary>What can I upload?</summary><p>PDF, Word (.docx), text, Markdown, CSV and HTML files. Scanned PDFs (photos of pages) need to be converted to text first. Save Excel sheets as CSV.</p></details>
+    <details><summary>Is my data private?</summary><p>Your documents sit in your own workspace, which other customers cannot see. They are not used to train AI models. You can delete them at any time. Details are in the <a href="/privacy">privacy policy</a>.</p></details>
+    <details><summary>What happens when the documents don't have the answer?</summary><p>The chat says it couldn't find it and can show your phone number or email instead. It does not guess.</p></details>
+    <details><summary>What if I use up my answers?</summary><p>The chat stops answering until the next month, or until you upgrade. You are never charged extra automatically.</p></details>
+    <details><summary>Can my staff use it too?</summary><p>Yes. Give each person a key from your dashboard and they can ask questions in the browser. Developers can also connect it to other apps: it speaks the same API format as OpenAI.</p></details>
+    <details><summary>Can I cancel?</summary><p>Any time. Your workspace moves back to the free plan and your documents are kept. See <a href="/refunds">cancellation and refunds</a>.</p></details>
+  </section>
+
+  <footer><span id="foot">Cascade Guard</span><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/refunds">Refunds</a><a href="/contact">Contact</a></footer>
+</div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+function h(tag, attrs, ...kids){ const e = document.createElement(tag); for(const [k, v] of Object.entries(attrs || {})){ if(v == null || v === false) continue; if(k === 'class') e.className = v; else if(k === 'text') e.textContent = v; else e.setAttribute(k, v); } for(const c of kids.flat()){ if(c != null && c !== false) e.append(c.nodeType ? c : document.createTextNode(String(c))); } return e; }
+
+fetch('/plans').then(r => r.json()).then(d => {
+  $('#brand').textContent = d.brand; $('#foot').textContent = '© ' + new Date().getFullYear() + ' ' + d.brand;
+  if(!d.signup){ $('#formbox').replaceChildren(h('h2', {text: 'Sign-up is closed'}), h('p', {class: 's', text: 'This server is private. Sign in with the key you were given.'}), h('a', {class: 'btn wide', href: '/chat', style: 'text-align:center', text: 'Sign in'})); }
+  const box = $('#plans');
+  for(const p of d.plans){
+    const lim = p.answers ? p.answers.toLocaleString('en-IN') + ' checked answers a month' : 'No monthly limit';
+    let action;
+    if(p.plan === 'free') action = h('a', {class: 'btn ghost', href: '#signupcard', text: 'Start free'});
+    else if(p.link) action = h('a', {class: 'btn', href: p.link, rel: 'noopener', text: 'Choose ' + p.plan});
+    else if(d.contact) action = h('a', {class: 'btn ghost', href: 'mailto:' + d.contact + '?subject=' + encodeURIComponent(d.brand + ': ' + p.plan + ' plan'), text: 'Contact us to upgrade'});
+    else action = h('span', {class: 's', text: 'Coming soon'});
+    box.append(h('div', {class: 'card plan'}, h('h3', {text: p.plan}), h('div', {class: 'price', text: p.price || ''}), h('ul', {}, h('li', {text: lim}), h('li', {text: 'Website chat widget'}), h('li', {text: p.plan === 'free' ? 'Up to about 30 pages of documents' : 'Large document library'}), h('li', {text: 'Keys for your staff'})), action));
+  }
+  if(d.plans.length > 1) box.append(h('p', {class: 's', style: 'grid-column:1/-1;color:var(--muted);font-size:14px', text: 'Paying? Use the same email you signed up with, and your workspace is upgraded automatically.'}));
+}).catch(() => {});
+
+$('#signup').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const err = $('#err'); err.hidden = true; $('#go').disabled = true; $('#go').textContent = 'Creating…';
+  try{
+    const r = await fetch('/signup', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({company: $('#company').value, email: $('#email').value, agree: $('#agree').checked})});
+    const j = await r.json().catch(() => ({}));
+    if(!r.ok){ let d = j.detail; if(Array.isArray(d)) d = 'Please check the business name and email.'; throw new Error(d || 'Could not create the workspace. Please try again.'); }
+    $('#key').textContent = j.key;
+    try{ sessionStorage.setItem('cg_key', j.key); }catch(e){}
+    $('#formbox').hidden = true; $('#donebox').hidden = false;
+    $('#copy').addEventListener('click', async () => { try{ await navigator.clipboard.writeText(j.key); $('#copy').textContent = 'Copied'; }catch(e){ $('#copy').textContent = 'Select the key and copy it'; } });
+  }catch(e){ err.textContent = e.message; err.hidden = false; }
+  finally{ $('#go').disabled = false; $('#go').textContent = 'Create my workspace'; }
+});
+
+fetch('/widget/demo').then(r => r.json()).then(d => {
+  const s = document.createElement('script'); s.src = '/widget.js'; s.async = true;
+  s.setAttribute('data-key', d.key); s.setAttribute('data-title', 'Demo: Kestrel Tools (a made-up company)');
+  s.setAttribute('data-greeting', 'This is a live demo for a made-up company, Kestrel Precision Tools. Try: "What is the warranty on the angle grinder?" or "What is the price of the cordless drill?"');
+  s.setAttribute('data-contact', 'In a real shop, your phone number would show here.');
+  document.body.append(s);
+}).catch(() => {});
+</script>
+</body>
+</html>

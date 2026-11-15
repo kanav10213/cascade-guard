@@ -1,7 +1,8 @@
 """Selling it: payments create customer keys by themselves.
 
     GET  /pricing                    your plans, prices and payment links (a page to send customers)
-    POST /billing/stripe             Stripe webhook: a paid checkout makes a key; a cancelled subscription revokes it
+    POST /billing/stripe             Stripe webhook: a paid checkout makes a key (or upgrades the workspace of that
+                                     email); a cancelled subscription puts the workspace back on the free plan
     POST /billing/razorpay           Razorpay webhook: a paid payment link or payment makes a key; a cancelled
                                      subscription revokes it
     GET  /welcome?ref=...            after paying, the customer sees their key once (then it is forgotten)
@@ -80,6 +81,10 @@ def _issue(ref: str, *, email: str | None, company: str | None, plan: str, custo
         return {"status": "already issued", "key_id": existing["id"]}
     if plan not in K.plans():
         plan = os.getenv("BILLING_DEFAULT_PLAN", "starter")
+    ws = K.workspace_of_email(email) if email else None
+    if ws:  # someone who signed up free and now pays: their workspace moves to the plan, their keys keep working
+        K.set_plan(ws, plan, customer=customer, ref=ref)
+        return {"status": "upgraded", "workspace": ws, "plan": plan}
     _, rec = K.create_key(company or email or "customer", _workspace_for(company, email, ref), role="manager",
                           plan=plan, email=email, ref=ref, customer=customer, keep_for_reveal=True)
     return {"status": "issued", "key_id": rec["id"], "workspace": rec["workspace"], "plan": plan}
@@ -121,7 +126,7 @@ async def stripe_webhook(request: Request):
         return _issue(obj["id"], email=details.get("email"), company=meta.get("company") or details.get("name"),
                       plan=plan, customer=obj.get("subscription") or obj.get("customer"))
     if kind in ("customer.subscription.deleted",):
-        return {"status": "revoked", "keys": K.revoke_by_customer(obj.get("id", ""))}
+        return {"status": "back to free", "keys": K.downgrade_by_customer(obj.get("id", ""))}
     return {"status": "ignored", "type": kind}
 
 
@@ -164,7 +169,7 @@ async def razorpay_webhook(request: Request):
                       customer=sub.get("id"))
     if kind in ("subscription.cancelled", "subscription.halted", "subscription.completed"):
         sub = (p.get("subscription") or {}).get("entity") or {}
-        return {"status": "revoked", "keys": K.revoke_by_customer(str(sub.get("id", "")))}
+        return {"status": "back to free", "keys": K.downgrade_by_customer(str(sub.get("id", "")))}
     return {"status": "ignored", "type": kind}
 
 
@@ -218,8 +223,10 @@ def welcome(ref: str | None = None, razorpay_payment_id: str | None = None):
     got = K.reveal_once(ref)
     if got is None:
         rec = K.find_by_ref(ref)
-        msg = ("Your key was already shown once, so it is not shown again. If you did not save it, write to us and "
-               "we will make a new one.") if rec else ("We have not received the payment confirmation yet. It "
+        msg = (f"Your payment is received and workspace {html.escape(rec['workspace'])} is on the "
+               f"{html.escape(rec['plan'])} plan. The keys you already have keep working: <a href='/chat'>open the "
+               "assistant</a>. (A new key is shown here only once; if you lost yours, write to us.)") if rec else \
+            ("We have not received the payment confirmation yet. It "
                                                        "usually takes a few seconds: refresh this page in a minute.")
         inner = f"<h1>Thank you</h1><p class='m'>{msg}</p>"
     else:

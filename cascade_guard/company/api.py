@@ -144,7 +144,9 @@ def kb_add(doc: DocIn, p: Principal = Depends(caller)):
     else:
         raise HTTPException(status_code=422, detail="send text or file_base64")
     try:
-        return kb.add_document(p.workspace, doc.name, data, by=p.name)
+        from cascade_guard.company.saas import passages_limit
+        cap = passages_limit(p.plan) if p.key_id else None
+        return kb.add_document(p.workspace, doc.name, data, by=p.name, max_chunks=cap)
     except kb.DocumentError as e:
         raise HTTPException(status_code=422, detail=str(e)) from None
 

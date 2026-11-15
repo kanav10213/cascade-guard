@@ -390,13 +390,13 @@ def answer(question: str, *, workspace: str = "default", client=None, history: l
                 "usage": _usage(client if real else None, before)}
     passages = [h for h in hits if h["score"] >= hits[0]["score"] * 0.25][:k]
     if not real:
-        return {**base, **_quoted(passages), "usage": {"ai_calls": 0, "tokens": 0}}
+        return {**base, **_quoted(passages, question), "usage": {"ai_calls": 0, "tokens": 0}}
     from cascade_guard.llm.client import BudgetExceeded, LLMCallError
     try:
         return {**base, **_grounded(question, passages, hist, client), "usage": _usage(client, before)}
     except (LLMCallError, BudgetExceeded) as e:  # the AI is down or busy: the exact passages are still useful
         busy = re.search(r"\b429\b|rate.?limit|too many", str(e), re.I)
-        return {**base, **_quoted(passages), "usage": _usage(client, before),
+        return {**base, **_quoted(passages, question), "usage": _usage(client, before),
                 "notice": "The AI is busy right now, so these are the exact passages from your documents." if busy
                 else f"The AI is not available right now ({str(e)[:160]}), so these are the exact passages."}
 
@@ -410,14 +410,34 @@ def _not_found(hits: list[dict]) -> dict:
             "caught": [], "removed": [], "attempts": []}
 
 
-def _quoted(passages: list[dict]) -> dict:
-    best = passages[:2]
+def _best_lines(question: str, text: str, limit: int = 2) -> tuple[list[str], int]:
+    """The sentences or rows of a passage that match the question best, word for word: (lines, best score)."""
+    units: list[str] = []
+    body = re.sub(r"(?m)^#{1,6}\s*.*$", "", text)                 # headings are not answers
+    for para in re.split(r"\n\s*\n", body):
+        if para.count(";") >= 2 and ":" in para:                   # spreadsheet rows: one per line
+            units += [u.strip() for u in para.splitlines() if u.strip()]
+        else:                                                      # prose: undo the line wrapping first
+            units += [u.strip() for u in SPLIT.split(re.sub(r"\s*\n\s*", " ", para)) if u.strip()]
+    qw = {w for w in kb.words(question) if not w.isdigit()}
+    scores = [len(qw & set(kb.words(u))) for u in units]
+    best = max(scores, default=0)
+    if best == 0:
+        return units[:1], 0
+    keep = [i for i, sc in enumerate(scores) if sc >= max(1, best - 1)][:limit + 1]   # near-ties add the conditions
+    return [units[i][:400] for i in keep], best
+
+
+def _quoted(passages: list[dict], question: str = "") -> dict:
+    picked = [(p, *_best_lines(question, p["text"])) for p in passages[:3]]
+    top = max((sc for _, _, sc in picked), default=0)
+    best = [(p, ls) for p, ls, sc in picked if ls and sc == top][:2]
     lines = ["Here is what your documents say:"]
-    for i, p in enumerate(best, 1):
-        body = re.sub(r"\s*\n+\s*", " ", re.sub(r"(?m)^#{1,6}\s*", "", p["text"])).strip()
-        lines.append(f"\n> {body[:700]}{'…' if len(body) > 700 else ''} [{i}]")
-    return {"answer": "\n".join(lines), "verdict": "quoted", "mode": "documents", "sources": _source_list(best),
-            "checks": ["word-for-word passages from your documents (no AI is connected, so nothing is reworded)"],
+    for i, (_, ls) in enumerate(best, 1):
+        lines += [f"\n> {ln} [{i}]" for ln in ls]
+    return {"answer": "\n".join(lines), "verdict": "quoted", "mode": "documents",
+            "sources": _source_list([p for p, _ in best]),
+            "checks": ["word-for-word lines from your documents (no AI is connected, so nothing is reworded)"],
             "caught": [], "removed": [], "attempts": []}
 
 
