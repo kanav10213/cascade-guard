@@ -21,7 +21,7 @@ paid plans. It is built in. These steps turn it on for real customers. Do them i
 
 | Step | What you do | Time | Cost |
 |---|---|---|---|
-| 1 | **A database that keeps data.** Create a free PostgreSQL database at [neon.tech](https://neon.tech). Copy its connection string and add it on Render as `CASCADE_DB`. Without this, the free Render disk forgets every customer when the server restarts. | 5 min | free |
+| 1 | **A database that keeps data.** On Render, open your PostgreSQL database, copy its **Internal Database URL**, and add it to the web service's Environment as `CASCADE_DB`. (A free Render database lasts 30 days; after that it costs about $6 a month. [neon.tech](https://neon.tech) has a free one that doesn't expire: use its connection string instead.) Without this, the free Render disk forgets every customer when the server restarts. | 5 min | free to start |
 | 2 | **An AI.** Add a free Groq key on Render as `OPENAI_API_KEY`. Without an AI the chat still works, but it quotes the matching lines instead of writing an answer. | 3 min | free |
 | 3 | **Your details.** On Render set `CONTACT_EMAIL`, `BUSINESS_NAME` (your name or firm) and `BUSINESS_ADDRESS`. They appear on `/contact`, `/terms`, `/privacy` and `/refunds`. | 2 min | free |
 | 4 | **Read the policy pages.** `/terms`, `/privacy` and `/refunds` are starting drafts, not legal advice. Read them and change what doesn't fit you (`cascade_guard/company/saas.py`). | 15 min | free |
@@ -30,6 +30,11 @@ paid plans. It is built in. These steps turn it on for real customers. Do them i
 | 7 | **Webhook.** In Razorpay, Settings, Webhooks: add `https://<your-site>/billing/razorpay` with the events `payment_link.paid`, `subscription.charged` and `subscription.cancelled`. Put its secret on Render as `RAZORPAY_WEBHOOK_SECRET`. | 5 min | |
 | 8 | **Test it.** Sign up on your own site with a second email, add a document, paste the widget into a test page, and pay for the cheapest plan yourself. Your workspace should move to that plan. | 15 min | one small payment |
 
+**You can start earning before Razorpay is approved.** Take payment directly (UPI, bank transfer), then open
+`/admin` with your `API_KEY`, find the company under **Customers**, and choose its plan. The same page makes a
+password-reset link for a customer who is locked out. From the command line: `cascade-guard customers`,
+`cascade-guard customers plan WORKSPACE starter`, `cascade-guard customers reset-link EMAIL`.
+
 Useful to know:
 
 - **Prices** are `PLAN_PRICES` and **limits** are `PLANS`. Change them on Render at any time.
@@ -37,8 +42,16 @@ Useful to know:
   automatically. If they cancel, their workspace goes back to the free plan and keeps its documents.
 - **A plan is per workspace.** The website widget, staff keys and API calls all count towards the same monthly
   answers.
+- **Behind a proxy, tell the server how to find each visitor's address**, or everyone shares one set of limits
+  (requests a minute, sign-in attempts, sign-ups a day). On Render: `CLIENT_IP_HEADER=cf-connecting-ip,x-forwarded-for`
+  and `TRUSTED_PROXY_HOPS=2`. Behind your own Caddy or nginx: `CLIENT_IP_HEADER=x-forwarded-for` and
+  `TRUSTED_PROXY_HOPS=1`.
 - **Sign-up has no email verification yet**, and it is limited to 3 per address per day and `SIGNUPS_PER_DAY` in
   total.
+- **Email:** set `SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD` and `SMTP_FROM` (any mail provider) so invitations and
+  password resets are emailed. Without it, a manager copies the link and sends it.
+- **Company login:** set `OIDC_ISSUER`, `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` to add "Continue with Google"
+  (or Microsoft, Okta). Register `https://<your-site>/auth/sso/callback` as the redirect URL.
 - **The free Render server sleeps** after 15 minutes without visitors, and the first visit then takes about a
   minute. Move to a paid Render plan (about $7 a month) once you have paying customers. A custom domain can be added
   on Render too.
@@ -59,7 +72,9 @@ cp .env.example .env          # then set COMPANY_NAME, and API_KEY to a long ran
 docker compose up -d          # the first start downloads the AI model (about 4.7 GB)
 ```
 
-Open **http://localhost:8000/chat** on that machine and enter your `API_KEY`. Then:
+Open **http://localhost:8000/chat** on that machine and enter your `API_KEY`. For sign-in with your company's own
+login instead of keys, set the `OIDC_...` settings and `OIDC_WORKSPACE` in `.env`; people then use
+`http://<server>:8000/login`, and managers get the dashboard at `/app`. Then:
 
 1. **Add documents.** Use "Add documents" in the left panel: PDF, Word (.docx), text, Markdown, CSV and HTML.
    Scanned PDFs need OCR first. Try "Load the sample company" to see how it works.

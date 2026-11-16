@@ -200,7 +200,7 @@ function h(tag, attrs, ...kids){
 }
 
 async function call(path, body, method){
-  const headers = {'Content-Type': 'application/json'};
+  const headers = {'Content-Type': 'application/json', 'X-CG': '1'};
   if(apiKey) headers['X-API-Key'] = apiKey;
   let r;
   try{ r = await fetch(path, {method: method || (body === undefined ? 'GET' : 'POST'), headers, body: body === undefined ? undefined : JSON.stringify(body)}); }
@@ -231,6 +231,7 @@ async function load(){
   $('#aipill').title = info.ai ? `${info.ai.provider} · ${info.ai.model}` : 'No AI is connected, so answers quote your documents word for word.';
   $('#uploadbox').hidden = !info.can_manage_documents;
   $('#adminlink').hidden = !info.can_manage_keys;
+  if(!apiKey){ $('#changekey').textContent = 'Sign out'; $('#adminlink').href = '/app'; $('#adminlink').textContent = 'Dashboard'; }
   if(info.docs_only){ $('#mode').value = 'documents'; }
   usageLine();
   await loadDocs();
@@ -249,7 +250,8 @@ function askKey(){
     h('form', {onsubmit: ev => { ev.preventDefault(); const v = $('#keyin').value.trim(); apiKey = v; rawKey.set(v, $('#keyrem').checked); load(); }},
       h('input', {class: 'text', id: 'keyin', type: 'password', autocomplete: 'off', placeholder: 'cg_…', 'aria-label': 'Access key'}),
       h('p', {class: 'small', style: 'margin:8px 0'}, h('label', {}, h('input', {type: 'checkbox', id: 'keyrem'}), ' Remember on this device')),
-      h('button', {class: 'btn', type: 'submit', text: 'Continue'}))));
+      h('button', {class: 'btn', type: 'submit', text: 'Continue'})),
+    h('p', {class: 'small', style: 'margin:12px 0 0'}, 'Have an account? ', h('a', {href: '/login', text: 'Sign in with your email'}))));
   setTimeout(() => $('#keyin') && $('#keyin').focus(), 50);
 }
 
@@ -429,7 +431,7 @@ $('#form').addEventListener('submit', ev => { ev.preventDefault(); const t = $('
 $('#q').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); $('#form').requestSubmit(); } });
 function grow(){ const t = $('#q'); t.style.height = 'auto'; t.style.height = Math.min(200, t.scrollHeight) + 'px'; }
 $('#q').addEventListener('input', grow);
-$('#changekey').addEventListener('click', () => { apiKey = ''; rawKey.set('', false); askKey(); closeSide(); });
+$('#changekey').addEventListener('click', async () => { if(!apiKey){ try{ await call('/auth/logout', {}); }catch(e){} location.href = '/login'; return; } apiKey = ''; rawKey.set('', false); askKey(); closeSide(); });
 function closeSide(){ $('#side').classList.remove('open'); $('#scrim').classList.remove('open'); }
 $('#menu').addEventListener('click', () => { $('#side').classList.add('open'); $('#scrim').classList.add('open'); });
 $('#scrim').addEventListener('click', closeSide);

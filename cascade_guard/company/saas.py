@@ -95,7 +95,8 @@ def signup(req: SignupIn, request: Request):
     if K.workspace_of_email(email):
         raise HTTPException(status_code=409, detail="This email already has a workspace. Use the key you were given, "
                                                     "or write to us for a new one.")
-    if not _allow_signup(request.client.host if request.client else "?"):
+    from cascade_guard.clientip import client_address
+    if not _allow_signup(client_address(request)):
         raise HTTPException(status_code=429, detail="Too many sign-ups from here today. Please try again tomorrow.")
     from cascade_guard.company.billing import _workspace_for
     try:
@@ -151,8 +152,8 @@ def widget_demo():
 
 @router.get("/widget.js", include_in_schema=False)
 def widget_js():
-    return FileResponse(STATIC / "widget.js", media_type="application/javascript",
-                        headers={"Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*",
+    return FileResponse(STATIC / "widget.js", media_type="application/javascript; charset=utf-8",
+                        headers={"Cache-Control": "public, max-age=120", "Access-Control-Allow-Origin": "*",
                                  "Cross-Origin-Resource-Policy": "cross-origin"})
 
 
@@ -172,14 +173,101 @@ def widget_preflight():
     return Response(status_code=204, headers=CORS)
 
 
-@router.post("/widget/ask")
-def widget_ask(req: WidgetAsk):
-    from cascade_guard.company.answer import answer
-    from cascade_guard.company.api import _client
-    p = K.principal_for(req.key)
+def _origin_host(request: Request) -> str:
+    origin = request.headers.get("origin") or request.headers.get("referer") or ""
+    return re.sub(r"^www\.", "", re.sub(r"^https?://", "", origin).split("/")[0].split(":")[0].lower())
+
+
+def _own_site(request: Request) -> bool:
+    """Is the widget being used on this service's own pages (the dashboard preview, the home page demo)?"""
+    own = re.sub(r"^https?://", "", os.getenv("PUBLIC_URL", "") or str(request.base_url)).split("/")[0].split(":")[0]
+    return bool(_origin_host(request)) and _origin_host(request) == re.sub(r"^www\.", "", own.lower())
+
+
+def _site(key: str, request: Request):
+    """(principal, settings) for a site key used from an allowed website, or a JSON error response."""
+    from cascade_guard.company import accounts
+    p = K.principal_for(key)
     if p is None or p.role != "widget":
         return JSONResponse({"detail": "This chat is not set up correctly (unknown site key)."}, status_code=401,
-                            headers=CORS)
+                            headers=CORS), None
+    conf = accounts.settings(p.workspace)
+    allowed = conf.get("domains") or []
+    if allowed:
+        host = _origin_host(request)
+        if not _own_site(request) and not any(host == d or host.endswith("." + d) for d in allowed):
+            return JSONResponse({"detail": "This chat is not enabled for this website."}, status_code=403,
+                                headers=CORS), None
+    return p, conf
+
+
+@router.get("/widget/config")
+def widget_config(request: Request, key: str = ""):
+    """How the widget should look for this site key (set in the dashboard, so the website's code never changes)."""
+    p, conf = _site(key, request)
+    if conf is None:
+        return p
+    return JSONResponse({**conf["widget"], "collect_leads": bool(conf.get("collect_leads", True))},
+                        headers={**CORS, "Cache-Control": "public, max-age=60"})
+
+
+class WidgetFeedback(BaseModel):
+    key: str = Field(..., min_length=10, max_length=100)
+    token: str = Field(..., min_length=6, max_length=40)
+    helpful: bool
+
+
+class WidgetLead(BaseModel):
+    key: str = Field(..., min_length=10, max_length=100)
+    contact: str = Field(..., min_length=5, max_length=200)
+    question: str = Field("", max_length=1000)
+
+
+@router.options("/widget/feedback", include_in_schema=False)
+@router.options("/widget/lead", include_in_schema=False)
+def widget_preflight2():
+    return Response(status_code=204, headers=CORS)
+
+
+@router.post("/widget/feedback")
+def widget_feedback(req: WidgetFeedback, request: Request):
+    p, conf = _site(req.key, request)
+    if conf is None:
+        return p
+    with K._store()._tx() as c:
+        c.execute("UPDATE chat_log SET feedback = ? WHERE workspace = ? AND token = ?",
+                  (1 if req.helpful else -1, p.workspace, req.token))
+    return JSONResponse({"ok": True}, headers=CORS)
+
+
+@router.post("/widget/lead")
+def widget_lead(req: WidgetLead, request: Request):
+    """A visitor whose question the documents couldn't answer leaves a phone number or email."""
+    from cascade_guard.company import accounts
+    p, conf = _site(req.key, request)
+    if conf is None:
+        return p
+    if not conf.get("collect_leads", True):
+        return JSONResponse({"detail": "Not enabled."}, status_code=403, headers=CORS)
+    store = K._store()
+    recent = store._read("SELECT COUNT(*) AS n FROM leads WHERE workspace = ? AND at > ?",
+                         (p.workspace, accounts._later(hours=-24)))
+    if int(recent[0]["n"]) >= 200:   # a flood from one widget must not fill the inbox
+        return JSONResponse({"detail": "Please contact us directly."}, status_code=429, headers=CORS)
+    with store._tx() as c:
+        c.execute("INSERT INTO leads (workspace, at, question, contact) VALUES (?, ?, ?, ?)",
+                  (p.workspace, accounts._now(), req.question.strip()[:1000], req.contact.strip()[:200]))
+    return JSONResponse({"ok": True}, headers=CORS)
+
+
+@router.post("/widget/ask")
+def widget_ask(req: WidgetAsk, request: Request):
+    from cascade_guard.company.answer import answer
+    from cascade_guard.company.api import _client
+    from cascade_guard.company.app import log_answer
+    p, conf = _site(req.key, request)
+    if conf is None:
+        return p
     try:
         K.check_quota(p)
     except HTTPException:
@@ -188,8 +276,10 @@ def widget_ask(req: WidgetAsk):
     res = answer(req.question, workspace=p.workspace, client=_client(),
                  history=[t.model_dump() for t in req.history], mode="documents")
     K.record(p, ai_calls=res.get("usage", {}).get("ai_calls", 0), tokens=res.get("usage", {}).get("tokens", 0))
+    token = log_answer(p.workspace, "app" if _own_site(request) else "widget", req.question, res)
     # Visitors see the answer and where it came from; the working stays in the owner's dashboard.
     return JSONResponse({"answer": res["answer"], "verdict": res["verdict"], "notice": res.get("notice"),
+                         "token": token,
                          "sources": [{"n": s["n"], "doc": s["doc"], "page": s.get("page")}
                                      for s in res.get("sources", [])]}, headers=CORS)
 
@@ -213,7 +303,8 @@ def _page(title: str, body: str) -> str:
 content="width=device-width, initial-scale=1"><title>{html.escape(title)}</title>{_STYLE}<style>h2{{font-size:18px;
 margin:22px 0 6px}}p,li{{max-width:70ch}}.nav{{font-size:14px;margin-bottom:18px}}</style></head><body><div class="w">
 <p class="nav"><a href="/">{b}</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> ·
-<a href="/refunds">Refunds</a> · <a href="/contact">Contact</a></p><h1>{html.escape(title)}</h1>{body}</div></body></html>"""
+<a href="/refunds">Refunds</a> · <a href="/security">Security</a> ·
+<a href="/contact">Contact</a></p><h1>{html.escape(title)}</h1>{body}</div></body></html>"""
 
 
 def _who() -> tuple[str, str, str]:
@@ -254,15 +345,19 @@ def privacy():
 <p class="m">{name} runs {html.escape(brand())}. This page says what we keep and why.</p>
 <h2>What we keep</h2><ul><li>Your company name and email address, from sign-up.</li><li>The documents you upload,
 stored as text so they can be searched.</li><li>Counts of how many answers your workspace used.</li><li>A log of
-requests (time, address, route, result) for security.</li></ul>
-<p>We do not store the questions your website visitors ask, and the widget sets no cookies.</p>
+requests (time, address, route, result) for security.</li>
+<li>The questions asked and the answers given, so you can see what your customers ask and what your documents
+could not answer. You can turn this off in Settings; logs are deleted after {os.getenv("LOG_RETENTION_DAYS", "180")}
+days. Visitors are not identified: no names, addresses or cookies are kept with a question.</li>
+<li>Contact details a visitor chooses to leave for you in the chat.</li></ul>
+<p>The widget sets no cookies.</p>
 <h2>How it is used</h2><p>Only to provide the service to you. When a question is asked, the few passages of your
 documents that relate to it are sent to the AI model that writes the answer. We do not sell your data or use your
 documents to train models.</p>
 <h2>Who else handles it</h2><p>Our hosting provider, our database provider, the AI model provider, and the payment
 provider (for payments; we never see your card or bank details).</p>
-<h2>Your choices</h2><p>You can delete your documents at any time in the dashboard. To delete your whole workspace,
-or to see or correct your details, write to {contact}.</p>
+<h2>Your choices</h2><p>In the dashboard you can delete documents, download everything your workspace holds as one
+file, and delete the whole workspace. To see or correct your details, write to {contact}.</p>
 <p class="m">Last updated: {time.strftime('%d %B %Y')}.</p>""")
 
 

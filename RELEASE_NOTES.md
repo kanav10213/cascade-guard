@@ -1,32 +1,25 @@
-# Cascade Guard 1.5.0: the company assistant
+# Cascade Guard 1.7.0: a complete web app
 
-**An AI assistant for your company's own documents that checks every answer before anyone sees it.** Upload
-policies, handbooks, price lists and FAQs (PDF, Word, text, CSV, HTML) and ask questions. Answers cite the passages
-they used. Cascade Guard then checks every amount, number, date and quotation against the passage cited. A wrong
-one goes back to the AI with the reason, and what still fails is removed and listed. An independent AI reading
-flags anything else it doubts. If the documents don't say, the assistant says so instead of guessing.
+Cascade Guard is an AI assistant that answers from a company's own documents and checks every answer before
+anyone sees it. This release turns it into a web app a business can sign up for and run without touching code.
 
-- **Private:** `docker compose up` runs a local AI (Ollama) next to it, so nothing leaves your server. Any cloud AI
-  works too (`CASCADE_AI`).
-- **Use it anywhere:** the `/chat` page (desktop and phone), any OpenAI-compatible app (`/v1/chat/completions`,
-  streaming included; tested with the official `openai` package), or the command line (`cascade-guard chat`).
-- **Run it as a business:**
-  - workspaces, one per company, and keys per person (member, manager, owner);
-  - plans with monthly limits, usage, and the `/admin` page;
-  - Stripe and Razorpay payments that issue and revoke keys by themselves, and a `/pricing` page.
+- **Accounts:** sign in with an email and password, or with the company's own login (single sign-on: Google,
+  Microsoft Entra, Okta). Team members join by invite link. Members ask questions; managers run the workspace.
+- **One dashboard (`/app`):**
+  - an overview with setup steps and the last 30 days;
+  - documents: upload files, or type a website address and it reads the pages;
+  - a test chat that shows the full working;
+  - conversations: every question, its answer and verdict, with search and CSV download;
+  - the questions the documents could not answer, so you know what to add;
+  - leads: when the chat can't answer, a visitor can leave a phone number or email;
+  - the website chat widget: one line of code, with its look, greeting and allowed websites set in the dashboard;
+  - team, API keys, plan, settings, data export, workspace deletion and an activity log.
+- **For selling it:** a home page with a live demo, free sign-up, plans with monthly limits, Stripe and Razorpay
+  payments that upgrade the workspace, and policy pages. See DEPLOY.md, "Go live as a paid service".
+- **For a company's own server:** `docker compose up` runs it with a local AI, so nothing leaves the network.
+  A `/security` page lists what the software does to protect data.
 
-  See DEPLOY.md.
-
-**Tested with real local AIs** (30 questions; GitHub's machines; Ollama):
-
-| AI | Right: plain → checked | Wrong, shown as if right | Wrong, shown with a warning |
-|---|---|---|---|
-| Qwen 2.5 7B | 25 → 25 of 26 | 0 → 0 | 0 |
-| Qwen 2.5 3B | 22 → 22 of 26 | 3 → 0 | 3 |
-| Llama 3.2 3B | 25 → 25 of 26 | 1 → 0 | 1 |
-
-None of them made up an answer to the 4 questions the documents don't answer. With 3B models, the AI reading also
-warns about many right answers: use 7B or larger, or set `CHAT_READER_AI` to a stronger AI. The full results are in
-the README.
+Tested on SQLite and PostgreSQL, and in a browser on desktop and phone as an owner, a team member and a website
+visitor. Earlier results with real AI models (receipts and company questions) are in the README.
 
 Get it: `pip install --upgrade cascade-guard-ai`, or `git clone` and `docker compose up -d`. Full list: CHANGELOG.md

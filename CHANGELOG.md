@@ -1,6 +1,45 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] - 2026-11-16
+
+### Added
+- **Accounts** (`cascade_guard/company/accounts.py`): sign up and sign in with an email and password (scrypt),
+  sessions in HttpOnly cookies (stored hashed, 30 days), sign-in throttling, and a header check so another site
+  cannot act for a signed-in person. Access keys remain for the API.
+- **Single sign-on** with OpenID Connect (Google, Microsoft Entra, Okta): authorization code flow with PKCE,
+  state and nonce; `OIDC_WORKSPACE` and `OIDC_DOMAINS` for a company's own install.
+- **Team:** invite people by link (emailed when SMTP is set), roles, removal, password-reset links.
+- **One dashboard at `/app`:** overview with setup steps, documents, test chat, conversations, leads, website
+  widget, team, API keys, plan, settings. It works on a phone.
+- **Add from a website** (`POST /kb/url`): reads a page and the pages it links to on the same site. Only public
+  addresses are fetched, checked again after every redirect.
+- **Conversations and insights:** every question with its answer and verdict, search, CSV download, and the
+  questions the documents could not answer. Logging can be turned off; logs are deleted after
+  `LOG_RETENTION_DAYS`.
+- **Leads:** when the widget cannot answer, the visitor can leave a phone number or email.
+- **Widget settings in the dashboard** (title, colour, greeting, contact line) with a live preview, visitor
+  feedback, and a list of websites the widget is allowed on.
+- **Your data:** download everything a workspace holds as one file, delete the whole workspace, an activity log,
+  and a `/security` page.
+
+- **For the person running the service:** a Customers table in `/admin` (every company, its contact, plan, usage,
+  documents and people), a plan selector for customers who pay directly, and password-reset links
+  (`GET /admin/workspaces`, `POST /admin/workspaces/{name}/plan`, `POST /admin/users/reset-link`,
+  `cascade-guard customers`).
+
+### Fixed
+- Behind a proxy every visitor looked like one address, so the limits (requests a minute, sign-in attempts,
+  3 sign-ups a day) were shared by everyone. `CLIENT_IP_HEADER` and `TRUSTED_PROXY_HOPS` say where the visitor's
+  address is; the "is this my own computer" check still trusts only the real connection.
+- The widget's script is plain ASCII and served as UTF-8, so its symbols show correctly on a website in any
+  encoding.
+- With no AI connected, an answer quotes only the lines that cover the question, not similar lines.
+
+### Changed
+- The home page signs people up with a password and takes them to the dashboard.
+- The privacy page now says that questions and answers are kept for the workspace's owner.
+
 ## [1.6.0] - 2026-11-16
 
 ### Added

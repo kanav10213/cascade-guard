@@ -21,3 +21,20 @@ def _fresh_rate_limits():
     limiter.reset()
     audit_limiter.reset()
     yield
+
+
+@pytest.fixture()
+def fresh_store():
+    """A function giving an empty database: in memory, or the PostgreSQL in CASCADE_TEST_PG, so the same tests
+    prove both."""
+    import os
+
+    from cascade_guard.storage.db import Store
+
+    def make():
+        url = os.getenv("CASCADE_TEST_PG")
+        store = Store(url) if url else Store(":memory:")
+        if url:
+            store.clear()
+        return store
+    return make

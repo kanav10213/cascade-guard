@@ -28,7 +28,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from fastapi import Header, HTTPException
+from fastapi import Header, HTTPException, Request
 
 DEFAULT_PLANS = {"free": 50, "starter": 1000, "team": 10000, "unlimited": 0}
 ROLES = ("member", "manager", "widget")   # widget: a public site key (pk_...) that can only ask through /widget/ask
@@ -206,17 +206,30 @@ def principal_for(key: str, store=None) -> Principal | None:
                                " AND revoked_at IS NULL", (digest(key),))
             if rows:
                 r = rows[0]
-                return Principal(r["workspace"], r["role"], int(r["id"]), r["name"], r["plan"],
-                                 int(r["monthly_limit"]))
+                ws = store._read("SELECT plan, monthly_limit FROM workspaces WHERE name = ?", (r["workspace"],))
+                plan = ws[0] if ws else r   # a workspace with accounts keeps its plan in one place
+                return Principal(r["workspace"], r["role"], int(r["id"]), r["name"], plan["plan"],
+                                 int(plan["monthly_limit"]))
     if not auth_enabled():  # no keys set: only this computer can reach the server (ops.py), as its owner
         return Principal("default", "owner", 0, "this computer")
     return None
 
 
-def caller(x_api_key: str | None = Header(default=None),
+def caller(request: Request, x_api_key: str | None = Header(default=None),
            authorization: str | None = Header(default=None)) -> Principal:
-    """FastAPI dependency: the caller, from either header."""
-    p = principal_for(key_from(x_api_key, authorization))
+    """FastAPI dependency: the caller, from a key in either header, or from a signed-in browser's session."""
+    key = key_from(x_api_key, authorization)
+    cookie = request.cookies.get("cg_session")
+    if not key and cookie:
+        from cascade_guard.company import accounts
+        user = accounts.session_user(cookie)
+        if user is not None:
+            # A cookie is sent by the browser on its own, so a change also needs a header that only this site's
+            # pages can add: another site cannot make a signed-in person's browser change anything.
+            if request.method not in ("GET", "HEAD", "OPTIONS") and request.headers.get("x-cg") != "1":
+                raise HTTPException(status_code=403, detail="this request did not come from the app")
+            return accounts.principal_of(user)
+    p = principal_for(key)
     if p is None:
         raise HTTPException(status_code=401, detail="invalid or missing key (send X-API-Key or Authorization: Bearer)")
     if p.role == "widget":
@@ -250,6 +263,8 @@ def set_plan(workspace: str, plan: str, customer: str | None = None, ref: str | 
     with store._tx() as c:
         n = c.execute("UPDATE api_keys SET plan = ?, monthly_limit = ? WHERE workspace = ? AND revoked_at IS NULL",
                       (plan, limit, workspace)).rowcount
+        n += c.execute("UPDATE workspaces SET plan = ?, monthly_limit = ?, customer = COALESCE(?, customer)"
+                       " WHERE name = ?", (plan, limit, customer, workspace)).rowcount
         if customer or ref:
             c.execute("UPDATE api_keys SET customer = COALESCE(?, customer), ref = COALESCE(?, ref) WHERE id ="
                       " (SELECT MIN(id) FROM api_keys WHERE workspace = ? AND role = 'manager' AND revoked_at IS NULL)",
@@ -258,15 +273,18 @@ def set_plan(workspace: str, plan: str, customer: str | None = None, ref: str | 
 
 
 def workspace_of_email(email: str, store=None) -> str | None:
-    rows = (store or _store())._read("SELECT workspace FROM api_keys WHERE LOWER(email) = ? AND role = 'manager' AND"
-                                     " revoked_at IS NULL ORDER BY id LIMIT 1", ((email or "").strip().lower(),))
+    store, email = store or _store(), (email or "").strip().lower()
+    rows = store._read("SELECT workspace FROM users WHERE email = ? AND disabled_at IS NULL", (email,)) or \
+        store._read("SELECT workspace FROM api_keys WHERE LOWER(email) = ? AND role = 'manager' AND"
+                    " revoked_at IS NULL ORDER BY id LIMIT 1", (email,))
     return rows[0]["workspace"] if rows else None
 
 
 def downgrade_by_customer(customer: str, store=None) -> int:
     """A cancelled subscription: the customer's workspace goes back to the free plan (their documents stay)."""
     store = store or _store()
-    rows = store._read("SELECT DISTINCT workspace FROM api_keys WHERE customer = ? AND revoked_at IS NULL", (customer,))
+    rows = store._read("SELECT workspace FROM api_keys WHERE customer = ? AND revoked_at IS NULL UNION"
+                       " SELECT name AS workspace FROM workspaces WHERE customer = ?", (customer, customer))
     return sum(set_plan(r["workspace"], "free", store=store) for r in rows) if customer else 0
 
 

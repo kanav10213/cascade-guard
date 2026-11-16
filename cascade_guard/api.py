@@ -161,6 +161,10 @@ from cascade_guard.company.saas import router as saas_router  # noqa: E402
 
 app.include_router(saas_router)
 
+from cascade_guard.company.app import router as account_router  # noqa: E402
+
+app.include_router(account_router)
+
 from cascade_guard import ops  # noqa: E402
 
 ops.install(app)

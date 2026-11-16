@@ -75,6 +75,15 @@ pre{background:var(--paper);border:1px solid var(--rule2);border-radius:8px;padd
     <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Name</th><th>Workspace</th><th>Role</th><th>Plan</th><th style="text-align:right">Used this month</th><th>Last used</th><th>Status</th><th></th></tr></thead><tbody id="keyrows"></tbody></table></div>
   </section>
 
+  <section class="card" id="customers" hidden>
+    <h2>Customers</h2>
+    <p>Every company on this server. Change a plan here when a customer pays you directly (UPI, bank transfer, cash). Payments through Razorpay or Stripe change it by themselves.</p>
+    <div class="tablewrap"><table><thead><tr><th>Company</th><th>Contact</th><th>Plan</th><th style="text-align:right">Used this month</th><th style="text-align:right">Documents</th><th style="text-align:right">People</th><th>Joined</th><th>Last sign-in</th></tr></thead><tbody id="custrows"></tbody></table></div>
+    <h2 style="margin-top:18px;font-size:15px">A customer forgot their password</h2>
+    <form id="resetform" class="grid"><label class="f">Their email<input id="resetemail" type="email" required maxlength="255"></label><button class="btn ghost" type="submit">Make a reset link</button></form>
+    <div id="resetout"></div>
+  </section>
+
   <section class="card" id="usage" hidden>
     <h2>Usage</h2>
     <p>Answers, AI calls and tokens by workspace and month.</p>
@@ -113,7 +122,7 @@ function h(tag, attrs, ...kids){
   return e;
 }
 async function call(path, body, method){
-  const headers = {'Content-Type': 'application/json'}; if(apiKey) headers['X-API-Key'] = apiKey;
+  const headers = {'Content-Type': 'application/json', 'X-CG': '1'}; if(apiKey) headers['X-API-Key'] = apiKey;
   const r = await fetch(path, {method: method || (body === undefined ? 'GET' : 'POST'), headers, body: body === undefined ? undefined : JSON.stringify(body)});
   if(r.status === 401 || r.status === 403){ const j = await r.json().catch(() => ({})); throw {kind: 'key', detail: j.detail || 'This needs an owner or manager key.'}; }
   if(!r.ok){ const j = await r.json().catch(() => ({})); throw {detail: (Array.isArray(j.detail) ? j.detail.map(x => x.msg).join('; ') : j.detail) || ('Error ' + r.status)}; }
@@ -130,6 +139,7 @@ async function load(){
     if(me.role !== 'owner') $('#keyshelp').textContent = `Add member keys for people in ${me.workspace}. They share your plan (${me.plan}).`;
     $('#keys').hidden = false; $('#usage').hidden = false; $('#apps').hidden = false;
     await Promise.all([keys(), usage()]);
+    if(me.role === 'owner') customers().catch(() => {});
     call('/widget/key').then(w => { $('#widget').hidden = false; $('#snippet').textContent = w.snippet; $('#copysnip').onclick = async () => { try{ await navigator.clipboard.writeText(w.snippet); $('#copysnip').textContent = 'Copied'; }catch(e){ $('#copysnip').textContent = 'Select the code and copy it'; } }; }).catch(() => {});
     const base = location.origin + '/v1';
     $('#base').textContent = base;
@@ -154,6 +164,25 @@ async function keys(){
   }
   if(!r.keys.length) rows.append(h('tr', {}, h('td', {colspan: '8', class: 'small', text: 'No keys yet.'})));
 }
+async function customers(){
+  const r = await call('/admin/workspaces'); $('#customers').hidden = false;
+  const rows = $('#custrows'); rows.replaceChildren();
+  const day = iso => iso ? iso.slice(0, 10) : '–';
+  for(const w of r.workspaces){
+    const sel = h('select', {'aria-label': 'Plan for ' + w.title}, Object.keys(r.plans).map(name => h('option', {value: name, selected: name === w.plan ? true : null, text: name})));
+    if(!(w.plan in r.plans)) sel.prepend(h('option', {value: w.plan, selected: true, text: w.plan}));
+    const said = h('span', {class: 'small'});
+    sel.addEventListener('change', async () => { try{ const out = await call('/admin/workspaces/' + encodeURIComponent(w.name) + '/plan', {plan: sel.value}); said.textContent = ' saved: ' + (out.monthly_limit ? out.monthly_limit.toLocaleString() + ' a month' : 'no limit'); }catch(e){ said.textContent = ' ' + e.detail; said.className = 'err'; } });
+    rows.append(h('tr', {}, h('td', {}, h('b', {text: w.title}), h('div', {class: 'small', text: w.name})), h('td', {text: w.contact || '–'}), h('td', {}, sel, said),
+      h('td', {class: 'num', text: w.used_this_month + (w.monthly_limit ? ' / ' + w.monthly_limit.toLocaleString() : '')}), h('td', {class: 'num', text: w.documents}), h('td', {class: 'num', text: w.people}), h('td', {text: day(w.created_at)}), h('td', {text: day(w.last_sign_in)})));
+  }
+  if(!r.workspaces.length) rows.append(h('tr', {}, h('td', {colspan: '8', class: 'small', text: 'No customers yet.'})));
+}
+$('#resetform').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  try{ const r = await call('/admin/users/reset-link', {email: $('#resetemail').value.trim()}); $('#resetout').replaceChildren(h('div', {class: 'newkey'}, h('p', {style: 'margin:0 0 6px', text: r.note}), h('code', {text: r.link}))); }
+  catch(e){ $('#resetout').replaceChildren(h('p', {class: 'err', text: e.detail})); }
+});
 async function usage(){
   const r = await call('/admin/usage'); const rows = $('#userows'); rows.replaceChildren();
   for(const u of r.usage) rows.append(h('tr', {}, h('td', {text: u.month}), h('td', {text: u.workspace}), h('td', {class: 'num', text: u.answers}), h('td', {class: 'num', text: u.ai_calls}), h('td', {class: 'num', text: Number(u.tokens).toLocaleString()})));

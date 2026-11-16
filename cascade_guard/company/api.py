@@ -55,6 +55,11 @@ def load_samples(workspace: str, by: str = "") -> list[dict]:
             if f.is_file() and f.name != "README.md"]
 
 
+def _event(p: Principal, action: str, detail: str = "") -> None:
+    from cascade_guard.company import accounts
+    accounts.event(p.workspace, p.name or p.role, action, detail)
+
+
 def _client():
     from cascade_guard.llm_api import get_client
     c = get_client(required=False)
@@ -104,10 +109,12 @@ def chat_info(p: Principal = Depends(caller)):
     return _info(p)
 
 
-def _answer_for(p: Principal, question: str, history: list[dict], mode: str) -> dict:
+def _answer_for(p: Principal, question: str, history: list[dict], mode: str, channel: str = "app") -> dict:
     K.check_quota(p)
     res = answer(question, workspace=p.workspace, client=_client(), history=history, mode=mode)
     K.record(p, ai_calls=res.get("usage", {}).get("ai_calls", 0), tokens=res.get("usage", {}).get("tokens", 0))
+    from cascade_guard.company.app import log_answer
+    log_answer(p.workspace, channel, question, res)
     return res
 
 
@@ -146,7 +153,9 @@ def kb_add(doc: DocIn, p: Principal = Depends(caller)):
     try:
         from cascade_guard.company.saas import passages_limit
         cap = passages_limit(p.plan) if p.key_id else None
-        return kb.add_document(p.workspace, doc.name, data, by=p.name, max_chunks=cap)
+        out = kb.add_document(p.workspace, doc.name, data, by=p.name, max_chunks=cap)
+        _event(p, "document added", out["name"])
+        return out
     except kb.DocumentError as e:
         raise HTTPException(status_code=422, detail=str(e)) from None
 
@@ -164,6 +173,7 @@ def kb_delete(doc_id: int, p: Principal = Depends(caller)):
     need(p, "manager")
     if not kb.delete_document(p.workspace, doc_id):
         raise HTTPException(status_code=404, detail="no such document in your workspace")
+    _event(p, "document removed", f"#{doc_id}")
     return {"deleted": doc_id}
 
 
@@ -211,6 +221,7 @@ def keys_create(req: KeyIn, p: Principal = Depends(caller)):
         key, rec = K.create_key(req.name, ws, role=role, plan=plan, monthly_limit=limit, email=req.email)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e)) from None
+    _event(p, "key created", f"{rec['name']} ({rec['role']})")
     return {"key": key, "record": rec, "note": "Copy the key now: it is shown only once."}
 
 
@@ -219,6 +230,7 @@ def keys_revoke(key_id: int, p: Principal = Depends(caller)):
     need(p, "manager")
     if not K.revoke_key(key_id, None if p.role == "owner" else p.workspace):
         raise HTTPException(status_code=404, detail="no such active key")
+    _event(p, "key revoked", f"#{key_id}")
     return {"revoked": key_id}
 
 
@@ -262,7 +274,7 @@ async def v1_chat(request: Request, p: Principal = Depends(caller)):
         raise HTTPException(status_code=400, detail="the last message must be the user's question")
     model = str(body.get("model") or "cascade-guard")
     mode = MODELS.get(model, "auto")
-    res = await run_in_threadpool(_answer_for, p, turns[-1]["content"][:4000], turns[:-1][-12:], mode)
+    res = await run_in_threadpool(_answer_for, p, turns[-1]["content"][:4000], turns[:-1][-12:], mode, "api")
     show = os.getenv("CHAT_API_FOOTER", "on").strip().lower() not in ("off", "0", "no", "false")
     note = footer(res) if show else ""
     content = res["answer"] + (f"\n\n{note}" if note else "")

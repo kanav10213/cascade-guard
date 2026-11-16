@@ -154,6 +154,75 @@ CREATE TABLE IF NOT EXISTS kb_chunks (
     page      INTEGER,
     text      TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS workspaces (
+    name          TEXT PRIMARY KEY,        -- the slug used everywhere else
+    title         TEXT NOT NULL,           -- the company's name as typed
+    plan          TEXT NOT NULL,
+    monthly_limit INTEGER NOT NULL DEFAULT 0,
+    customer      TEXT,                    -- payment provider's customer or subscription id
+    settings      TEXT,                    -- JSON: widget look, allowed domains, logging, lead capture
+    created_at    TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS users (
+    id            {ID},
+    email         TEXT NOT NULL UNIQUE,
+    name          TEXT,
+    password_hash TEXT,                    -- scrypt (NULL for people who only sign in through SSO)
+    workspace     TEXT NOT NULL,
+    role          TEXT NOT NULL,           -- member | manager
+    created_at    TEXT NOT NULL,
+    last_login_at TEXT,
+    disabled_at   TEXT
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,           -- sha256 of the cookie value
+    user_id    INTEGER NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS invites (
+    token_hash TEXT PRIMARY KEY,
+    kind       TEXT NOT NULL,              -- invite | reset
+    workspace  TEXT,
+    role       TEXT,
+    email      TEXT,
+    user_id    INTEGER,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    used_at    TEXT
+);
+CREATE TABLE IF NOT EXISTS chat_log (
+    id        {ID},
+    workspace TEXT NOT NULL,
+    at        TEXT NOT NULL,
+    channel   TEXT NOT NULL,               -- widget | app | api
+    question  TEXT NOT NULL,
+    answer    TEXT,
+    verdict   TEXT,
+    sources   TEXT,                        -- JSON list of document names
+    feedback  INTEGER,                     -- 1 helpful, -1 not helpful
+    token     TEXT                         -- lets the asker rate this one answer
+);
+CREATE TABLE IF NOT EXISTS leads (
+    id         {ID},
+    workspace  TEXT NOT NULL,
+    at         TEXT NOT NULL,
+    question   TEXT,
+    contact    TEXT NOT NULL,
+    handled_at TEXT
+);
+CREATE TABLE IF NOT EXISTS events (
+    id        {ID},
+    workspace TEXT NOT NULL,
+    at        TEXT NOT NULL,
+    actor     TEXT,
+    action    TEXT NOT NULL,
+    detail    TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_chat_log_ws ON chat_log(workspace, at);
+CREATE INDEX IF NOT EXISTS idx_leads_ws ON leads(workspace);
+CREATE INDEX IF NOT EXISTS idx_events_ws ON events(workspace, at);
+CREATE INDEX IF NOT EXISTS idx_users_ws ON users(workspace);
 CREATE INDEX IF NOT EXISTS idx_kb_chunks_ws ON kb_chunks(workspace);
 CREATE INDEX IF NOT EXISTS idx_kb_docs_ws ON kb_docs(workspace);
 CREATE INDEX IF NOT EXISTS idx_api_keys_ws ON api_keys(workspace);
@@ -399,7 +468,8 @@ class Store:
     def clear(self):
         """Delete everything (tests only)."""
         with self._tx() as c:
-            for t in ("kb_chunks", "kb_docs", "key_usage", "api_keys", "agents", "chains", "audit", "usage",
+            for t in ("events", "leads", "chat_log", "invites", "sessions", "users", "workspaces",
+                      "kb_chunks", "kb_docs", "key_usage", "api_keys", "agents", "chains", "audit", "usage",
                       "review_queue", "verdicts", "steps", "runs"):
                 c.execute(f"DELETE FROM {t}")  # noqa: S608 - fixed table names, no user input
 

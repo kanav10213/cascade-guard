@@ -83,7 +83,9 @@ def _issue(ref: str, *, email: str | None, company: str | None, plan: str, custo
         plan = os.getenv("BILLING_DEFAULT_PLAN", "starter")
     ws = K.workspace_of_email(email) if email else None
     if ws:  # someone who signed up free and now pays: their workspace moves to the plan, their keys keep working
+        from cascade_guard.company import accounts
         K.set_plan(ws, plan, customer=customer, ref=ref)
+        accounts.event(ws, "payment", "plan changed", f"{plan} {ref}")
         return {"status": "upgraded", "workspace": ws, "plan": plan}
     _, rec = K.create_key(company or email or "customer", _workspace_for(company, email, ref), role="manager",
                           plan=plan, email=email, ref=ref, customer=customer, keep_for_reveal=True)
@@ -223,9 +225,14 @@ def welcome(ref: str | None = None, razorpay_payment_id: str | None = None):
     got = K.reveal_once(ref)
     if got is None:
         rec = K.find_by_ref(ref)
+        if rec is None:   # an account without keys that was upgraded by this payment
+            up = K._store()._read("SELECT workspace, detail FROM events WHERE action = 'plan changed' AND detail"
+                                  " LIKE ? ORDER BY id DESC LIMIT 1", ("% " + ref,))
+            if up:
+                rec = {"workspace": up[0]["workspace"], "plan": up[0]["detail"].split(" ")[0]}
         msg = (f"Your payment is received and workspace {html.escape(rec['workspace'])} is on the "
-               f"{html.escape(rec['plan'])} plan. The keys you already have keep working: <a href='/chat'>open the "
-               "assistant</a>. (A new key is shown here only once; if you lost yours, write to us.)") if rec else \
+               f"{html.escape(rec['plan'])} plan. The keys you already have keep working: <a href='/app'>open your "
+               "dashboard</a>. (A new key is shown here only once; if you lost yours, write to us.)") if rec else \
             ("We have not received the payment confirmation yet. It "
                                                        "usually takes a few seconds: refresh this page in a minute.")
         inner = f"<h1>Thank you</h1><p class='m'>{msg}</p>"

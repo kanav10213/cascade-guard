@@ -410,22 +410,35 @@ def _not_found(hits: list[dict]) -> dict:
             "caught": [], "removed": [], "attempts": []}
 
 
-def _best_lines(question: str, text: str, limit: int = 2) -> tuple[list[str], int]:
-    """The sentences or rows of a passage that match the question best, word for word: (lines, best score)."""
+def _best_lines(question: str, text: str, limit: int = 3) -> tuple[list[str], int]:
+    """The sentences or rows of a passage that answer the question, word for word: (lines, best score).
+    The best-matching line first; another line is added only if it covers a word of the question that the lines
+    already chosen do not (the fee, and then the condition that goes with it), never just a similar line."""
     units: list[str] = []
     body = re.sub(r"(?m)^#{1,6}\s*.*$", "", text)                 # headings are not answers
     for para in re.split(r"\n\s*\n", body):
-        if para.count(";") >= 2 and ":" in para:                   # spreadsheet rows: one per line
-            units += [u.strip() for u in para.splitlines() if u.strip()]
-        else:                                                      # prose: undo the line wrapping first
-            units += [u.strip() for u in SPLIT.split(re.sub(r"\s*\n\s*", " ", para)) if u.strip()]
+        lines = [u.strip() for u in para.splitlines() if u.strip()]
+        rows = para.count(";") >= 2 and ":" in para                # spreadsheet rows: one per line
+        facts = len(lines) > 1 and sum(ln[-1] in ".!?:" for ln in lines) >= 0.6 * len(lines)   # one fact per line
+        if rows or facts:
+            for ln in lines:
+                units += [ln] if rows else [u.strip() for u in SPLIT.split(ln) if u.strip()]
+        else:                                                      # wrapped prose: undo the wrapping first
+            units += [u.strip() for u in SPLIT.split(" ".join(lines)) if u.strip()]
     qw = {w for w in kb.words(question) if not w.isdigit()}
-    scores = [len(qw & set(kb.words(u))) for u in units]
-    best = max(scores, default=0)
+    found = [qw & set(kb.words(u)) for u in units]
+    best = max((len(f) for f in found), default=0)
     if best == 0:
         return units[:1], 0
-    keep = [i for i, sc in enumerate(scores) if sc >= max(1, best - 1)][:limit + 1]   # near-ties add the conditions
-    return [units[i][:400] for i in keep], best
+    keep: list[int] = []
+    covered: set[str] = set()
+    for i in sorted(range(len(units)), key=lambda i: (-len(found[i]), i)):
+        if len(keep) >= limit:
+            break
+        if not keep or (found[i] - covered and len(found[i]) >= max(1, best - 1)):
+            keep.append(i)
+            covered |= found[i]
+    return [units[i][:400] for i in sorted(keep)], best
 
 
 def _quoted(passages: list[dict], question: str = "") -> dict:

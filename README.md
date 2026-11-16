@@ -37,7 +37,7 @@ A wrong answer is never passed on silently.
   Together), any OpenAI-format URL, any program on your computer, any Python function, or no AI at all (rule-based).
   See [Use it with any AI](#use-it-with-any-ai-check-your-own-receipts).
 
-> **Status: v1.5.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
+> **Status: v1.7.0.** Tested on **real data with real agents**: 326 held-out scanned shop receipts, run through a
 > three-agent expense workflow with rule-based agents and with open AI models as the agents (see
 > [Real-world results](#real-world-results)), and a company assistant answering questions with real local AIs (see
 > [The company assistant](#the-company-assistant)). Software tested on Python 3.12 to 3.14, SQLite and PostgreSQL,
@@ -78,6 +78,9 @@ your documents") and the passages it used.
   - the command line (`cascade-guard chat "question"`).
 - **Any AI:** a local one (Ollama, LM Studio, llama.cpp, vLLM, ...) or a cloud one (Gemini, Groq, OpenAI,
   Claude, ...), chosen with `CASCADE_AI`. With no AI at all, it quotes the passages word for word.
+- **A real web app:** people sign in with a password or the company's own login (single sign-on). Managers get a
+  dashboard at `/app`: documents (files, or read straight from a website), conversations, the questions the
+  documents couldn't answer, leads, the website chat widget, team, API keys, data export and an activity log.
 - **Run it as a business:**
   - workspaces, one per company, each with its own documents;
   - keys for each person, with roles (member, manager, owner);

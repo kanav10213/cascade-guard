@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in</title>
+<style>
+:root{--paper:#f2f5f1;--sheet:#fff;--ink:#1d2528;--muted:#56646a;--rule:#d3dddf;--blue:#23527c;--onblue:#fff;--pen:#c62f28;--ok:#1d7a50;--ok-soft:#e3f2ea;
+  --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif}
+@media (prefers-color-scheme:dark){:root{--paper:#13181a;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;--blue:#8db8e8;--onblue:#0f1720;--pen:#ff7b70;--ok:#5ccf96;--ok-soft:#163326}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--paper);color:var(--ink);font:16px/1.55 var(--sans);padding:24px 16px}
+a{color:var(--blue)}:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+.box{width:100%;max-width:400px}
+.brand{display:flex;gap:9px;align-items:center;justify-content:center;font-weight:650;font-size:18px;margin-bottom:18px;text-decoration:none;color:var(--ink)}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:24px}
+h1{font-size:21px;margin:0 0 4px}p.s{margin:0 0 16px;color:var(--muted);font-size:14.5px}
+label{display:block;font-size:13.5px;color:var(--muted);margin:0 0 12px}
+input{display:block;width:100%;margin-top:4px;border:1px solid var(--rule);border-radius:9px;padding:10px 12px;background:var(--paper);color:var(--ink);font:inherit}
+.btn{display:block;width:100%;border:0;background:var(--blue);color:var(--onblue);border-radius:10px;padding:11px 18px;font:inherit;font-weight:650;cursor:pointer;text-align:center;text-decoration:none}
+.btn.ghost{background:none;border:1px solid var(--rule);color:var(--ink);margin-bottom:14px}
+.btn:disabled{opacity:.6}
+.or{text-align:center;color:var(--muted);font-size:13px;margin:0 0 14px}
+.err{color:var(--pen);font-size:14px;margin:12px 0 0}.okmsg{background:var(--ok-soft);color:var(--ok);border-radius:9px;padding:9px 12px;font-size:14px;margin:12px 0 0}
+.links{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-top:14px;flex-wrap:wrap}
+.linkbtn{background:none;border:0;padding:0;color:var(--blue);cursor:pointer;font:inherit;font-size:14px;text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="box">
+  <a class="brand" href="/"><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="var(--blue)"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="var(--onblue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="brand">Cascade Guard</span></a>
+  <div class="card">
+    <div id="v-login">
+      <h1>Sign in</h1><p class="s">Welcome back.</p>
+      <a class="btn ghost" id="sso" href="/auth/sso/start" hidden></a><p class="or" id="or" hidden>or with your password</p>
+      <form id="f-login">
+        <label>Email<input id="l-email" type="email" required autocomplete="username" maxlength="255"></label>
+        <label>Password<input id="l-pass" type="password" required autocomplete="current-password" maxlength="200"></label>
+        <button class="btn" type="submit">Sign in</button>
+      </form>
+      <div class="links"><button class="linkbtn" id="to-forgot" type="button">Forgot password?</button><a id="to-signup" href="/#signupcard" hidden>Create an account</a></div>
+      <div class="links"><a href="/chat">Sign in with an access key instead</a></div>
+    </div>
+    <div id="v-forgot" hidden>
+      <h1>Reset your password</h1><p class="s">Enter your email and we'll send a link to choose a new password.</p>
+      <form id="f-forgot"><label>Email<input id="f-email" type="email" required maxlength="255" autocomplete="username"></label><button class="btn" type="submit">Send the link</button></form>
+      <div class="links"><button class="linkbtn" id="back1" type="button">Back to sign in</button></div>
+    </div>
+    <div id="v-reset" hidden>
+      <h1>Choose a new password</h1><p class="s">At least 8 characters.</p>
+      <form id="f-reset"><label>New password<input id="r-pass" type="password" required minlength="8" maxlength="200" autocomplete="new-password"></label><button class="btn" type="submit">Save and sign in</button></form>
+    </div>
+    <div id="v-invite" hidden>
+      <h1 id="i-title">Join your team</h1><p class="s" id="i-sub"></p>
+      <form id="f-invite">
+        <label>Your name<input id="i-name" type="text" maxlength="100" autocomplete="name"></label>
+        <label>Choose a password<input id="i-pass" type="password" required minlength="8" maxlength="200" autocomplete="new-password"></label>
+        <button class="btn" type="submit">Join</button>
+      </form>
+    </div>
+    <p class="err" id="err" role="alert" hidden></p><p class="okmsg" id="ok" role="status" hidden></p>
+  </div>
+</div>
+<script>
+'use strict';
+const $ = s => document.querySelector(s);
+const params = new URLSearchParams(location.search);
+function show(v){ for(const id of ['login', 'forgot', 'reset', 'invite']) $('#v-' + id).hidden = id !== v; $('#err').hidden = true; $('#ok').hidden = true; }
+function fail(m){ $('#err').textContent = m; $('#err').hidden = false; $('#ok').hidden = true; }
+function good(m){ $('#ok').textContent = m; $('#ok').hidden = false; $('#err').hidden = true; }
+async function post(path, body){
+  const r = await fetch(path, {method: 'POST', headers: {'Content-Type': 'application/json', 'X-CG': '1'}, body: JSON.stringify(body)});
+  const j = await r.json().catch(() => ({}));
+  if(!r.ok){ let d = j.detail; if(Array.isArray(d)) d = 'Please check what you typed.'; throw new Error(d || 'Something went wrong. Please try again.'); }
+  return j;
+}
+function enter(user){ location.href = user.role === 'manager' ? '/app' : '/chat'; }
+function guard(form, fn){ form.addEventListener('submit', async ev => { ev.preventDefault(); const b = form.querySelector('button[type=submit]'); b.disabled = true; try{ await fn(); }catch(e){ fail(e.message); } finally{ b.disabled = false; } }); }
+
+fetch('/auth/options').then(r => r.json()).then(o => {
+  $('#brand').textContent = o.brand; document.title = 'Sign in · ' + o.brand;
+  if(o.sso){ $('#sso').textContent = 'Continue with ' + o.sso; $('#sso').hidden = false; $('#or').hidden = false; }
+  $('#to-signup').hidden = !o.signup;
+}).catch(() => {});
+fetch('/auth/me').then(r => r.ok ? r.json() : null).then(j => { if(j && !params.get('invite') && !params.get('reset')) enter(j.user); }).catch(() => {});
+
+guard($('#f-login'), async () => enter((await post('/auth/login', {email: $('#l-email').value, password: $('#l-pass').value})).user));
+guard($('#f-forgot'), async () => good((await post('/auth/reset-request', {email: $('#f-email').value})).note));
+guard($('#f-reset'), async () => { await post('/auth/reset', {token: params.get('reset'), password: $('#r-pass').value}); history.replaceState(null, '', '/login'); show('login'); good('Password saved. Sign in with it now.'); });
+guard($('#f-invite'), async () => enter((await post('/auth/accept', {token: params.get('invite'), name: $('#i-name').value, password: $('#i-pass').value})).user));
+$('#to-forgot').addEventListener('click', () => show('forgot'));
+$('#back1').addEventListener('click', () => show('login'));
+
+if(params.get('reset')) show('reset');
+else if(params.get('invite')){
+  show('invite');
+  fetch('/auth/invite?token=' + encodeURIComponent(params.get('invite'))).then(async r => { const j = await r.json(); if(!r.ok) throw new Error(j.detail); $('#i-title').textContent = 'Join ' + j.workspace; $('#i-sub').textContent = 'You were invited as ' + j.email + '. Choose a password to finish.'; }).catch(e => { show('login'); fail(e.message); });
+}
+if(params.get('problem') === 'sso') fail('The company login was cancelled or failed. Try again.');
+</script>
+</body>
+</html>

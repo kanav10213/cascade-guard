@@ -388,6 +388,11 @@ def cmd_keys(args) -> int:
     return keys_main(args.rest + (["--home", args.home] if args.home else []))
 
 
+def cmd_customers(args) -> int:
+    from cascade_guard.company.cli import customers_main
+    return customers_main(args.rest + (["--home", args.home] if args.home else []))
+
+
 def cmd_ai(args) -> int:
     from cascade_guard.ai_cli import main as ai_main
     from cascade_guard.config import load_env, use_home
@@ -469,6 +474,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = add("keys", cmd_keys, "access keys for people and customers: create, list, revoke, usage, plans")
     s.add_argument("rest", nargs=argparse.REMAINDER, help="create NAME --workspace W [--role] [--plan] [--limit]")
+
+    s = add("customers", cmd_customers, "the companies on this server: list, set a plan, password reset link")
+    s.add_argument("rest", nargs=argparse.REMAINDER, help="[list] · plan WORKSPACE PLAN · reset-link EMAIL")
 
     s = add("ai", cmd_ai, "which AIs Cascade Guard can use (list), and check that one answers (test)")
     s.add_argument("rest", nargs=argparse.REMAINDER, help="list | test [--ai X]")

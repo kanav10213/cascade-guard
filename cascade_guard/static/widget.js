@@ -12,7 +12,7 @@
   var color = /^#[0-9a-fA-F]{3,8}$/.test(me.getAttribute('data-color') || '') ? me.getAttribute('data-color') : '#23527c';
   var greeting = me.getAttribute('data-greeting') || 'Hi! Ask a question and I will answer from our own information.';
   var contact = me.getAttribute('data-contact') || '';
-  var history = [], busy = false;
+  var history = [], busy = false, leads = true, lastQuestion = '';
 
   var host = document.createElement('div');
   host.style.cssText = 'position:fixed;right:18px;bottom:18px;z-index:2147483000';
@@ -33,15 +33,17 @@
     'form{display:flex;gap:6px;padding:10px;border-top:1px solid #e3e9e9;background:#fff}' +
     'textarea{flex:1;resize:none;border:1px solid #cfd8d8;border-radius:10px;padding:8px 10px;font-size:14px;height:40px;color:#1d2528;background:#fff}' +
     '.s{border:0;background:' + color + ';color:#fff;border-radius:10px;padding:0 14px;font-weight:600;cursor:pointer;font-size:14px}.s:disabled{opacity:.6}' +
+    '.r{display:flex;gap:6px;margin-top:6px}.r button{border:1px solid #cfd8d8;background:#fff;border-radius:99px;padding:1px 9px;font-size:12px;cursor:pointer;color:#42525a}.r button:hover{border-color:' + color + '}' +
+    '.k{display:flex;gap:6px;margin-top:8px}.k input{flex:1;min-width:0;border:1px solid #cfd8d8;border-radius:8px;padding:6px 8px;font-size:13px;color:#1d2528;background:#fff}.k button{border:0;background:' + color + ';color:#fff;border-radius:8px;padding:0 10px;font-size:13px;cursor:pointer}' +
     '.f{font-size:10.5px;color:#7a8789;text-align:center;padding:0 0 7px;background:#fff}.f a{color:inherit}';
   root.appendChild(style);
 
   function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
   var panel = el('div', 'p'); panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-label', title);
   var head = el('div', 'h'); head.appendChild(el('span', '', title));
-  var close = el('button', 'x', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Close chat'); head.appendChild(close);
+  var close = el('button', 'x', '\u00d7'); close.type = 'button'; close.setAttribute('aria-label', 'Close chat'); head.appendChild(close);
   var log = el('div', 'l'); log.setAttribute('aria-live', 'polite');
-  var form = el('form'); var input = el('textarea'); input.placeholder = 'Type your question…'; input.maxLength = 1000; input.setAttribute('aria-label', 'Your question');
+  var form = el('form'); var input = el('textarea'); input.placeholder = 'Type your question\u2026'; input.maxLength = 1000; input.setAttribute('aria-label', 'Your question');
   var send = el('button', 's', 'Send'); send.type = 'submit'; form.appendChild(input); form.appendChild(send);
   var foot = el('div', 'f'); var link = el('a', '', 'Answers checked by Cascade Guard'); link.href = base + '/'; link.target = '_blank'; link.rel = 'noopener'; foot.appendChild(link);
   panel.appendChild(head); panel.appendChild(log); panel.appendChild(form); panel.appendChild(foot);
@@ -58,6 +60,44 @@
     panel.classList.toggle('o', open);
     if (open) { if (!log.childNodes.length) add('a', greeting); input.focus(); }
   }
+  function post(path, body) {
+    return fetch(base + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  }
+  function rate(m, token) {
+    var row = el('div', 'r');
+    [['Helpful', true], ['Not helpful', false]].forEach(function (o) {
+      var b = el('button', '', o[0]); b.type = 'button';
+      b.addEventListener('click', function () { post('/widget/feedback', { key: key, token: token, helpful: o[1] }).catch(function () {}); row.textContent = 'Thanks for telling us.'; row.style.fontSize = '12px'; row.style.color = '#5d6b6f'; });
+      row.appendChild(b);
+    });
+    m.appendChild(row);
+  }
+  function leadForm(m, question) {
+    var f = el('form', 'k'), i = el('input'), b = el('button', '', 'Send');
+    i.placeholder = 'Your phone or email'; i.maxLength = 200; i.setAttribute('aria-label', 'Your phone number or email, so we can reply'); b.type = 'submit';
+    var hint = el('span', 't', 'Leave your phone or email and we will get back to you.');
+    f.appendChild(i); f.appendChild(b); m.appendChild(hint); m.appendChild(f);
+    f.addEventListener('submit', function (e) {
+      e.preventDefault(); e.stopPropagation();
+      var v = i.value.trim(); if (v.length < 5) { i.focus(); return; }
+      b.disabled = true;
+      post('/widget/lead', { key: key, contact: v, question: question })
+        .then(function (r) { hint.textContent = r.ok ? 'Thank you. We will get back to you.' : 'Sorry, that could not be sent. Please contact us directly.'; f.remove(); })
+        .catch(function () { b.disabled = false; });
+    });
+  }
+  function applyConfig(c) {
+    if (c.title && !me.getAttribute('data-title')) { title = c.title; head.firstChild.textContent = title; panel.setAttribute('aria-label', title); bubble.setAttribute('aria-label', 'Open chat: ' + title); }
+    if (c.greeting && !me.getAttribute('data-greeting')) greeting = c.greeting;
+    if (c.contact && !me.getAttribute('data-contact')) contact = c.contact;
+    leads = c.collect_leads !== false;
+    if (/^#[0-9a-fA-F]{6}$/.test(c.color || '') && !me.getAttribute('data-color') && c.color !== color) {
+      style.textContent = style.textContent.split(color).join(c.color); color = c.color;
+    }
+  }
+  fetch(base + '/widget/config?key=' + encodeURIComponent(key)).then(function (r) { return r.ok ? r.json() : null; }).then(function (c) { if (c) applyConfig(c); }).catch(function () {});
+  window.addEventListener('message', function (e) { if (e.origin === base && e.data && e.data.cgWidgetConfig) applyConfig(e.data.cgWidgetConfig); });
+
   bubble.addEventListener('click', function () { toggle(!panel.classList.contains('o')); });
   close.addEventListener('click', function () { toggle(false); bubble.focus(); });
   root.addEventListener('keydown', function (e) { if (e.key === 'Escape') { toggle(false); bubble.focus(); } });
@@ -68,22 +108,24 @@
     var q = input.value.trim(); if (!q || busy) return;
     busy = true; send.disabled = true; input.value = '';
     add('u', q);
-    var wait = add('a', '…');
+    var wait = add('a', '\u2026');
     fetch(base + '/widget/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: key, question: q, history: history.slice(-8) }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
         wait.remove();
         if (!res.ok) { add('a', (res.j && typeof res.j.detail === 'string') ? res.j.detail : 'Sorry, something went wrong. Please try again.'); return; }
-        var j = res.j, text = String(j.answer || '').replace(/\s*\[\d+(?:\s*[,–-]\s*\d+)*\]/g, '').replace(/^>\s?/gm, '');
-        var note = '', warn = false;
-        if (j.verdict === 'not_found') { text = "Sorry, I couldn't find that in our information." + (contact ? ' ' + contact : ''); }
+        var j = res.j, text = String(j.answer || '').replace(/\s*\[\d+(?:\s*[,\u2013-]\s*\d+)*\]/g, '').replace(/^>\s?/gm, '').replace(/^Here is what your documents say:\s*/, '').replace(/\n{3,}/g, '\n\n');
+        var note = '', warn = false, missing = j.verdict === 'not_found';
+        if (missing) { text = "Sorry, I couldn't find that in our information." + (contact ? ' ' + contact : ''); }
         else {
           var docs = []; (j.sources || []).slice(0, 2).forEach(function (s) { if (docs.indexOf(s.doc) < 0) docs.push(s.doc); });
           if (j.verdict === 'unconfirmed') { note = 'Please confirm this with us before relying on it.'; warn = true; }
-          else note = '✓ Checked against: ' + docs.join(', ');
+          else note = '\u2713 Checked against: ' + docs.join(', ');
         }
-        add('a', text, note, warn);
+        var m = add('a', text, note, warn);
+        if (missing && leads) leadForm(m, q); else if (j.token) rate(m, j.token);
+        log.scrollTop = log.scrollHeight;
         history.push({ role: 'user', content: q }, { role: 'assistant', content: text });
       })
       .catch(function () { wait.remove(); add('a', 'Sorry, the chat could not be reached. Please try again.'); })

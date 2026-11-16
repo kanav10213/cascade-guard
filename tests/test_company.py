@@ -14,7 +14,7 @@ from cascade_guard.company import kb
 from cascade_guard.company import keys as K
 from cascade_guard.company.api import SAMPLES  # noqa: E402  (shipped in the package)
 from cascade_guard.llm.presets import function_client
-from cascade_guard.storage.db import Store
+from cascade_guard.storage.db import Store  # noqa: F401
 
 Q_LEAVE = "How many days of paid leave do we get, and how many can be carried forward?"
 GOOD = "Every permanent employee gets 24 days of paid annual leave per year [1]. Up to 10 unused days can be " \
@@ -23,8 +23,8 @@ ACCEPT = '{"verdict": "accept", "problems": []}'
 
 
 @pytest.fixture()
-def store():
-    s = Store(":memory:")
+def store(fresh_store):
+    s = fresh_store()
     for f in sorted(SAMPLES.iterdir()):
         if f.name != "README.md":
             kb.add_document("default", f.name, f.read_bytes(), store=s)
@@ -195,8 +195,8 @@ def test_without_an_ai_or_when_it_is_down_it_quotes(store):
 
 # ------------------------------------------------------------------ keys
 
-def test_keys_plans_quota_and_revoke():
-    s = Store(":memory:")
+def test_keys_plans_quota_and_revoke(fresh_store):
+    s = fresh_store()
     key, rec = K.create_key("Acme", "Acme Pvt Ltd", role="manager", plan="free", monthly_limit=2, store=s)
     assert rec["workspace"] == "acme-pvt-ltd" and key.startswith("cg_") and "key_hash" not in rec
     p = K.principal_for(key, store=s)

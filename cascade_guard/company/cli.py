@@ -7,6 +7,9 @@
     cascade-guard chat                                         a conversation in the terminal
     cascade-guard keys create NAME --workspace acme [--role manager] [--plan starter] [--limit N]
     cascade-guard keys list [--workspace W] | revoke ID | usage
+    cascade-guard customers                                    every company on this server
+    cascade-guard customers plan WORKSPACE PLAN                put one on a plan (they paid you directly)
+    cascade-guard customers reset-link EMAIL                   a one-time link for a forgotten password
 """
 from __future__ import annotations
 
@@ -184,4 +187,41 @@ def keys_main(argv: list[str]) -> int:
         used = f"{k['used_this_month']}" + (f"/{k['monthly_limit']}" if k["monthly_limit"] else "")
         print(f"  {k['id']:>4}  {k['prefix']}…  {k['name'][:28]:<28} {k['workspace']:<18} {k['role']:<8} "
               f"{k['plan']:<10} {used:>11}  {'active' if k['active'] else 'revoked'}")
+    return 0
+
+
+def customers_main(argv: list[str]) -> int:
+    p = argparse.ArgumentParser(prog="cascade-guard customers", description="The companies on this server.")
+    p.add_argument("action", nargs="?", default="list", choices=["list", "plan", "reset-link"])
+    p.add_argument("items", nargs="*", help="plan: WORKSPACE PLAN · reset-link: EMAIL")
+    p.add_argument("--home")
+    a = p.parse_args(argv)
+    _setup(a)
+    from cascade_guard.company import accounts as A
+    from cascade_guard.company import keys as K
+    from cascade_guard.company.app import all_workspaces
+    if a.action == "plan":
+        if len(a.items) != 2 or a.items[1] not in K.plans():
+            raise SystemExit(f"use: cascade-guard customers plan WORKSPACE PLAN   (plans: {', '.join(K.plans())})")
+        if not any(w["name"] == a.items[0] for w in all_workspaces()):
+            raise SystemExit("No such workspace (see: cascade-guard customers).")
+        A.ensure_workspace(a.items[0], a.items[0], a.items[1])
+        K.set_plan(a.items[0], a.items[1])
+        A.event(a.items[0], "the service", "plan changed", f"{a.items[1]} (set by the operator)")
+        print(f"{a.items[0]} is now on the {a.items[1]} plan.")
+        return 0
+    if a.action == "reset-link":
+        u = A.find_user(a.items[0]) if a.items else None
+        if not u:
+            raise SystemExit("No account with that email.")
+        base = os.getenv("PUBLIC_URL", "http://localhost:8000").rstrip("/")
+        print(f"{base}/login?reset={A.make_link('reset', user_id=u['id'], hours=24)}\n"
+              "Send this to that email address only. It works once, for 24 hours.")
+        return 0
+    rows = all_workspaces()
+    for w in rows:
+        used = f"{w['used_this_month']}" + (f"/{w['monthly_limit']}" if w["monthly_limit"] else "")
+        print(f"  {w['name'][:26]:<26} {w['plan']:<10} {used:>11}  {w['documents']:>3} docs  {w['people']:>2} people  "
+              f"{(w['contact'] or '')[:34]:<34} joined {(w['created_at'] or '')[:10]}")
+    print(f"{len(rows)} companies.")
     return 0

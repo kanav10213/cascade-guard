@@ -33,7 +33,8 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from cascade_guard.auth import auth_enabled, require, role_for_key
 
 EXEMPT = {"/", "/assistant", "/receipts", "/chat", "/admin", "/welcome", "/pricing", "/health", "/health/ready",
-          "/favicon.ico", "/dashboard", "/widget.js", "/terms", "/privacy", "/refunds", "/contact", "/start"}
+          "/favicon.ico", "/dashboard", "/widget.js", "/terms", "/privacy", "/refunds", "/contact", "/start", "/app",
+          "/login", "/security"}
 # Routes that call the model; chain runs on a real model use the same limit.
 LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions", "/widget/ask")
 
@@ -205,8 +206,10 @@ def install(app):
         path = request.url.path
         from cascade_guard.company.keys import key_from
         key = key_from(request.headers.get("x-api-key"), request.headers.get("authorization"))
-        client = request.client.host if request.client else "?"
-        why = keyless_refusal(request, client)
+        from cascade_guard.clientip import client_address
+        client = client_address(request)   # for limits and the log; may come from a proxy's header
+        peer = request.client.host if request.client else "?"
+        why = keyless_refusal(request, peer)   # "is this my own computer?" trusts only the real connection
         if why:
             await _audit(request, key, client, 403, 0)
             return _secure(JSONResponse({"detail": f"Refused because {why}. This server has no API_KEY set, so it "
