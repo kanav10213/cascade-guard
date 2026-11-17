@@ -181,7 +181,7 @@ def _fcm_account() -> dict | None:
 
 def _fcm_access_token(acc: dict) -> str:
     from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import padding
+    from cryptography.hazmat.primitives.asymmetric import padding, rsa
     if _fcm_token.get("exp", 0) > time.time() + 60:
         return _fcm_token["value"]
     now = int(time.time())
@@ -190,7 +190,9 @@ def _fcm_access_token(acc: dict) -> str:
     claims = b64u(json.dumps({"iss": acc["client_email"], "scope": "https://www.googleapis.com/auth/firebase.messaging",
                               "aud": aud, "iat": now, "exp": now + 3600}, separators=(",", ":")).encode())
     key = serialization.load_pem_private_key(acc["private_key"].encode(), password=None)
-    sig = key.sign(f"{head}.{claims}".encode(), padding.PKCS1v15(), hashes.SHA256())  # type: ignore[call-arg,union-attr]
+    if not isinstance(key, rsa.RSAPrivateKey):
+        raise ValueError("FCM_SERVICE_ACCOUNT's private key is not an RSA key")
+    sig = key.sign(f"{head}.{claims}".encode(), padding.PKCS1v15(), hashes.SHA256())
     r = httpx.post(aud, timeout=15, data={"grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
                                           "assertion": f"{head}.{claims}.{b64u(sig)}"})
     r.raise_for_status()
