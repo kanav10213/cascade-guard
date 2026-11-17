@@ -165,9 +165,11 @@ from cascade_guard.company.app import router as account_router  # noqa: E402
 
 app.include_router(account_router)
 
+from cascade_guard.company.alerts import router as alerts_router  # noqa: E402
 from cascade_guard.company.pwa import router as pwa_router  # noqa: E402
 
 app.include_router(pwa_router)
+app.include_router(alerts_router)
 
 from cascade_guard import ops  # noqa: E402
 

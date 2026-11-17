@@ -33,6 +33,7 @@ jobs:
     env:
       SERVER: ${{ vars.CASCADE_SERVER_URL }}
       HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_FIREBASE: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -46,14 +47,34 @@ jobs:
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
       - run: npm ci
-      - name: Default server address
+      - name: Server address
         if: env.SERVER != ''
-        run: sed -i "s#var DEFAULT_SERVER = '[^']*';#var DEFAULT_SERVER = '${SERVER%/}';#" www/index.html && grep -n "DEFAULT_SERVER =" www/index.html
+        run: |
+          S="${SERVER%/}"
+          sed -i "s#var SERVER = '[^']*';#var SERVER = '$S';#" www/index.html www/offline.html
+          node -e "const f='capacitor.config.json',c=require('./'+f);c.server.url=process.argv[1]+'/app';require('fs').writeFileSync(f,JSON.stringify(c,null,2))" "$S"
+          grep -n "url" capacitor.config.json
+      - name: Alerts through Firebase (when the GOOGLE_SERVICES_JSON secret is set)
+        if: env.HAS_FIREBASE == 'true'
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          # the page offers alerts only in builds that can receive them
+          node -e "const f='capacitor.config.json',c=require('./'+f);c.android.appendUserAgent=c.android.appendUserAgent.replace(')','; push)');require('fs').writeFileSync(f,JSON.stringify(c,null,2))"
+          grep -n appendUserAgent capacitor.config.json
       - name: Android project, icons and splash screens
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
           npx cap add android
           npm run assets -- --android
           npx cap sync android
+          cp -r native/android/res/. android/app/src/main/res/
+          # alerts: the white tick in the status bar, in the app's blue
+          sed -i 's#</application>#    <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_cg" />\n        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/cg_blue" />\n    </application>#' android/app/src/main/AndroidManifest.xml
+          printf '<?xml version="1.0" encoding="utf-8"?>\n<resources>\n    <color name="cg_blue">#23527C</color>\n</resources>\n' > android/app/src/main/res/values/cg_colors.xml
+          if [ "$HAS_FIREBASE" = "true" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json; fi
+          grep -n "firebase" android/app/src/main/AndroidManifest.xml
       - name: Version number
         run: |
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
@@ -123,19 +144,20 @@ jobs:
           cache: npm
           cache-dependency-path: mobile/package-lock.json
       - run: npm ci
-      - name: Default server address
+      - name: Server address
         if: env.SERVER != ''
-        run: sed -i '' "s#var DEFAULT_SERVER = '[^']*';#var DEFAULT_SERVER = '${SERVER%/}';#" www/index.html
+        run: |
+          S="${SERVER%/}"
+          sed -i '' "s#var SERVER = '[^']*';#var SERVER = '$S';#" www/index.html www/offline.html
+          node -e "const f='capacitor.config.json',c=require('./'+f);c.server.url=process.argv[1]+'/app';require('fs').writeFileSync(f,JSON.stringify(c,null,2))" "$S"
       - name: iOS project, icons and splash screens
         run: |
           npx cap add ios
           npm run assets -- --ios
           npx cap sync ios
-      - name: App settings (local company servers, display name, version)
+      - name: App settings (display name, version)
         run: |
           P=ios/App/App/Info.plist
-          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" $P 2>/dev/null || true
-          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsLocalNetworking bool true" $P
           /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Cascade Guard" $P 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Cascade Guard" $P
           /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $P
           sed -i '' "s/CURRENT_PROJECT_VERSION = 1;/CURRENT_PROJECT_VERSION = ${{ github.run_number }};/g" ios/App/App.xcodeproj/project.pbxproj

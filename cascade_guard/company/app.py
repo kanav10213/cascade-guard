@@ -154,6 +154,33 @@ def auth_password(req: PasswordIn, request: Request, response: Response):
     return {"ok": True}
 
 
+class DeleteMeIn(BaseModel):
+    password: str = Field(default="", max_length=200)
+
+
+@router.post("/auth/delete-account")
+def auth_delete_account(req: DeleteMeIn, request: Request, response: Response):
+    """A person deletes their own account (the app stores require this). The last manager deletes the whole
+    workspace instead (Settings), so a company is never left without anyone who can manage it."""
+    user = A.session_user(request.cookies.get(A.COOKIE) or "")
+    if user is None or request.headers.get("x-cg") != "1":
+        raise HTTPException(status_code=401, detail="not signed in")
+    if user.get("password_hash") and not A.check_password(req.password, user["password_hash"]):
+        raise HTTPException(status_code=403, detail="The password is not right.")
+    others = [u for u in A.list_users(user["workspace"]) if u["id"] != user["id"]]
+    if user["role"] == "manager" and not any(u["role"] == "manager" and u["active"] for u in others):
+        raise HTTPException(status_code=409, detail="You are the only manager. To delete your account, delete the "
+                                                    "whole workspace under Settings, or make someone else a manager "
+                                                    "first.")
+    with K._store()._tx() as c:
+        c.execute("DELETE FROM sessions WHERE user_id = ?", (user["id"],))
+        c.execute("DELETE FROM push_devices WHERE user_id = ?", (user["id"],))
+        c.execute("DELETE FROM users WHERE id = ?", (user["id"],))
+    A.event(user["workspace"], user["email"], "deleted their account")
+    response.delete_cookie(A.COOKIE, path="/")
+    return {"deleted": True}
+
+
 class ResetRequestIn(BaseModel):
     email: str = Field(..., max_length=255)
 
@@ -494,6 +521,7 @@ def team_remove(user_id: int, p: Principal = Depends(caller)):  # noqa: B008
         _keep_a_manager(p, user_id)
     with K._store()._tx() as c:
         c.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+        c.execute("DELETE FROM push_devices WHERE user_id = ?", (user_id,))
         c.execute("DELETE FROM users WHERE id = ?", (user_id,))
     A.event(p.workspace, _actor(p), "removed", u["email"])
     return {"ok": True}
@@ -649,7 +677,7 @@ def delete_workspace(req: DeleteIn, response: Response, p: Principal = Depends(c
     with K._store()._tx() as c:
         c.execute("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE workspace = ?)", (ws,))
         for table in ("kb_chunks", "kb_docs", "chat_log", "leads", "events", "invites", "users", "api_keys",
-                      "key_usage"):
+                      "key_usage", "push_devices"):
             c.execute(f"DELETE FROM {table} WHERE workspace = ?", (ws,))  # noqa: S608 - fixed table names
         c.execute("DELETE FROM workspaces WHERE name = ?", (ws,))
     kb._cache.pop(ws, None)

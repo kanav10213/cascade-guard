@@ -152,6 +152,7 @@ details.work ul{margin:6px 0;padding-left:20px}
       <span id="usage"></span>
       <span><a href="/admin" id="adminlink" hidden>Keys, usage and apps</a></span>
       <button class="linkbtn" id="changekey" type="button">Change access key</button>
+      <a class="linkbtn" id="delme" href="/delete-account" hidden style="display:block;margin-top:6px">Delete my account</a>
     </div>
   </aside>
 
@@ -239,7 +240,7 @@ async function load(){
   $('#aipill').title = info.ai ? `${info.ai.provider} · ${info.ai.model}` : 'No AI is connected, so answers quote your documents word for word.';
   $('#uploadbox').hidden = !info.can_manage_documents;
   $('#adminlink').hidden = !info.can_manage_keys;
-  if(!apiKey){ $('#changekey').textContent = 'Sign out'; $('#adminlink').href = '/app'; $('#adminlink').textContent = 'Dashboard'; }
+  if(!apiKey){ $('#delme').hidden = false; $('#changekey').textContent = 'Sign out'; $('#adminlink').href = '/app'; $('#adminlink').textContent = 'Dashboard'; }
   if(info.docs_only){ $('#mode').value = 'documents'; }
   usageLine();
   await loadDocs();

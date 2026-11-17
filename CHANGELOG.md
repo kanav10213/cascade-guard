@@ -1,6 +1,32 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] - 2026-11-18
+
+### Added
+- **Phone alerts** (`cascade_guard/company/alerts.py`): managers get a notification when a website visitor leaves
+  their contact details, and, at most once every 15 minutes, when a question can't be answered. Each can be
+  turned on or off in Settings, per device.
+  - Web Push works in Chrome, Edge and Firefox, and in the iPhone home-screen app (iOS 16.4+), with nothing to set
+    up. Messages are encrypted for each browser (RFC 8291, tested against the RFC's example), signing follows
+    RFC 8292, and the signing key is made once and kept in the database.
+  - The Android app gets alerts through Firebase Cloud Messaging (`FCM_SERVICE_ACCOUNT` on the server and the
+    `GOOGLE_SERVICES_JSON` build secret).
+  - It sends only to real push services, and forgets devices that have gone.
+- **Feels like an app on phones:** five bottom tabs (Home, Chats, Leads with a badge, Try it, More), tables shown
+  as cards, one-tap Call, WhatsApp, SMS and Email for each lead, pull to refresh in the app, and fresh data when
+  you come back to it.
+- **Play Store kit** (`mobile/store/`): listing text, Data safety answers, feature graphic, 512 px icon and five
+  1080 × 1920 screenshots.
+- **Account deletion** (the app stores require it): `/delete-account` and Settings, then Delete my account. The
+  last manager deletes the whole workspace instead. The privacy policy now covers alerts and the app.
+
+### Changed
+- The phone app now opens the server directly instead of showing its own start screen. This gives the dashboard
+  the phone's notifications and back button. A company with its own server builds its own copy
+  (`CASCADE_SERVER_URL`).
+- `cryptography` is now a dependency (it signs and encrypts alerts).
+
 ## [1.8.0] - 2026-11-17
 
 ### Added

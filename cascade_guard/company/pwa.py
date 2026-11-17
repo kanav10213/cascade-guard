@@ -2,7 +2,8 @@
 
 On Android (Chrome) and iPhone (Safari: Share > Add to Home Screen) the dashboard installs like an app. The same
 pages run inside the Android and iOS apps in mobile/, which add "CascadeGuardApp" to their user agent; /pwa.js then
-marks the page (html.in-app) so the app hides prices and payment links, as the app stores require.
+marks the page (html.in-app) so the app hides prices and payment links, as the app stores require. The service
+worker also shows phone alerts (alerts.py).
 """
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from cascade_guard.company.app import STATIC
 
 router = APIRouter(include_in_schema=False)
 ICONS = STATIC / "icons"
-VERSION = "1"   # bump to make installed apps fetch the offline page and icons again
+VERSION = "2"   # bump to make installed apps fetch the offline page and icons again
 THEME = "#23527c"
 PAPER = "#f2f5f1"
 
@@ -58,7 +59,7 @@ def manifest():
 # API answers, documents and conversations always come from the server.
 SW = """/* Cascade Guard service worker */
 const CACHE = 'cg-shell-%(v)s';
-const SHELL = ['/offline', '/icons/icon-192.png', '/icons/apple-touch-icon.png'];
+const SHELL = ['/offline', '/icons/icon-192.png', '/icons/badge-96.png', '/icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
 });
@@ -76,6 +77,25 @@ self.addEventListener('fetch', e => {
   } else if(url.pathname.startsWith('/icons/')){
     e.respondWith(caches.match(r).then(hit => hit || fetch(r)));
   }
+});
+// Alerts: a new lead, or a question the documents couldn't answer
+self.addEventListener('push', e => {
+  let m = {};
+  try{ m = e.data ? e.data.json() : {}; }catch(err){ m = {body: e.data ? e.data.text() : ''}; }
+  e.waitUntil(self.registration.showNotification(m.title || 'Cascade Guard', {
+    body: m.body || '', tag: m.tag || 'cg', renotify: true, icon: '/icons/icon-192.png', badge: '/icons/badge-96.png',
+    data: {url: m.url || '/app'}
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = new URL((e.notification.data && e.notification.data.url) || '/app', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
+    for(const c of list){
+      if(new URL(c.url).origin === self.location.origin && 'focus' in c){ c.navigate(target).catch(() => {}); return c.focus(); }
+    }
+    return self.clients.openWindow(target);
+  }));
 });
 """
 
@@ -96,17 +116,6 @@ PWA_JS = """(function(){
   var s = document.createElement('style');
   s.textContent = '.in-app .web-only,.in-app #pricing,.installed .get-app{display:none!important}';
   document.head.appendChild(s);
-  if(inApp && location.pathname === '/login'){
-    // the phone app's own start screen, where a company can enter its own server address
-    var home = /Android/.test(navigator.userAgent) ? 'https://localhost/' : 'capacitor://localhost/';
-    document.addEventListener('DOMContentLoaded', function(){
-      var a = document.createElement('a');
-      a.href = home + 'index.html?change=1';
-      a.textContent = 'Use a different server';
-      a.style.cssText = 'display:block;text-align:center;margin:18px auto 28px;font-size:14px';
-      document.body.appendChild(a);
-    });
-  }
   if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
     try{ navigator.serviceWorker.register('/sw.js', {scope: '/'}).catch(function(){}); }catch(e){}
   }

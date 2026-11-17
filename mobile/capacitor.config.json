@@ -4,24 +4,28 @@
   "webDir": "www",
   "backgroundColor": "#f2f5f1",
   "server": {
+    "url": "https://cascade-guard.onrender.com/app",
     "androidScheme": "https",
-    "cleartext": true,
-    "allowNavigation": [
-      "*"
-    ],
     "errorPath": "offline.html"
   },
   "android": {
-    "appendUserAgent": "CascadeGuardApp/1.0 (Android)",
+    "appendUserAgent": "CascadeGuardApp/1.1 (Android)",
     "webContentsDebuggingEnabled": false
   },
   "ios": {
-    "appendUserAgent": "CascadeGuardApp/1.0 (iOS)",
+    "appendUserAgent": "CascadeGuardApp/1.1 (iOS)",
     "contentInset": "always"
   },
   "plugins": {
     "SystemBars": {
       "insetsHandling": "css"
+    },
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
     }
   }
 }

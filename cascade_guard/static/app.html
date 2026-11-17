@@ -95,6 +95,31 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px}
 .empty{color:var(--muted);padding:14px 0;font-size:14px}
 .q-cell{max-width:260px}.a-cell{max-width:420px;color:var(--muted)}
 .clip{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.tabs{display:none}.show-s{display:none}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.acts a{font-size:13px;border:1px solid var(--rule);border-radius:99px;padding:3px 11px;text-decoration:none;color:var(--blue);background:var(--sheet)}
+.switch{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--rule2);font-size:14px}
+.switch:first-of-type{border-top:0}.switch input{width:20px;height:20px;flex:none}
+#ptr{position:fixed;top:0;left:50%;transform:translate(-50%,-48px);z-index:40;background:var(--sheet);border:1px solid var(--rule);border-radius:99px;padding:6px 14px;font-size:13px;color:var(--muted);box-shadow:0 2px 10px rgba(0,0,0,.12);transition:transform .15s}
+@media(max-width:820px){
+  .tabs{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:22;background:var(--sheet);border-top:1px solid var(--rule);padding-bottom:env(safe-area-inset-bottom)}
+  .tabs button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 2px 6px;font-size:11.5px;color:var(--muted);cursor:pointer;min-height:54px;position:relative}
+  .tabs button svg{width:23px;height:23px}
+  .tabs button[aria-current=page]{color:var(--blue);font-weight:600}
+  .tabs .badge{position:absolute;top:3px;left:calc(50% + 6px);font-size:10.5px;padding:0 6px}
+  main{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  .top #menu{display:none}
+  .card{padding:14px}
+}
+@media(max-width:620px){
+  table.stack thead{display:none}
+  table.stack tr{display:block;border:1px solid var(--rule2);border-radius:10px;padding:8px 10px;margin:0 0 10px}
+  table.stack td{display:block;border:0;padding:3px 0;max-width:none}
+  table.stack td[data-l]::before{content:attr(data-l);display:block;font-size:11.5px;color:var(--muted);font-weight:600}
+  table.stack td.w{white-space:normal}
+  .hide-s{display:none!important}.show-s{display:inline}
+  .row .btn{flex:1;text-align:center}
+}
 </style>
 </head>
 <body>
@@ -108,6 +133,8 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px}
   </aside>
   <main id="main"><p class="small">Loading…</p></main>
 </div>
+<nav class="tabs" id="tabs" aria-label="Main sections"></nav>
+<div id="ptr" aria-hidden="true">Release to refresh</div>
 <script>
 'use strict';
 const $ = s => document.querySelector(s);
@@ -147,6 +174,26 @@ function nav(){
   const cur = (location.hash || '#overview').slice(1);
   for(const [id, label] of SECTIONS){
     box.append(h('button', {type: 'button', 'aria-current': cur === id ? 'page' : null, onclick: () => { location.hash = id; closeSide(); }}, label, id === 'leads' && O && O.open_leads ? h('span', {class: 'badge', text: O.open_leads}) : null));
+  }
+  tabs();
+}
+const ICON = {
+  overview: '<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  conversations: '<path d="M4 5h16v11H9l-5 4z"/>',
+  leads: '<circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+  try: '<path d="M4 12l16-8-6 16-3-7z"/>',
+  more: '<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
+const TABS = [['overview', 'Home'], ['conversations', 'Chats'], ['leads', 'Leads'], ['try', 'Try it'], ['more', 'More']];
+function tabs(){
+  const box = $('#tabs'); if(!box) return; box.replaceChildren();
+  const cur = (location.hash || '#overview').slice(1), main = TABS.some(t => t[0] === cur);
+  for(const [id, label] of TABS){
+    const b = h('button', {type: 'button', 'aria-current': (id === cur || (id === 'more' && !main)) ? 'page' : null});
+    b.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[id] + '</svg>';
+    b.append(h('span', {text: label}));
+    if(id === 'leads' && O && O.open_leads) b.append(h('span', {class: 'badge', text: O.open_leads}));
+    b.addEventListener('click', () => { if(id === 'more'){ $('#side').classList.add('open'); $('#scrim').classList.add('open'); } else { location.hash = id; } });
+    box.append(b);
   }
 }
 function closeSide(){ $('#side').classList.remove('open'); $('#scrim').classList.remove('open'); }
@@ -296,9 +343,9 @@ VIEWS.conversations = async () => {
     const p = new URLSearchParams(); if(filter.value) p.set('verdict', filter.value); if(search.value.trim()) p.set('q', search.value.trim());
     const r = await call('/app/conversations?' + p);
     if(!r.conversations.length){ body.replaceChildren(h('p', {class: 'empty', text: 'No conversations match.'})); return; }
-    body.replaceChildren(h('div', {class: 'tw'}, h('table', {}, h('thead', {}, h('tr', {}, h('th', {text: 'When'}), h('th', {text: 'Where'}), h('th', {text: 'Question'}), h('th', {text: 'Answer'}), h('th', {text: 'Result'}))),
-      h('tbody', {}, r.conversations.map(c => h('tr', {}, h('td', {class: 'w', text: when(c.at)}), h('td', {class: 'w', text: {widget: 'Website', app: 'Dashboard', api: 'API'}[c.channel] || c.channel}), h('td', {class: 'q-cell', text: c.question}),
-        h('td', {class: 'a-cell'}, h('div', {class: 'clip', title: c.answer, text: c.answer})), h('td', {class: 'w'}, tag(c.verdict), c.feedback ? h('div', {class: 'small', text: c.feedback > 0 ? 'Visitor: helpful' : 'Visitor: not helpful'}) : null)))))));
+    body.replaceChildren(h('div', {class: 'tw'}, h('table', {class: 'stack'}, h('thead', {}, h('tr', {}, h('th', {text: 'When'}), h('th', {text: 'Where'}), h('th', {text: 'Question'}), h('th', {text: 'Answer'}), h('th', {text: 'Result'}))),
+      h('tbody', {}, r.conversations.map(c => h('tr', {}, h('td', {class: 'w'}, when(c.at), h('span', {class: 'show-s', text: ' · ' + ({widget: 'Website', app: 'Dashboard', api: 'API'}[c.channel] || c.channel)})), h('td', {class: 'w hide-s', text: {widget: 'Website', app: 'Dashboard', api: 'API'}[c.channel] || c.channel}), h('td', {class: 'q-cell', 'data-l': 'Question'}, h('b', {text: c.question})),
+        h('td', {class: 'a-cell', 'data-l': 'Answer'}, h('div', {class: 'clip', title: c.answer, text: c.answer})), h('td', {class: 'w'}, tag(c.verdict), c.feedback ? h('div', {class: 'small', text: c.feedback > 0 ? 'Visitor: helpful' : 'Visitor: not helpful'}) : null)))))));
   }
   filter.addEventListener('change', load); let t; search.addEventListener('input', () => { clearTimeout(t); t = setTimeout(load, 300); });
   out.push(h('div', {class: 'card'}, h('div', {class: 'row', style: 'margin-bottom:12px'}, h('label', {class: 'f'}, 'Show', filter), h('label', {class: 'f', style: 'flex:2'}, 'Search', search), h('a', {class: 'btn ghost', href: '/app/conversations.csv', text: 'Download CSV'})), body));
@@ -313,11 +360,14 @@ VIEWS.leads = async () => {
   async function load(){
     const r = await call('/app/leads');
     if(!r.leads.length){ body.replaceChildren(h('p', {class: 'empty', text: 'No leads yet.'})); return; }
-    body.replaceChildren(h('div', {class: 'tw'}, h('table', {}, h('thead', {}, h('tr', {}, h('th', {text: 'When'}), h('th', {text: 'Contact'}), h('th', {text: 'They asked'}), h('th', {}))),
+    body.replaceChildren(h('div', {class: 'tw'}, h('table', {class: 'stack'}, h('thead', {}, h('tr', {}, h('th', {text: 'When'}), h('th', {text: 'Contact'}), h('th', {text: 'They asked'}), h('th', {}))),
       h('tbody', {}, r.leads.map(l => { const b = h('button', {class: 'btn ghost small', type: 'button', text: 'Mark done'}); b.addEventListener('click', async () => { await call('/app/leads/' + l.id + '/done', {}); O.open_leads = Math.max(0, O.open_leads - 1); nav(); load(); });
-        return h('tr', {}, h('td', {class: 'w', text: when(l.at)}), h('td', {}, h('b', {text: l.contact})), h('td', {text: l.question || ''}), h('td', {class: 'w'}, l.handled_at ? h('span', {class: 'tag t-ok', text: 'Done'}) : b)); })))));
+        return h('tr', {}, h('td', {class: 'w small', text: when(l.at)}), h('td', {'data-l': 'Contact'}, h('b', {text: l.contact}), reach(l.contact, l.question)), h('td', {'data-l': 'They asked', text: l.question || '–'}), h('td', {class: 'w'}, l.handled_at ? h('span', {class: 'tag t-ok', text: 'Done'}) : b)); })))));
   }
-  await load(); out.push(body);
+  await load();
+  const ask = await alertsCard(true).catch(() => null);
+  if(ask) out.push(ask);
+  out.push(body);
   return out;
 };
 
@@ -437,12 +487,137 @@ VIEWS.settings = async () => {
   const conf = h('input', {type: 'text', maxlength: '80', placeholder: O.workspace.name, 'aria-label': 'Type the workspace name to confirm'}), m3 = h('div'), del = h('button', {class: 'btn danger', type: 'submit', text: 'Delete everything'});
   const f3 = h('form', {class: 'row'}, h('label', {class: 'f', style: 'flex:3'}, `To delete this workspace and all its documents, conversations and accounts, type its name: ${O.workspace.name}`, conf), del);
   f3.addEventListener('submit', async ev => { ev.preventDefault(); try{ await call('/app/delete-workspace', {confirm: conf.value}); location.href = '/'; }catch(e){ note(m3, e.message); } });
+  const alertBox = await alertsCard(false).catch(e => h('div', {class: 'card'}, h('h2', {text: 'Phone alerts'}), h('p', {class: 'msg err', text: e.message})));
+  if(alertBox) out.push(alertBox);
   out.push(h('div', {class: 'card'}, h('h2', {text: 'Company'}), f1), h('div', {class: 'card'}, h('h2', {text: 'Your password'}), f2, m2),
     h('div', {class: 'card'}, h('h2', {text: 'Your data'}), h('p', {class: 'h', text: 'Download everything this workspace holds (documents, conversations, leads, people, activity) as one file.'}), h('a', {class: 'btn ghost', href: '/app/export', text: 'Download my data'}), h('p', {class: 'small', style: 'margin:10px 0 0'}, h('a', {href: '/security', target: '_blank', rel: 'noopener', text: 'How your data is protected'}))),
     h('div', {class: 'card'}, h('h2', {text: 'Activity'}), h('p', {class: 'h', text: 'Who did what, most recent first.'}), act.events.length ? h('div', {class: 'tw'}, h('table', {}, h('tbody', {}, act.events.map(e => h('tr', {}, h('td', {class: 'w', text: when(e.at)}), h('td', {text: e.actor || ''}), h('td', {text: e.action + (e.detail ? ': ' + e.detail : '')})))))) : h('p', {class: 'empty', text: 'Nothing yet.'})),
-    h('div', {class: 'card'}, h('h2', {text: 'Delete workspace'}), f3, m3));
+    h('div', {class: 'card'}, h('h2', {text: 'Delete workspace'}), f3, m3), deleteMe());
   return out;
 };
+function deleteMe(){
+  const pw = h('input', {type: 'password', autocomplete: 'current-password', maxlength: '200'}), m = h('div');
+  const f = h('form', {class: 'row'}, h('label', {class: 'f', style: 'flex:3'}, 'To delete only your own account (the workspace stays for your team), type your password', pw), h('button', {class: 'btn danger', type: 'submit', text: 'Delete my account'}));
+  f.addEventListener('submit', async ev => { ev.preventDefault(); try{ await call('/auth/delete-account', {password: pw.value}); location.href = '/login'; }catch(e){ note(m, e.message); } });
+  return h('div', {class: 'card'}, h('h2', {text: 'Delete my account'}), f, m);
+}
+
+/* ---------------------------------------------------------------- reaching a lead */
+function reach(contact, question){
+  const c = (contact || '').trim(), acts = h('div', {class: 'acts'});
+  const mail = c.match(/[^\s@]+@[^\s@]+\.[^\s@]+/);
+  let digits = c.replace(/[^\d+]/g, '');
+  if(mail) acts.append(h('a', {href: 'mailto:' + mail[0] + '?subject=' + encodeURIComponent('Your question to ' + (O ? O.workspace.title : 'us')), text: 'Email'}));
+  else if(digits.replace(/\D/g, '').length >= 7){
+    acts.append(h('a', {href: 'tel:' + digits, text: 'Call'}));
+    let wa = digits.replace(/\D/g, '');
+    if(wa.length === 10 && !digits.startsWith('+')) wa = '91' + wa;   // a 10-digit number written without a country code: India
+    const hello = 'Hello! You asked us: ' + (question || '') ;
+    acts.append(h('a', {href: 'https://wa.me/' + wa + (question ? '?text=' + encodeURIComponent(hello) : ''), target: '_blank', rel: 'noopener', text: 'WhatsApp'}));
+    acts.append(h('a', {href: 'sms:' + digits, text: 'SMS'}));
+  }
+  return acts.childNodes.length ? acts : null;
+}
+
+/* ---------------------------------------------------------------- phone alerts */
+const CAP = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() ? window.Capacitor : null;
+const capHas = n => !!(CAP && (CAP.PluginHeaders || []).some(x => x.name === n));
+const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const STANDALONE = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+function deviceLabel(){
+  const ua = navigator.userAgent;
+  if(CAP) return (/Android/.test(ua) ? 'Android' : 'iPhone') + ' app';
+  const os = /Android/.test(ua) ? 'Android' : IOS ? 'iPhone' : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : /Linux/.test(ua) ? 'Linux' : 'this computer';
+  const br = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? (STANDALONE ? 'Home Screen app' : 'Safari') : 'browser';
+  return br + ' on ' + os;
+}
+function alertWay(info){
+  if(CAP) return capHas('PushNotifications') && info.android && /\bpush\b/.test(navigator.userAgent) ? 'android' : 'none-app';
+  if(IOS && !STANDALONE) return 'ios-install';
+  if('serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window) return 'web';
+  return 'none';
+}
+const keyBytes = k => { const s = atob(k.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - k.length % 4) % 4)); return Uint8Array.from(s, c => c.charCodeAt(0)); };
+async function enableWeb(info){
+  const perm = await Notification.requestPermission();
+  if(perm !== 'granted') throw new Error('Notifications are blocked for this site. Allow them in the browser settings (the lock icon next to the address), then try again.');
+  const reg = await navigator.serviceWorker.register('/sw.js', {scope: '/'}); await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(sub){ await sub.unsubscribe().catch(() => {}); }
+  try{ sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: keyBytes(info.web_key)}); }
+  catch(e){ throw new Error('This browser could not turn on alerts (' + (e.message || e.name) + '). In a private window alerts do not work; otherwise check that notifications are allowed for this site.'); }
+  const j = sub.toJSON();
+  await call('/app/alerts/devices', {kind: 'web', endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth, label: deviceLabel()});
+}
+function nativeToken(){
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('The phone did not answer. Check that Google Play services is up to date.')), 20000);
+    CAP.addListener('PushNotifications', 'registration', x => { clearTimeout(t); resolve(x.value); });
+    CAP.addListener('PushNotifications', 'registrationError', e => { clearTimeout(t); reject(new Error((e && e.error) || 'The phone refused to register for alerts.')); });
+    CAP.nativePromise('PushNotifications', 'register', {}).catch(e => { clearTimeout(t); reject(e); });
+  });
+}
+async function enableAndroid(){
+  const perm = await CAP.nativePromise('PushNotifications', 'requestPermissions', {});
+  if(!perm || perm.receive !== 'granted') throw new Error('Notifications are off for this app. Turn them on in the phone settings (Apps, Cascade Guard, Notifications).');
+  await call('/app/alerts/devices', {kind: 'android', endpoint: await nativeToken(), label: deviceLabel()});
+  try{ localStorage.setItem('cg_push', '1'); }catch(e){}
+}
+async function alertsCard(compact){
+  if(O && O.you.role === 'member') return null;
+  const info = await call('/app/alerts');
+  const way = alertWay(info), mine = info.devices;
+  if(compact && mine.length) return null;
+  const msg = h('div'), card = h('div', {class: 'card'});
+  const title = compact ? 'Get a phone alert for each new lead' : 'Phone alerts';
+  const lead = h('input', {type: 'checkbox'}), miss = h('input', {type: 'checkbox'}); lead.checked = info.settings.lead; miss.checked = info.settings.unanswered;
+  const saveSet = async () => { try{ await call('/app/alerts/settings', {lead: lead.checked, unanswered: miss.checked}, 'PUT'); note(msg, 'Saved.', true); }catch(e){ note(msg, e.message); } };
+  lead.addEventListener('change', saveSet); miss.addEventListener('change', saveSet);
+  const on = h('button', {class: 'btn', type: 'button', text: 'Turn on alerts on this device'});
+  on.addEventListener('click', async () => {
+    on.disabled = true;
+    try{ if(way === 'android') await enableAndroid(); else await enableWeb(info); route(); }
+    catch(e){ note(msg, e.message); on.disabled = false; }
+  });
+  const test = h('button', {class: 'btn ghost', type: 'button', text: 'Send a test alert'});
+  test.addEventListener('click', async () => { try{ const r = await call('/app/alerts/test', {}); note(msg, r.sent ? 'Sent. It should arrive within a few seconds.' : 'Could not reach this device. Turn alerts off and on again.', !!r.sent); }catch(e){ note(msg, e.message); } });
+  let how;
+  if(way === 'web' || way === 'android') how = h('div', {class: 'row'}, on, mine.length ? test : null);
+  else if(way === 'ios-install') how = h('p', {class: 'h', text: 'On iPhone, alerts work from the home-screen app: in Safari tap Share, then Add to Home Screen, open it from there and sign in, then come back here. Needs iOS 16.4 or newer.'});
+  else if(way === 'none-app') how = h('p', {class: 'h', text: info.android ? 'Update the app to get alerts (open /get-app on this phone).' : 'Alerts for the Android app are not set up on this server yet. Until then, open this dashboard in Chrome on your phone and turn alerts on there.'});
+  else how = h('p', {class: 'h', text: 'This browser cannot show alerts. Use Chrome, Edge or Firefox, or the phone app.'});
+  card.append(h('h2', {text: title}), h('p', {class: 'h', text: 'A notification on your phone or computer when a website visitor leaves their number, so you can call back while they are still interested.'}), how);
+  if(!compact){
+    card.append(h('div', {style: 'margin-top:12px'}, h('label', {class: 'switch'}, h('span', {text: 'A visitor leaves their contact details'}), lead), h('label', {class: 'switch'}, h('span', {text: 'A question your documents can’t answer (at most one every 15 minutes)'}), miss)));
+    if(mine.length) card.append(h('p', {class: 'small', style: 'margin:12px 0 4px', text: 'Your devices with alerts on:'}), h('ul', {style: 'margin:0;padding-left:18px'}, mine.map(d => { const x = h('button', {class: 'linkbtn', type: 'button', text: 'Turn off'}); x.addEventListener('click', async () => { await call('/app/alerts/devices/' + d.id, undefined, 'DELETE'); route(); }); return h('li', {class: 'small'}, d.label + ' (since ' + when(d.created_at) + ') ', x); })));
+  }
+  card.append(msg);
+  return card;
+}
+if(CAP && capHas('PushNotifications')){
+  // opening the app from an alert goes to the right page; a phone that had alerts on refreshes its token
+  CAP.addListener('PushNotifications', 'pushNotificationActionPerformed', a => { const u = a && a.notification && a.notification.data && a.notification.data.url; if(u && u.startsWith('/')) location.href = u; });
+  let had = false; try{ had = localStorage.getItem('cg_push') === '1'; }catch(e){}
+  if(had) nativeToken().then(t => call('/app/alerts/devices', {kind: 'android', endpoint: t, label: deviceLabel()})).catch(() => {});
+}
+
+/* ---------------------------------------------------------------- feels like an app */
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', async () => {
+  if(document.hidden){ hiddenAt = Date.now(); return; }
+  if(hiddenAt && Date.now() - hiddenAt > 60000){
+    const id = (location.hash || '#overview').slice(1);
+    if(['overview', 'leads', 'conversations'].includes(id)) route();
+    else { try{ O = await call('/app/overview'); nav(); }catch(e){} }
+  }
+});
+(function pullToRefresh(){
+  if(!(STANDALONE || CAP)) return;   // browsers already do this themselves
+  const ptr = $('#ptr'); let y0 = null, dy = 0;
+  window.addEventListener('touchstart', e => { y0 = window.scrollY <= 0 && !$('#side').classList.contains('open') ? e.touches[0].clientY : null; dy = 0; }, {passive: true});
+  window.addEventListener('touchmove', e => { if(y0 === null) return; dy = e.touches[0].clientY - y0; if(dy > 0){ ptr.style.transform = 'translate(-50%,' + Math.min(dy * .45 - 48, 24) + 'px)'; ptr.textContent = dy > 90 ? 'Release to refresh' : 'Pull to refresh'; } }, {passive: true});
+  window.addEventListener('touchend', () => { if(y0 !== null && dy > 90){ ptr.textContent = 'Refreshing…'; ptr.style.transform = 'translate(-50%,16px)'; route().finally(() => { ptr.style.transform = 'translate(-50%,-48px)'; }); } else ptr.style.transform = 'translate(-50%,-48px)'; y0 = null; });
+})();
 boot();
 </script>
 </body>

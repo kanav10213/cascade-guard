@@ -34,7 +34,7 @@ from cascade_guard.auth import auth_enabled, require, role_for_key
 
 EXEMPT = {"/", "/assistant", "/receipts", "/chat", "/admin", "/welcome", "/pricing", "/health", "/health/ready",
           "/favicon.ico", "/dashboard", "/widget.js", "/terms", "/privacy", "/refunds", "/contact", "/start", "/app",
-          "/login", "/security", "/manifest.webmanifest", "/sw.js", "/pwa.js", "/offline", "/get-app"}
+          "/login", "/security", "/manifest.webmanifest", "/sw.js", "/pwa.js", "/offline", "/get-app", "/delete-account"}
 # Routes that call the model; chain runs on a real model use the same limit.
 LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions", "/widget/ask")
 

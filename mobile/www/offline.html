@@ -20,9 +20,9 @@ main{max-width:340px}h1{font-size:21px;margin:18px 0 6px}p{color:var(--muted);ma
 <main>
   <svg width="64" height="64" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="#23527c"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
   <h1>Can't reach the server</h1>
-  <p>Check your internet connection. If your company runs its own server, check that you are on its network.</p>
-  <button class="btn" type="button" onclick="location.replace('index.html')">Try again</button>
-  <button class="link" type="button" onclick="location.replace('index.html?change=1')">Use a different server</button>
+  <p>Check your internet connection, then try again. Nothing is lost.</p>
+  <button class="btn" type="button" onclick="location.replace(SERVER + '/app')">Try again</button>
 </main>
+<script>var SERVER = 'https://cascade-guard.onrender.com';</script>
 </body>
 </html>

@@ -76,10 +76,14 @@ def test_phone_app_config_matches_the_server():
     assert cfg["appId"] == "com.cascadeguard.app" and cfg["webDir"] == "www"
     for platform in ("android", "ios"):
         assert cfg[platform]["appendUserAgent"].startswith("CascadeGuardApp/")
-    assert cfg["server"]["errorPath"] == "offline.html" and "url" not in cfg["server"]
-    start = (MOBILE / "www" / "index.html").read_text("utf-8")
-    assert "var DEFAULT_SERVER = 'https://cascade-guard.onrender.com';" in start
-    assert (MOBILE / "www" / "offline.html").is_file()
+    # the app opens the server directly, so the page can use the app's own features (alerts, back button)
+    assert cfg["server"]["url"] == "https://cascade-guard.onrender.com/app" and cfg["server"]["errorPath"] == "offline.html"
+    assert "allowNavigation" not in cfg["server"]   # any other site opens in the phone's browser
+    for page in ("index.html", "offline.html"):   # the build replaces this line when CASCADE_SERVER_URL is set
+        assert "var SERVER = 'https://cascade-guard.onrender.com';" in (MOBILE / "www" / page).read_text("utf-8")
+    deps = json.loads((MOBILE / "package.json").read_text("utf-8"))["dependencies"]
+    assert {"@capacitor/push-notifications", "@capacitor/app"} <= set(deps)
+    assert (MOBILE / "native" / "android" / "res" / "drawable" / "ic_stat_cg.xml").is_file()
     for name in ("icon-only.png", "icon-foreground.png", "icon-background.png", "splash.png", "splash-dark.png"):
         assert (MOBILE / "assets" / name).read_bytes()[:4] == b"\x89PNG"
 

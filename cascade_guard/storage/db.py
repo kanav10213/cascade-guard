@@ -219,6 +219,24 @@ CREATE TABLE IF NOT EXISTS events (
     action    TEXT NOT NULL,
     detail    TEXT
 );
+CREATE TABLE IF NOT EXISTS push_devices (
+    id         {ID},
+    workspace  TEXT NOT NULL,
+    user_id    INTEGER NOT NULL,
+    kind       TEXT NOT NULL,              -- web (browser or home-screen app) | android (the Android app, via FCM)
+    endpoint   TEXT NOT NULL UNIQUE,       -- the browser's push address, or the app's FCM token
+    p256dh     TEXT,
+    auth       TEXT,
+    label      TEXT,
+    created_at TEXT NOT NULL,
+    last_ok_at TEXT,
+    fails      INTEGER NOT NULL DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS app_config (
+    name  TEXT PRIMARY KEY,                -- server-wide settings the service makes for itself (alert signing key)
+    value TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_push_devices_ws ON push_devices(workspace);
 CREATE INDEX IF NOT EXISTS idx_chat_log_ws ON chat_log(workspace, at);
 CREATE INDEX IF NOT EXISTS idx_leads_ws ON leads(workspace);
 CREATE INDEX IF NOT EXISTS idx_events_ws ON events(workspace, at);
@@ -468,7 +486,7 @@ class Store:
     def clear(self):
         """Delete everything (tests only)."""
         with self._tx() as c:
-            for t in ("events", "leads", "chat_log", "invites", "sessions", "users", "workspaces",
+            for t in ("push_devices", "app_config", "events", "leads", "chat_log", "invites", "sessions", "users", "workspaces",
                       "kb_chunks", "kb_docs", "key_usage", "api_keys", "agents", "chains", "audit", "usage",
                       "review_queue", "verdicts", "steps", "runs"):
                 c.execute(f"DELETE FROM {t}")  # noqa: S608 - fixed table names, no user input

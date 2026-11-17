@@ -32,6 +32,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 
+from cascade_guard.company import alerts
 from cascade_guard.company import keys as K
 from cascade_guard.company.keys import Principal, caller, need
 
@@ -257,6 +258,7 @@ def widget_lead(req: WidgetLead, request: Request):
     with store._tx() as c:
         c.execute("INSERT INTO leads (workspace, at, question, contact) VALUES (?, ?, ?, ?)",
                   (p.workspace, accounts._now(), req.question.strip()[:1000], req.contact.strip()[:200]))
+    alerts.lead_alert(p.workspace, req.contact.strip()[:200], req.question.strip()[:200])
     return JSONResponse({"ok": True}, headers=CORS)
 
 
@@ -276,7 +278,10 @@ def widget_ask(req: WidgetAsk, request: Request):
     res = answer(req.question, workspace=p.workspace, client=_client(),
                  history=[t.model_dump() for t in req.history], mode="documents")
     K.record(p, ai_calls=res.get("usage", {}).get("ai_calls", 0), tokens=res.get("usage", {}).get("tokens", 0))
-    token = log_answer(p.workspace, "app" if _own_site(request) else "widget", req.question, res)
+    own = _own_site(request)
+    token = log_answer(p.workspace, "app" if own else "widget", req.question, res)
+    if res.get("verdict") == "not_found" and not own:
+        alerts.unanswered_alert(p.workspace, req.question.strip()[:200])
     # Visitors see the answer and where it came from; the working stays in the owner's dashboard.
     return JSONResponse({"answer": res["answer"], "verdict": res["verdict"], "notice": res.get("notice"),
                          "token": token,
@@ -304,7 +309,7 @@ content="width=device-width, initial-scale=1"><title>{html.escape(title)}</title
 margin:22px 0 6px}}p,li{{max-width:70ch}}.nav{{font-size:14px;margin-bottom:18px}}</style></head><body><div class="w">
 <p class="nav"><a href="/">{b}</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> ·
 <a href="/refunds">Refunds</a> · <a href="/security">Security</a> ·
-<a href="/contact">Contact</a></p><h1>{html.escape(title)}</h1>{body}</div></body></html>"""
+<a href="/delete-account">Delete account</a> · <a href="/contact">Contact</a></p><h1>{html.escape(title)}</h1>{body}</div></body></html>"""
 
 
 def _who() -> tuple[str, str, str]:
@@ -313,6 +318,42 @@ def _who() -> tuple[str, str, str]:
     contact = f'<a href="mailto:{html.escape(mail, quote=True)}">{html.escape(mail)}</a>' if mail else \
         "the address on our Contact page"
     return name, contact, html.escape(os.getenv("BUSINESS_ADDRESS", ""))
+
+
+@router.get("/delete-account", response_class=HTMLResponse, include_in_schema=False)
+def delete_account_page():
+    """How to delete an account and its data (the app stores ask for this page)."""
+    _, contact, _ = _who()
+    return _page("Delete your account", f"""
+<p>You can delete your account yourself at any time. Deleting cannot be undone.</p>
+<h2>If you manage the workspace</h2><p>Sign in, open <b>Settings</b> in the dashboard (or in the app: More, then
+Settings) and use <b>Delete workspace</b>. This deletes the workspace and everything in it at once: documents,
+conversations, leads, team accounts, keys and alert settings. To keep the workspace for your team and delete only
+yourself, make someone else a manager first, then use <b>Delete my account</b> on the same page.</p>
+<h2>If you are a team member</h2><p>Sign in, then delete your account below. Your manager can also remove you
+under Team.</p>
+<div id="me" hidden><p><label>Your password<br><input id="pw" type="password" autocomplete="current-password"
+maxlength="200" style="padding:7px 9px;border:1px solid #ccd;border-radius:8px;min-width:260px"></label></p>
+<p><button id="go" type="button" style="padding:8px 16px;border-radius:8px;border:1px solid #c62f28;color:#c62f28;
+background:none;font-weight:600;cursor:pointer">Delete my account</button></p><p id="msg" role="status"></p></div>
+<p id="out"><a href="/login">Sign in</a> to delete your account here.</p>
+<h2>What is kept</h2><p>Nothing that identifies you. Payment records are kept by the payment company as the law
+requires. Backups are overwritten within 30 days.</p>
+<p>Can't sign in? Write to {contact} from the email address of the account, and we will delete it within 30
+days.</p>
+<script>
+fetch('/auth/me', {{headers: {{'X-CG': '1'}}}}).then(r => r.ok ? r.json() : null).then(j => {{
+  if(!j || !j.user) return;
+  document.getElementById('me').hidden = false; document.getElementById('out').hidden = true;
+}});
+document.getElementById('go').addEventListener('click', async () => {{
+  const r = await fetch('/auth/delete-account', {{method: 'POST', headers: {{'Content-Type': 'application/json',
+    'X-CG': '1'}}, body: JSON.stringify({{password: document.getElementById('pw').value}})}});
+  const j = await r.json().catch(() => ({{}}));
+  document.getElementById('msg').textContent = r.ok ? 'Your account was deleted.' : (j.detail || 'Something went wrong.');
+  if(r.ok) document.getElementById('me').querySelector('button').disabled = true;
+}});
+</script>""")
 
 
 @router.get("/terms", response_class=HTMLResponse, include_in_schema=False)
@@ -349,15 +390,21 @@ requests (time, address, route, result) for security.</li>
 <li>The questions asked and the answers given, so you can see what your customers ask and what your documents
 could not answer. You can turn this off in Settings; logs are deleted after {os.getenv("LOG_RETENTION_DAYS", "180")}
 days. Visitors are not identified: no names, addresses or cookies are kept with a question.</li>
-<li>Contact details a visitor chooses to leave for you in the chat.</li></ul>
+<li>Contact details a visitor chooses to leave for you in the chat.</li>
+<li>If you turn on phone alerts: an address from your browser's or phone's notification service, so alerts can
+reach that device. Turn alerts off in Settings and it is deleted.</li></ul>
+<h2>The phone app</h2><p>The Android and iPhone apps show the same dashboard and keep the same data as the website.
+They do not read your contacts, location, photos or files, and contain no advertising or tracking.</p>
 <p>The widget sets no cookies.</p>
 <h2>How it is used</h2><p>Only to provide the service to you. When a question is asked, the few passages of your
 documents that relate to it are sent to the AI model that writes the answer. We do not sell your data or use your
 documents to train models.</p>
-<h2>Who else handles it</h2><p>Our hosting provider, our database provider, the AI model provider, and the payment
-provider (for payments; we never see your card or bank details).</p>
+<h2>Who else handles it</h2><p>Our hosting provider, our database provider, the AI model provider, the payment
+provider (for payments; we never see your card or bank details), and, for phone alerts, the notification service
+of your browser or phone (for example Google Firebase Cloud Messaging or Apple).</p>
 <h2>Your choices</h2><p>In the dashboard you can delete documents, download everything your workspace holds as one
-file, and delete the whole workspace. To see or correct your details, write to {contact}.</p>
+file, and delete the whole workspace or only your own account (<a href="/delete-account">how</a>). To see or
+correct your details, write to {contact}.</p>
 <p class="m">Last updated: {time.strftime('%d %B %Y')}.</p>""")
 
 
