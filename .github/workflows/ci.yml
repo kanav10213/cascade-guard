@@ -65,7 +65,8 @@ jobs:
       - uses: actions/checkout@v6
       - uses: astral-sh/setup-uv@v6
       - run: uv venv -p 3.12 && uv pip install --resolution lowest-direct . && uv pip install "pytest>=8,<9"
-      - run: .venv/bin/python -m pytest -q
+      # -p no:langsmith_plugin: newer langsmith releases (pulled in by langgraph) break with the oldest pydantic
+      - run: .venv/bin/python -m pytest -q -p no:langsmith_plugin
 
   package:
     runs-on: ubuntu-latest

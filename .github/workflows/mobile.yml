@@ -59,7 +59,11 @@ jobs:
           sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
           grep -n "versionCode\|versionName" android/app/build.gradle
       - name: Build the test APK
-        run: cd android && ./gradlew --no-daemon assembleDebug
+        # Maven Central sometimes answers "too many requests"; try again after a pause
+        run: |
+          cd android
+          for i in 1 2 3; do ./gradlew --no-daemon assembleDebug && exit 0; echo "retrying in $((i*60)) s"; sleep $((i*60)); done
+          exit 1
       - name: Build the signed release (Play Store bundle and APK)
         if: env.HAS_KEY == 'true'
         env:

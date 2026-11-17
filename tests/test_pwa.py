@@ -65,7 +65,8 @@ def test_android_link_file_only_when_configured(client, monkeypatch):
 
 
 def test_app_hides_payment_inside_the_phone_app():
-    html = (Path(__file__).resolve().parent.parent / "cascade_guard" / "static" / "app.html").read_text("utf-8")
+    from cascade_guard.company.app import STATIC
+    html = (STATIC / "app.html").read_text("utf-8")
     assert "classList.contains('in-app')" in html and "Plans are changed on the website" in html
 
 
