@@ -1,4 +1,4 @@
-include LICENSE README.md CHANGELOG.md SECURITY.md CONTRIBUTING.md RELEASE_NOTES.md INTEGRATION.md
+include LICENSE MOBILE.md README.md CHANGELOG.md SECURITY.md CONTRIBUTING.md RELEASE_NOTES.md INTEGRATION.md
 recursive-include examples *.py
 include requirements*.txt .env.example Dockerfile docker-compose.yml start.bat start.sh Procfile
 recursive-include tests *.py

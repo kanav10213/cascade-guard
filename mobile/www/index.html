@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#23527c">
+<title>Cascade Guard</title>
+<style>
+:root{--paper:#f2f5f1;--sheet:#fff;--ink:#1d2528;--muted:#56646a;--rule:#d3dddf;--blue:#23527c;--onblue:#fff;--pen:#c62f28}
+@media (prefers-color-scheme:dark){:root{--paper:#161c1f;--sheet:#1b2225;--ink:#e5ebe9;--muted:#9aa8ab;--rule:#2f3a3e;--blue:#8db8e8;--onblue:#0f1720;--pen:#ff7b70}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex;align-items:center;justify-content:center;padding:24px;-webkit-tap-highlight-color:transparent}
+main{width:100%;max-width:360px;text-align:center}
+h1{font-size:23px;margin:18px 0 4px;letter-spacing:-.01em}
+p{color:var(--muted);margin:0 0 22px}
+.btn{display:block;width:100%;font:inherit;font-weight:600;background:var(--blue);color:var(--onblue);border:0;border-radius:12px;padding:13px 18px;min-height:48px;cursor:pointer}
+.link{background:none;border:0;color:var(--blue);font:inherit;font-size:15px;padding:12px;min-height:44px;cursor:pointer}
+form{text-align:left;background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:16px;margin-top:8px}
+label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+input{width:100%;font:inherit;color:inherit;background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:11px 12px;min-height:46px}
+.hint{font-size:13px;color:var(--muted);margin:8px 0 14px}
+.err{color:var(--pen);font-size:14px;margin:8px 0 0}
+.wait{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--muted)}
+.spin{width:28px;height:28px;border-radius:50%;border:3px solid var(--rule);border-top-color:var(--blue);animation:s .9s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <svg width="72" height="72" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="#23527c"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <section id="welcome" hidden>
+    <h1>Cascade Guard</h1>
+    <p>Your website chat, conversations and leads. Every answer is checked against your documents.</p>
+    <button class="btn" id="go" type="button">Continue</button>
+    <button class="link" id="own" type="button">My company runs its own server</button>
+    <form id="custom" hidden>
+      <label for="url">Server address</label>
+      <input id="url" type="text" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" placeholder="https://assistant.yourcompany.com">
+      <div class="hint">Ask your IT team. An address starting with http:// only works on your office network.</div>
+      <button class="btn" type="submit">Connect</button>
+      <p class="err" id="err" hidden></p>
+    </form>
+  </section>
+  <section id="waiting" class="wait" hidden>
+    <div class="spin" role="status" aria-label="Connecting"></div>
+    <div id="where"></div>
+    <div style="font-size:13px">The first start can take up to a minute.</div>
+    <button class="link" id="cancel" type="button">Use a different server</button>
+  </section>
+</main>
+<script>
+// The address the app opens by default. The build replaces it when CASCADE_SERVER_URL is set (see MOBILE.md).
+var DEFAULT_SERVER = 'https://cascade-guard.onrender.com';
+var KEY = 'cg_server';
+function $(s){ return document.querySelector(s); }
+function get(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+function put(v){ try{ v ? localStorage.setItem(KEY, v) : localStorage.removeItem(KEY); }catch(e){} }
+function clean(raw){
+  var v = (raw || '').trim();
+  if(!v) return null;
+  if(!/^https?:\/\//i.test(v)) v = 'https://' + v;
+  try{
+    var u = new URL(v);
+    if(u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+    if(!/^[a-z0-9-]+(\.[a-z0-9-]+)*$/i.test(u.hostname) || (u.hostname.indexOf('.') < 0 && u.hostname !== 'localhost')) return null;
+    return u.origin;
+  }catch(e){ return null; }
+}
+function open(server){
+  put(server);
+  $('#welcome').hidden = true;
+  $('#waiting').hidden = false;
+  $('#where').textContent = 'Connecting to ' + server.replace(/^https?:\/\//, '') + ' ...';
+  location.href = server + '/app?source=app';
+}
+function welcome(){
+  $('#waiting').hidden = true;
+  $('#welcome').hidden = false;
+  var saved = get();
+  if(saved && saved !== DEFAULT_SERVER){ $('#url').value = saved; $('#custom').hidden = false; }
+}
+$('#go').addEventListener('click', function(){ open(DEFAULT_SERVER); });
+$('#own').addEventListener('click', function(){ $('#custom').hidden = !$('#custom').hidden; if(!$('#custom').hidden) $('#url').focus(); });
+$('#cancel').addEventListener('click', function(){ put(null); location.replace('index.html?change=1'); });
+$('#custom').addEventListener('submit', function(e){
+  e.preventDefault();
+  var s = clean($('#url').value);
+  if(!s){ $('#err').textContent = 'That does not look like a web address.'; $('#err').hidden = false; return; }
+  open(s);
+});
+var change = /[?&]change=1/.test(location.search);
+var saved = get();
+if(saved && !change) open(saved); else welcome();
+</script>
+</body>
+</html>

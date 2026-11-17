@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#23527c">
+<title>Can't connect</title>
+<style>
+:root{--paper:#f2f5f1;--ink:#1d2528;--muted:#56646a;--blue:#23527c;--onblue:#fff}
+@media (prefers-color-scheme:dark){:root{--paper:#161c1f;--ink:#e5ebe9;--muted:#9aa8ab;--blue:#8db8e8;--onblue:#0f1720}}
+html,body{height:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;text-align:center}
+main{max-width:340px}h1{font-size:21px;margin:18px 0 6px}p{color:var(--muted);margin:0 0 22px}
+.btn{display:block;width:100%;font:inherit;font-weight:600;background:var(--blue);color:var(--onblue);border:0;border-radius:12px;padding:13px 18px;min-height:48px}
+.link{background:none;border:0;color:var(--blue);font:inherit;font-size:15px;padding:12px;min-height:44px}
+</style>
+</head>
+<body>
+<main>
+  <svg width="64" height="64" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="#23527c"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <h1>Can't reach the server</h1>
+  <p>Check your internet connection. If your company runs its own server, check that you are on its network.</p>
+  <button class="btn" type="button" onclick="location.replace('index.html')">Try again</button>
+  <button class="link" type="button" onclick="location.replace('index.html?change=1')">Use a different server</button>
+</main>
+</body>
+</html>

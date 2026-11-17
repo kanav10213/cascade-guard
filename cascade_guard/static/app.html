@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard</title>
+<meta name="theme-color" content="#23527c">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script src="/pwa.js" defer></script>
 <style>
 :root{
   --paper:#f2f5f1;--sheet:#ffffff;--ink:#1d2528;--muted:#56646a;--rule:#d3dddf;--rule2:#e6ecec;
@@ -96,7 +104,7 @@ details summary{cursor:pointer;color:var(--muted);font-size:13.5px}
   <aside id="side">
     <div class="brand"><svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect x="2" y="2" width="28" height="28" rx="7" fill="var(--blue)"/><path d="M9 16.5l4.5 4.5L23 11" fill="none" stroke="var(--onblue)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg><div><span id="ws-title">…</span><small id="ws-plan"></small></div></div>
     <nav id="nav" aria-label="Sections"></nav>
-    <div class="side-foot"><div id="me"></div><button class="linkbtn" id="logout" type="button">Sign out</button></div>
+    <div class="side-foot"><div id="me"></div><a class="get-app" href="/get-app" style="display:block;margin:4px 0 2px">Get the phone app</a><button class="linkbtn" id="logout" type="button">Sign out</button></div>
   </aside>
   <main id="main"><p class="small">Loading…</p></main>
 </div>
@@ -399,6 +407,10 @@ VIEWS.plan = async () => {
   const [p, me] = await Promise.all([call('/plans'), call('/me')]);
   const out = head('Plan', 'One plan covers your website chat, your team and the API.');
   out.push(h('div', {class: 'stats'}, h('div', {class: 'stat'}, h('b', {style: 'text-transform:capitalize', text: me.plan}), h('span', {text: 'your plan'})), h('div', {class: 'stat'}, h('b', {text: me.monthly_limit ? me.used_this_month + ' / ' + me.monthly_limit.toLocaleString() : me.used_this_month}), h('span', {text: 'answers used in ' + me.month}))));
+  if(document.documentElement.classList.contains('in-app')){
+    out.push(h('div', {class: 'card'}, h('p', {text: 'Plans are changed on the website, not in the app. Sign in on a computer to see or change your plan.'})));
+    return out;
+  }
   const cards = p.plans.filter(x => x.plan !== 'free').map(x => {
     let action;
     if(x.plan === me.plan) action = h('span', {class: 'tag t-ok', text: 'Your plan'});

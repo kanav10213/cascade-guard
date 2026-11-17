@@ -1,6 +1,19 @@
 # Changelog
 All notable changes to this project. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] - 2026-11-17
+
+### Added
+- **Android and iPhone app** (`mobile/`, Capacitor 8): a start screen (the default server, or a company's own
+  server address), the dashboard inside the app, an offline screen, icons and splash screens. Inside the app,
+  prices and payment links are hidden, as the app stores require.
+- **Automatic builds** (`.github/workflows/mobile.yml`): every change builds the Android APK and publishes it on the
+  "android-latest" release, plus a signed Play Store bundle once the signing secrets are set. iOS is built for
+  the simulator. Steps for both stores are in `MOBILE.md`.
+- **Install from the browser:** a web manifest, service worker (only the offline page and icons are stored),
+  icons, and a `/get-app` page with Android and iPhone steps. The home page and dashboard link to it. Also
+  `/favicon.ico` and `/.well-known/assetlinks.json` (when `ANDROID_CERT_SHA256` is set).
+
 ## [1.7.0] - 2026-11-16
 
 ### Added

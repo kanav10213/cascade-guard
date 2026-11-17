@@ -34,7 +34,7 @@ from cascade_guard.auth import auth_enabled, require, role_for_key
 
 EXEMPT = {"/", "/assistant", "/receipts", "/chat", "/admin", "/welcome", "/pricing", "/health", "/health/ready",
           "/favicon.ico", "/dashboard", "/widget.js", "/terms", "/privacy", "/refunds", "/contact", "/start", "/app",
-          "/login", "/security"}
+          "/login", "/security", "/manifest.webmanifest", "/sw.js", "/pwa.js", "/offline", "/get-app"}
 # Routes that call the model; chain runs on a real model use the same limit.
 LLM_PATHS = ("/llm/pipeline", "/llm/verify", "/llm/check", "/chat/ask", "/v1/chat/completions", "/widget/ask")
 
@@ -220,7 +220,7 @@ def install(app):
         # only valid keys get their own bucket; junk keys share the caller's address bucket
         ident = ("key:" + hashlib.sha256(key.encode("utf-8", "surrogateescape")).hexdigest()[:12]) if valid \
             else ("addr:" + client)
-        if path not in EXEMPT and not path.startswith(("/docs", "/openapi")):
+        if path not in EXEMPT and not path.startswith(("/docs", "/openapi", "/icons/")):
             ok, wait = limiter.allow(ident, _limit("RATE_LIMIT_PER_MIN", 120))
             if ok and path in LLM_PATHS:
                 ok, wait = limiter.allow(ident + ":llm", _limit("LLM_RATE_LIMIT_PER_MIN", 20))

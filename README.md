@@ -90,6 +90,9 @@ your documents") and the passages it used.
 
   See [DEPLOY.md](DEPLOY.md) for your own server, a cloud AI, or selling it as a service.
 
+- **On phones:** an Android and iPhone app (`mobile/`). It can open a company's own server, and GitHub builds
+  the Android download. You can also install it from the browser (`/get-app`). See [MOBILE.md](MOBILE.md).
+
 <!-- company-results -->
 **Tested with real local AIs.** The [company workflow](.github/workflows/company.yml) runs this on GitHub's
 machines with Ollama. It asks 30 questions about the made-up sample company: 26 that the documents answer and 4

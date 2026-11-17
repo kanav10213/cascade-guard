@@ -1,0 +1,149 @@
+# Builds the phone apps in mobile/.
+#   Android: an installable APK on every push (Releases > "android-latest"), plus a signed Play Store bundle (.aab)
+#            when the ANDROID_KEYSTORE_* secrets are set (see MOBILE.md).
+#   iOS:     builds the app for the iPhone simulator to prove it compiles. A build for real iPhones and the
+#            App Store needs an Apple Developer account (see MOBILE.md).
+# Set the repository variable CASCADE_SERVER_URL to open a different server by default.
+name: mobile
+
+on:
+  push:
+    branches: [main]
+    paths: ["mobile/**", ".github/workflows/mobile.yml"]
+  pull_request:
+    paths: ["mobile/**", ".github/workflows/mobile.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write          # to publish the APK on the "android-latest" release
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      SERVER: ${{ vars.CASCADE_SERVER_URL }}
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: npm ci
+      - name: Default server address
+        if: env.SERVER != ''
+        run: sed -i "s#var DEFAULT_SERVER = '[^']*';#var DEFAULT_SERVER = '${SERVER%/}';#" www/index.html && grep -n "DEFAULT_SERVER =" www/index.html
+      - name: Android project, icons and splash screens
+        run: |
+          npx cap add android
+          npm run assets -- --android
+          npx cap sync android
+      - name: Version number
+        run: |
+          sed -i "s/versionCode 1$/versionCode ${{ github.run_number }}/; s/versionName \"1.0\"/versionName \"1.0.${{ github.run_number }}\"/" android/app/build.gradle
+          grep -n "versionCode\|versionName" android/app/build.gradle
+      - name: Build the test APK
+        run: cd android && ./gradlew --no-daemon assembleDebug
+      - name: Build the signed release (Play Store bundle and APK)
+        if: env.HAS_KEY == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cd android && ./gradlew --no-daemon bundleRelease assembleRelease \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.jks" \
+            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+          rm -f "$RUNNER_TEMP/release.jks"
+      - name: Collect the files
+        run: |
+          mkdir -p ../out
+          if [ "$HAS_KEY" = "true" ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk ../out/cascade-guard.apk
+            cp android/app/build/outputs/bundle/release/app-release.aab ../out/cascade-guard-play-store.aab
+          else
+            cp android/app/build/outputs/apk/debug/app-debug.apk ../out/cascade-guard.apk
+          fi
+          ls -la ../out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: out/
+      - name: Publish the APK for download
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          kind=$([ "$HAS_KEY" = "true" ] && echo "signed release" || echo "test build (debug-signed)")
+          notes="Android app, build ${{ github.run_number }} from ${GITHUB_SHA::7} ($kind).
+
+          On your phone: download cascade-guard.apk, open it, and allow installing from this source when Android asks.
+          See MOBILE.md for the Play Store."
+          gh release delete android-latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create android-latest out/* --prerelease --title "Android app (latest build)" --notes "$notes" --target "$GITHUB_SHA"
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      SERVER: ${{ vars.CASCADE_SERVER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - run: npm ci
+      - name: Default server address
+        if: env.SERVER != ''
+        run: sed -i '' "s#var DEFAULT_SERVER = '[^']*';#var DEFAULT_SERVER = '${SERVER%/}';#" www/index.html
+      - name: iOS project, icons and splash screens
+        run: |
+          npx cap add ios
+          npm run assets -- --ios
+          npx cap sync ios
+      - name: App settings (local company servers, display name, version)
+        run: |
+          P=ios/App/App/Info.plist
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity dict" $P 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :NSAppTransportSecurity:NSAllowsLocalNetworking bool true" $P
+          /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Cascade Guard" $P 2>/dev/null || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Cascade Guard" $P
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" $P
+          sed -i '' "s/CURRENT_PROJECT_VERSION = 1;/CURRENT_PROJECT_VERSION = ${{ github.run_number }};/g" ios/App/App.xcodeproj/project.pbxproj
+          plutil -lint $P
+      - name: Build for the iPhone simulator
+        run: |
+          cd ios/App
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build | tail -n 25
+          test -d build/Build/Products/Debug-iphonesimulator/App.app
+          cd build/Build/Products/Debug-iphonesimulator && zip -qry "$GITHUB_WORKSPACE/cascade-guard-simulator.zip" App.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator
+          path: cascade-guard-simulator.zip
