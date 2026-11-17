@@ -4,10 +4,15 @@ services:
   - type: web
     name: cascade-guard
     runtime: docker
-    plan: free                 # sleeps after ~15 min idle; saved runs reset on restart
+    plan: free                 # sleeps after ~15 min idle
+    region: oregon
     healthCheckPath: /health
     autoDeploy: true           # redeploys on every push to main
     envVars:
+      - key: CASCADE_DB        # accounts, documents and usage live in the database below, so restarts lose nothing
+        fromDatabase:
+          name: cascade-guard-db
+          property: connectionString
       - key: API_KEY           # admin key; Render generates a random one (see the service's Environment tab)
         generateValue: true
       - key: MCP_CONNECTOR_TOKEN   # the secret in the Claude connector link (/mcp/<this>); see "Use in Claude" on /assistant
@@ -16,3 +21,11 @@ services:
         value: auto
       - key: LLM_MAX_COST      # spend cap per server run, USD
         value: "1.00"
+
+databases:
+  - name: cascade-guard-db     # free for 30 days on Render; then a paid plan, or point CASCADE_DB at another PostgreSQL
+    plan: free
+    region: oregon
+    postgresMajorVersion: "16"
+    databaseName: cascade_guard_db
+    user: cascade_guard_db_user
