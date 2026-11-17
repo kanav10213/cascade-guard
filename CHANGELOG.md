@@ -14,6 +14,9 @@ All notable changes to this project. Versions follow [Semantic Versioning](https
   icons, and a `/get-app` page with Android and iPhone steps. The home page and dashboard link to it. Also
   `/favicon.ico` and `/.well-known/assetlinks.json` (when `ANDROID_CERT_SHA256` is set).
 
+### Changed
+- Needs pydantic 2.9 or newer: current langsmith (used by langgraph) fails to import with older pydantic.
+
 ## [1.7.0] - 2026-11-16
 
 ### Added
